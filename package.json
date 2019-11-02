@@ -10,7 +10,8 @@
     "build": "lerna run build",
     "watch": "lerna run --stream --parallel watch",
     "test": "jest",
-    "test-watch": "jest --watch"
+    "test-watch": "jest --watch",
+    "create-pkg": "yo ./packages/generator-jug-package"
   },
   "jest": {
     "testPathIgnorePatterns": [

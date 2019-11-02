@@ -1,10 +1,6 @@
 {
   "name": "@jug/<%= name %>",
   "version": "1.0.0",
-  "description": "",
-  "author": "Rick Button",
-  "homepage": "https://github.com/rickbutton/jug#readme",
-  "license": "MIT",
   "main": "lib/index",
   "types": "lib/index",
   "files": [
@@ -17,13 +13,6 @@
     "compile": "tsc -p tsconfig.build.json",
     "compile-watch": "tsc -w -p tsconfig.build.json",
     "prepublishOnly": "npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/rickbutton/jug.git"
-  },
-  "bugs": {
-    "url": "https://github.com/rickbutton/jug/issues"
   },
   "devDependencies": {
     "typescript": "^3.6.4",

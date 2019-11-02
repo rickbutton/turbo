@@ -1,0 +1,20 @@
+{
+  "name": "generator-jug-package",
+  "version": "1.0.0",
+  "files": [
+    "generators"
+  ],
+  "main": "generators/app/index.js",
+  "dependencies": {
+    "yeoman-generator": "^2.0.1",
+    "chalk": "^2.1.0",
+    "yosay": "^2.0.1"
+  },
+  "scripts": {
+    "build": "true",
+    "watch": "true",
+    "clean": "true",
+    "compile": "true",
+    "compile-watch": "true"
+  }
+}
