@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "removeComments": true,
+    "declaration": true,
+    "strict": true,
+    "sourceMap": true,
+    "target": "esnext",
+    "lib": ["esnext"]
+  },
+  "exclude": [
+    "node_modules",
+    "lib"
+  ]
+}

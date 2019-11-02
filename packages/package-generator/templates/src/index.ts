@@ -1,0 +1,2 @@
+
+export meaning = 42;
