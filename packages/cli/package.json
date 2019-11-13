@@ -12,7 +12,7 @@
     "compile": "tsc -p tsconfig.build.json",
     "compile-watch": "tsc -w -p tsconfig.build.json",
     "prepublishOnly": "npm run build",
-    "lint": "eslint . --ext .ts || true"
+    "lint": "eslint . --ext .ts"
   },
   "devDependencies": {
     "@types/node": "^12.12.5",

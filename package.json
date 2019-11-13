@@ -9,7 +9,7 @@
     "clean": "lerna run clean",
     "build": "lerna run build",
     "watch": "lerna run build && lerna run --stream --parallel compile-watch",
-    "lint": "lerna run lint",
+    "lint": "eslint . --ext .ts",
     "test": "jest",
     "test-watch": "jest --watch",
     "create-pkg": "yo ./packages/generator-jug-package"
