@@ -8,8 +8,6 @@ layout strings (at least a good default)
 
 better name!
 
-eslint, prettier?
-
 ipc with daemon, shared state?
 - clients should identify themselves by type
  - so that # of running instances per type can be limited, i.e. 1 target
@@ -22,3 +20,7 @@ components render, send actions to daemon?
 
 better logger
 better "press enter to restart message"
+
+ls command
+
+ensure that commands that require a session check for access to the daemon, not tmux
