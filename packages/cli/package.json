@@ -1,5 +1,5 @@
 {
-  "name": "@jug/core",
+  "name": "@jug/cli",
   "version": "1.0.0",
   "main": "lib/index",
   "types": "lib/index",
@@ -23,5 +23,18 @@
     "eslint-plugin-prettier": "^3.1.1",
     "prettier": "^1.19.1",
     "typescript": "^3.6.4"
+  },
+  "dependencies": {
+    "@jug/core": "^1.0.0",
+    "@jug/daemon": "^1.0.0",
+    "@jug/tmux": "^1.0.0",
+    "@types/ffi": "^0.2.2",
+    "@types/ref": "^0.0.28",
+    "@types/ref-array": "^0.0.28",
+    "@types/yargs": "^13.0.3",
+    "ffi": "github:lxe/node-ffi#node-12",
+    "ref": "github:lxe/ref#node-12",
+    "ref-array": "github:lxe/ref-array#node-12",
+    "yargs": "^14.2.0"
   }
 }

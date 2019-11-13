@@ -5,11 +5,13 @@
     "declaration": true,
     "strict": true,
     "sourceMap": true,
+    "noImplicitAny": true,
     "target": "esnext",
     "lib": ["esnext"]
   },
   "exclude": [
     "node_modules",
-    "lib"
+    "lib",
+    "jug.config.js"
   ]
 }

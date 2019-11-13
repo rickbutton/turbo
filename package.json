@@ -8,18 +8,23 @@
     "bootstrap": "lerna bootstrap",
     "clean": "lerna run clean",
     "build": "lerna run build",
-    "watch": "lerna run --stream --parallel watch",
+    "watch": "lerna run build && lerna run --stream --parallel compile-watch",
+    "lint": "lerna run lint",
     "test": "jest",
     "test-watch": "jest --watch",
     "create-pkg": "yo ./packages/generator-jug-package"
   },
   "jest": {
     "testPathIgnorePatterns": [
-      "/node_modules/"
+      "/node_modules/",
+      "/generator-jug-package/"
     ],
     "testMatch": [
-      "**/lib/**/(*.)(spec|test).js"
-    ]
+      "**/src/**/(*.)(spec|test).ts"
+    ],
+    "transform": {
+      "^.+\\.ts$": "ts-jest"
+    }
   },
   "devDependencies": {
     "@types/jest": "^24.0.21",

@@ -1,6 +1,4 @@
-new-window -n  "code" "vim"
+new-window -n "watch" "vim"
 split-window -h "yarn test-watch"
 split-window -v "yarn watch"
-
 new-window -n "sh"
-previous-window

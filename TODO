@@ -1,0 +1,24 @@
+
+allow specifying target location in layout
+- will likely need to runtime restrict to 1 target
+
+tests for cli, connector-node, core, daemon
+
+layout strings (at least a good default)
+
+better name!
+
+eslint, prettier?
+
+ipc with daemon, shared state?
+- clients should identify themselves by type
+ - so that # of running instances per type can be limited, i.e. 1 target
+
+cdp integration into shared state
+components render, send actions to daemon?
+- do i need to care about reconciling conflicts?
+  - global counter, inc each action
+  - or counter per topic/type of state?
+
+better logger
+better "press enter to restart message"

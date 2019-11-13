@@ -6,8 +6,8 @@
   ],
   "main": "generators/app/index.js",
   "dependencies": {
-    "yeoman-generator": "^2.0.1",
     "chalk": "^2.1.0",
+    "yeoman-generator": "^2.0.1",
     "yosay": "^2.0.1"
   },
   "scripts": {
@@ -16,5 +16,10 @@
     "clean": "true",
     "compile": "true",
     "compile-watch": "true"
+  },
+  "devDependencies": {
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "prettier": "^1.19.1"
   }
 }
