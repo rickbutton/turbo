@@ -156,7 +156,3 @@ export function getCurrentSessionId(env: Environment): SessionId | undefined {
 
     return undefined;
 }
-
-export function isInTmux(env: Environment): boolean {
-    return Boolean(getCurrentSessionId(env));
-}

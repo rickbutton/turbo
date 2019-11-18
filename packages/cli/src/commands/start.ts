@@ -1,5 +1,5 @@
 import { generateTmuxStartCommand, generateSessionId } from "@jug/tmux";
-import { getJug, Layout } from "@jug/core";
+import { Jug, Layout } from "@jug/core";
 import * as ffi from "ffi";
 import * as ref from "ref";
 import * as ArrayType from "ref-array";
@@ -44,9 +44,8 @@ function execvp(command: string, args: string[]): void {
     ]);
 }
 
-export function start(): void {
+export function start(jug: Jug): void {
     const id = generateSessionId();
-    const jug = getJug();
 
     const layout = jug.config.layout || defaultLayout;
 

@@ -22,9 +22,7 @@
     "testMatch": [
       "**/src/**/(*.)(spec|test).ts"
     ],
-    "transform": {
-      "^.+\\.ts$": "ts-jest"
-    }
+    "preset": "ts-jest"
   },
   "devDependencies": {
     "@types/jest": "^24.0.21",

@@ -1,4 +1,4 @@
-import { getJug } from "@jug/core";
+import { Jug } from "@jug/core";
 import * as process from "process";
 
 function waitForEnter(callback: () => void): void {
@@ -21,9 +21,7 @@ function waitForEnter(callback: () => void): void {
     wait();
 }
 
-export function target(): void {
-    const jug = getJug();
-
+export function target(jug: Jug): void {
     const targetFactory = jug.config.target;
     const target = targetFactory(jug.env);
 

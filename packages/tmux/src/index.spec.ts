@@ -1,7 +1,6 @@
 import {
     SessionId,
     generateTmuxStartCommand,
-    isInTmux,
     getCurrentSessionId,
 } from "./index";
 import { Environment, Config, Jug, Layout, TargetFactory } from "@jug/core";
@@ -154,40 +153,6 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
             ...POST_CMDS,
         ],
     });
-});
-
-test("isInTmux correctly checks the TMUX var", () => {
-    const execSync = jest
-        .fn()
-        .mockReturnValueOnce("test1\ntest2")
-        .mockReturnValueOnce(
-            "/dev/pty/test1 notCorrect1\n/dev/pty/test2 notCorrect2",
-        )
-        .mockReturnValueOnce(
-            "/dev/pty/test3 correct1\n/dev/pty/test4 notCorrect3",
-        );
-
-    expect(
-        isInTmux({
-            nodePath: "",
-            scriptPath: "",
-            getVar(name: string) {
-                if (name === "TMUX") return "foobarbaz";
-                if (name === "TTY") return "/dev/pty/test3";
-                else return undefined;
-            },
-            execSync,
-        }),
-    ).toBe(true);
-
-    expect(() =>
-        isInTmux({
-            nodePath: "",
-            scriptPath: "",
-            getVar: () => undefined,
-            execSync,
-        }),
-    ).toThrow();
 });
 
 test("getCurrentSessionId returns the correct id", () => {
