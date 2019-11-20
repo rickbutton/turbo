@@ -8,7 +8,7 @@
     "bootstrap": "lerna bootstrap",
     "clean": "lerna run clean",
     "build": "lerna run build",
-    "watch": "lerna run build && lerna run --stream --parallel compile-watch",
+    "watch": "lerna run compile && lerna run --stream --parallel compile-watch",
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "test-watch": "jest --watch",

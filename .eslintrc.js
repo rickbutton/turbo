@@ -11,8 +11,6 @@ module.exports = {
     },
     rules: {
         "@typescript-eslint/no-explicit-any": "off",
-
-        "no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
-        "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "^_", "argsIgnorePattern": "^_" }],
+        "@typescript-eslint/no-unused-vars": ["error", { "varsIgnorePattern": "(^_|logger)", "argsIgnorePattern": "^_" }],
     },
 };

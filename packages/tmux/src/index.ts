@@ -1,7 +1,5 @@
-declare const __sessionIdTag: unique symbol;
-export type SessionId = string & { __tag: typeof __sessionIdTag };
-
-import { Environment, Jug, Pane, Layout } from "@jug/core";
+import { SessionId, Environment, Jug, Pane, Layout } from "@jug/core";
+import { ttyname } from "./ttyname";
 
 export function generateSessionId(): SessionId {
     return `jug-${[...Array(4)]
@@ -126,7 +124,7 @@ export function generateTmuxStartCommand(
 }
 
 export function getCurrentSessionId(env: Environment): SessionId | undefined {
-    const tty = env.getVar("TTY");
+    const tty = ttyname();
 
     if (!tty) {
         throw new Error("could not detect TTY");

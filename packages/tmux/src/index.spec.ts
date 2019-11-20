@@ -1,9 +1,18 @@
+import { generateTmuxStartCommand, getCurrentSessionId } from "./index";
 import {
     SessionId,
-    generateTmuxStartCommand,
-    getCurrentSessionId,
-} from "./index";
-import { Environment, Config, Jug, Layout, TargetFactory } from "@jug/core";
+    Environment,
+    Config,
+    Jug,
+    Layout,
+    TargetFactory,
+} from "@jug/core";
+
+jest.mock("./ttyname", () => ({
+    ttyname(_?: number): string {
+        return "/dev/pty/test3";
+    },
+}));
 
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
@@ -172,7 +181,6 @@ test("getCurrentSessionId returns the correct id", () => {
             scriptPath: "",
             getVar(name: string) {
                 if (name === "TMUX") return "foobarbaz";
-                if (name === "TTY") return "/dev/pty/test3";
                 else return undefined;
             },
             execSync,

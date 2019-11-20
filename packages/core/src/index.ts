@@ -3,6 +3,9 @@ import * as child from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 
+declare const __sessionIdTag: unique symbol;
+export type SessionId = string & { __tag: typeof __sessionIdTag };
+
 export interface Environment {
     readonly nodePath: string;
     readonly scriptPath: string;
@@ -12,6 +15,7 @@ export interface Environment {
 }
 
 function getVar(name: string): string | undefined {
+    console.log(process.env);
     return process.env ? process.env[name] : undefined;
 }
 
@@ -146,3 +150,6 @@ export function getJug(): Jug {
         config,
     };
 }
+
+export { JsonSocket } from "./jsonsocket";
+export { createLogger } from "./logger";

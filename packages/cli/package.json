@@ -25,6 +25,7 @@
     "typescript": "^3.6.4"
   },
   "dependencies": {
+    "@jug/client": "^1.0.0",
     "@jug/core": "^1.0.0",
     "@jug/daemon": "^1.0.0",
     "@jug/tmux": "^1.0.0",
