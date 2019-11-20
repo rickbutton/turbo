@@ -1,4 +1,4 @@
-import * as chalk from "chalk";
+import * as _chalk from "chalk";
 
 const log = console.log;
 
