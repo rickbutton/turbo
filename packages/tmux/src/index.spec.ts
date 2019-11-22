@@ -8,12 +8,6 @@ import {
     TargetFactory,
 } from "@jug/core";
 
-jest.mock("./ttyname", () => ({
-    ttyname(_?: number): string {
-        return "/dev/pty/test3";
-    },
-}));
-
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
         if (name === "SHELL") return "conch";
@@ -165,15 +159,7 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
 });
 
 test("getCurrentSessionId returns the correct id", () => {
-    const execSync = jest
-        .fn()
-        .mockReturnValueOnce("test1\ntest2")
-        .mockReturnValueOnce(
-            "/dev/pty/test1 notCorrect1\n/dev/pty/test2 notCorrect2",
-        )
-        .mockReturnValueOnce(
-            "/dev/pty/test3 correct1\n/dev/pty/test4 notCorrect3",
-        );
+    const execSync = jest.fn().mockReturnValueOnce("sessionid\n");
 
     expect(
         getCurrentSessionId({
@@ -185,5 +171,5 @@ test("getCurrentSessionId returns the correct id", () => {
             },
             execSync,
         }),
-    ).toBe("correct1");
+    ).toBe("sessionid");
 });

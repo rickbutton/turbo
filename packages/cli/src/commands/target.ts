@@ -3,10 +3,8 @@ import * as process from "process";
 
 function waitForEnter(callback: () => void): void {
     function wait(): void {
-        console.log("wait");
         process.stdin.setRawMode(true);
         process.stdin.once("data", keystroke => {
-            console.log(keystroke);
             process.stdin.setRawMode(false);
             if (keystroke[0] === "\r".charCodeAt(0)) {
                 callback();
@@ -34,7 +32,6 @@ export function target(jug: Jug): void {
     });
 
     process.on("SIGINT", () => {
-        console.log(target.isRunning);
         if (!target.isRunning) {
             process.exit();
         }

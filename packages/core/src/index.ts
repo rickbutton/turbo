@@ -3,6 +3,8 @@ import * as child from "child_process";
 import * as path from "path";
 import * as fs from "fs";
 
+import { Emitter } from "./emitter";
+
 declare const __sessionIdTag: unique symbol;
 export type SessionId = string & { __tag: typeof __sessionIdTag };
 
@@ -15,7 +17,6 @@ export interface Environment {
 }
 
 function getVar(name: string): string | undefined {
-    console.log(process.env);
     return process.env ? process.env[name] : undefined;
 }
 
@@ -62,9 +63,6 @@ export interface Config {
     layout?: Layout;
 }
 
-type EmitterCallback<T> = (event: T) => void;
-type EmitterMap<T> = { [K in keyof T]: Set<EmitterCallback<T[K]>> };
-
 export interface TargetEvents {
     started: undefined;
     stopped: undefined;
@@ -77,40 +75,6 @@ export interface Target extends Emitter<TargetEvents> {
     readonly stop: () => void;
 }
 export type TargetFactory = (env: Environment) => Target;
-
-export interface Emitter<T> {
-    on<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
-    off<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
-    fire<N extends keyof T>(name: N, event: T[N]): void;
-}
-
-export abstract class EmitterBase<T> implements Emitter<T> {
-    private map: EmitterMap<T> = {} as EmitterMap<T>;
-
-    on<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void {
-        if (this.map[name]) {
-            this.map[name].add(func);
-        } else {
-            this.map[name] = new Set([func]);
-        }
-    }
-    off<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void {
-        if (this.map[name]) {
-            this.map[name].delete(func);
-
-            if (this.map[name].size === 0) {
-                delete this.map[name];
-            }
-        }
-    }
-    fire<N extends keyof T>(name: N, event: T[N]): void {
-        if (this.map[name]) {
-            for (const func of this.map[name]) {
-                func(event);
-            }
-        }
-    }
-}
 
 function validateConfig(config: Config): void {
     if (!config.target) {
@@ -151,5 +115,7 @@ export function getJug(): Jug {
     };
 }
 
+export { Emitter, EmitterBase } from "./emitter";
 export { JsonSocket } from "./jsonsocket";
 export { createLogger } from "./logger";
+export { reduce, State, Action, IncrementAction } from "./state";

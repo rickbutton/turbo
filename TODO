@@ -2,7 +2,7 @@
 allow specifying target location in layout
 - will likely need to runtime restrict to 1 target
 
-tests for cli, connector-node, target, daemon
+tests for cli, logger, connector-node, target, daemon
 
 layout strings (at least a good default)
 
@@ -22,5 +22,3 @@ better logger
 better "press enter to restart message"
 
 ls command
-
-ensure that commands that require a session check for access to the daemon, not tmux

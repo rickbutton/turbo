@@ -3,31 +3,56 @@ import { JsonSocket, createLogger, SessionId, EmitterBase } from "@jug/core";
 
 const logger = createLogger("daemon");
 
-interface DaemonEvents {
+export interface Client {
+    id: number;
+    send(data: any): void;
+}
+
+interface DataEvent {
+    client: Client;
     data: any;
+}
+interface ConnectedEvent {
+    client: Client;
+}
+interface DisconnectedEvent {
+    client: Client;
+}
+interface DaemonEvents {
+    data: DataEvent;
+    connected: ConnectedEvent;
+    disconnected: DisconnectedEvent;
 }
 
 export class Daemon extends EmitterBase<DaemonEvents> {
+    private lastClientId = 0;
     private sessionId: SessionId;
     private server: net.Server = this.createServer();
+    private connections: Set<Client> = new Set();
 
     constructor(sessionId: SessionId) {
         super();
         this.sessionId = sessionId;
+
+        process.on("SIGHUP", () => {
+            this.server.close();
+        });
     }
 
     public start(): void {
         logger.verbose("daemon started");
-        this.server.listen(`/tmp/jug-sessions/${this.sessionId}`);
+        this.server.listen(`/tmp/jug-session-${this.sessionId}`);
+    }
+
+    public broadcast(data: any): void {
+        for (const c of this.connections) {
+            c.send(data);
+        }
     }
 
     private createServer(): net.Server {
         const server = net.createServer();
 
-        server.on("close", () => {
-            logger.info("daemon closed, restarting");
-            this.startAfterDelay();
-        });
         server.on("connection", (socket: net.Socket) =>
             this.handleSocket(socket),
         );
@@ -50,26 +75,31 @@ export class Daemon extends EmitterBase<DaemonEvents> {
 
     private handleSocket(rawSocket: net.Socket): void {
         const socket = new JsonSocket(rawSocket);
+
+        this.lastClientId++;
+
+        const client: Client = {
+            id: this.lastClientId,
+            send(data: any): void {
+                socket.write(data);
+            },
+        };
+        logger.info(`client:${client.id} connected`);
+
         socket.on("close", () => {
-            logger.verbose("connection with client closed"); // TODO: client id?
-            // remove socket
+            logger.verbose(`connection with client:${client.id} closed`);
+            this.connections.delete(client);
+            this.fire("disconnected", { client });
         });
         socket.on("data", (data: any) => {
-            logger.debug("received data from client"); // TODO: client id?
-            this.fire("data", data);
+            logger.verbose(`received data from client:${client.id}`);
+            this.fire("data", { data, client });
         });
         socket.on("error", (error: Error) => {
-            logger.warn(`client error, ${error}`); // TODO: client id?
+            logger.warn(`client:${client.id} error, ${error}`);
         });
-        socket.on("ready", () => {
-            logger.info("client connected"); // TODO: client id?
-            // handle, add to map
-        });
+
+        this.connections.add(client);
+        this.fire("connected", { client });
     }
-}
-
-export function startDaemon(sessionId: SessionId): void {
-    const daemon = new Daemon(sessionId);
-
-    daemon.start();
 }

@@ -1,6 +1,8 @@
 import * as net from "net";
 import * as stream from "stream";
 
+const MAX_LENGTH = 2 ** 18;
+
 export class JsonSocket extends stream.Duplex {
     private readingPaused = false;
     private socket: net.Socket;
@@ -36,8 +38,8 @@ export class JsonSocket extends stream.Duplex {
             if (!lenBuf) return;
 
             const len = lenBuf.readUInt32BE();
-            if (len > 2 ** 18) {
-                this.socket.destroy(new Error("Max length exceeded"));
+            if (len > MAX_LENGTH) {
+                this.socket.destroy(new Error("max length exceeded"));
                 return;
             }
 
@@ -68,6 +70,11 @@ export class JsonSocket extends stream.Duplex {
     _write(obj: any, _: any, cb: (error: Error | undefined) => void): void {
         const json = JSON.stringify(obj);
         const length = Buffer.byteLength(json);
+
+        if (length > MAX_LENGTH) {
+            this.socket.destroy(new Error("max length exceeded"));
+            return;
+        }
         const buffer = Buffer.alloc(4 + length);
         buffer.writeUInt32BE(length, 0);
         buffer.write(json, 4);

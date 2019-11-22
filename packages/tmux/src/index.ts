@@ -1,5 +1,13 @@
-import { SessionId, Environment, Jug, Pane, Layout } from "@jug/core";
-import { ttyname } from "./ttyname";
+import {
+    SessionId,
+    Environment,
+    Jug,
+    Pane,
+    Layout,
+    createLogger,
+} from "@jug/core";
+
+const logger = createLogger("tmux");
 
 export function generateSessionId(): SessionId {
     return `jug-${[...Array(4)]
@@ -124,33 +132,14 @@ export function generateTmuxStartCommand(
 }
 
 export function getCurrentSessionId(env: Environment): SessionId | undefined {
-    const tty = ttyname();
+    const inTmux = Boolean(env.getVar("TMUX"));
 
-    if (!tty) {
-        throw new Error("could not detect TTY");
+    if (inTmux) {
+        return env
+            .execSync("tmux display-message -p '#S'")
+            .toString()
+            .split("\n")[0] as SessionId;
+    } else {
+        return undefined;
     }
-
-    const sessionsOutput = env.execSync(
-        "tmux list-sessions -F '#{session_name}' 2>/dev/null",
-    );
-    const sessionStrings = sessionsOutput.split("\n");
-    for (const sessionString of sessionStrings) {
-        const panesOutput = env.execSync(
-            `tmux list-panes -F '#{pane_tty} #{session_name}' -t '${sessionString}'`,
-        );
-        const paneStrings = panesOutput.split("\n");
-
-        for (const paneString of paneStrings) {
-            if (paneString.includes(tty)) {
-                const parts = paneString.split(" ");
-                if (parts.length !== 2) {
-                    throw new Error("invalid tmux output");
-                }
-
-                return parts[1] as SessionId;
-            }
-        }
-    }
-
-    return undefined;
 }

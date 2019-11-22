@@ -1,4 +1,4 @@
-import * as _chalk from "chalk";
+import * as chalk from "chalk";
 
 const log = console.log;
 
@@ -9,19 +9,19 @@ class Logger {
     }
 
     public error(msg: string): void {
-        log(msg);
+        log(chalk.red("[err] ") + msg);
     }
     public warn(msg: string): void {
-        log(msg);
+        log(chalk.yellow("[wrn] ") + msg);
     }
     public info(msg: string): void {
-        log(msg);
+        log(chalk.blue("[nfo] ") + msg);
     }
     public verbose(msg: string): void {
-        log(msg);
+        log(chalk.cyan("[ver] ") + msg);
     }
     public debug(msg: string): void {
-        log(msg);
+        log(chalk.magenta("[dbg] ") + msg);
     }
 }
 

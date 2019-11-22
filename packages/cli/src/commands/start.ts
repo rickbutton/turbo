@@ -50,7 +50,6 @@ export function start(jug: Jug): void {
     const layout = jug.config.layout || defaultLayout;
 
     const { command, args } = generateTmuxStartCommand(id, layout, jug);
-    console.log(args);
 
     // replace current process with spawned tmux
     execvp(command, args);
