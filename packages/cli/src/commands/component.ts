@@ -1,5 +1,5 @@
 import { Jug, createLogger, State } from "@jug/core";
-import { Client } from "@jug/client";
+import { Client } from "@jug/net";
 import { getCurrentSessionId } from "@jug/tmux";
 
 export function component(jug: Jug, name: string): void {

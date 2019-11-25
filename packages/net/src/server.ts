@@ -3,7 +3,7 @@ import { JsonSocket, createLogger, SessionId, EmitterBase } from "@jug/core";
 
 const logger = createLogger("daemon");
 
-export interface Client {
+interface Client {
     id: number;
     send(data: any): void;
 }
@@ -18,13 +18,13 @@ interface ConnectedEvent {
 interface DisconnectedEvent {
     client: Client;
 }
-interface DaemonEvents {
+interface ServerEvents {
     data: DataEvent;
     connected: ConnectedEvent;
     disconnected: DisconnectedEvent;
 }
 
-export class Daemon extends EmitterBase<DaemonEvents> {
+export class Server extends EmitterBase<ServerEvents> {
     private lastClientId = 0;
     private sessionId: SessionId;
     private server: net.Server = this.createServer();

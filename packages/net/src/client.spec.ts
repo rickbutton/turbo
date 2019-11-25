@@ -1,4 +1,4 @@
-import { Client, ClientSocket } from "./index";
+import { Client, ClientSocket } from "./client";
 import { SessionId, State } from "@jug/core";
 
 jest.useFakeTimers();

@@ -1,4 +1,4 @@
-import { Daemon } from "@jug/daemon";
+import { Server } from "@jug/net";
 import { Jug, createLogger, State, reduce } from "@jug/core";
 import { getCurrentSessionId } from "@jug/tmux";
 
@@ -12,19 +12,19 @@ let state: State = {
 export function daemon(jug: Jug): void {
     const sessionId = getCurrentSessionId(jug.env);
     if (sessionId) {
-        const daemon = new Daemon(sessionId);
+        const server = new Server(sessionId);
 
-        daemon.on("data", event => {
+        server.on("data", event => {
             state = reduce(state, event.data);
-            daemon.broadcast(state);
+            server.broadcast(state);
         });
 
-        daemon.on("connected", event => {
+        server.on("connected", event => {
             event.client.send(state);
         });
-        daemon.on("disconnected", _ => {});
+        server.on("disconnected", _ => {});
 
-        daemon.start();
+        server.start();
     } else {
         logger.error("unable to identify current session");
     }
