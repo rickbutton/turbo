@@ -1,0 +1,25 @@
+name: CI
+
+on: [push]
+
+jobs:
+    build:
+
+        runs-on: ubuntu-latest
+
+        strategy:
+            matrix:
+                node-version: [12.x]
+
+        steps:
+             - uses: actions/checkout@v1
+             - name: use node ${{ matrix.node-version }}
+               uses: actions/setup-node@v1
+               with:
+                   node-version: ${{ matrix.node-version }}
+             - name: install, build, test
+               run: |
+                   yarn
+                   yarn bootstrap
+                   yarn build
+                   yarn test
