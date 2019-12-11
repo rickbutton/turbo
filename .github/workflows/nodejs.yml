@@ -20,6 +20,8 @@ jobs:
              - name: install, build, test
                run: |
                    yarn
-                   yarn lerna bootstrap
+                   yarn bootstrap
+                   ls node_modules
+                   ls node_modules/@turbo
                    yarn build
                    yarn test
