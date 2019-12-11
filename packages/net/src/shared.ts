@@ -29,8 +29,11 @@ export type SyncMessage = BaseMessage<"sync", SyncData>;
 export type PingRequest = BaseRequest<"ping", string>;
 export type PingResponse = BaseResponse<string>;
 
-export type Request = PingRequest;
-export type Response = PingResponse;
+export type EvalRequest = BaseRequest<"eval", string>;
+export type EvalResponse = BaseResponse<string>;
+
+export type Request = PingRequest | EvalRequest;
+export type Response = PingResponse | EvalResponse;
 export type ResponsePayload = Response["payload"];
 
 export type RequestMessage = BaseMessage<"req", Request>;

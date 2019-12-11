@@ -31,39 +31,47 @@ export interface ClientSocket {
 }
 
 export interface BaseClientEvents {
+    close: void;
     ready: void;
 }
 
-export interface ClientOptions {
+interface UnmanagedClientOptions {
+    type: "unmanaged";
     sessionId: SessionId;
-    socket?: ClientSocket;
-    connected?: boolean;
+    reconnect?: boolean;
+    socket: ClientSocket;
+    connected: boolean;
 }
+interface ManagedClientOptions {
+    type: "managed";
+    sessionId: SessionId;
+    reconnect?: boolean;
+}
+type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
 
 export abstract class BaseClient<
     T extends BaseClientEvents = BaseClientEvents
 > extends EmitterBase<T> {
     private sessionId: SessionId;
     private client: ClientSocket;
+
     private connected: boolean;
+    private reconnect: boolean;
+
     private inflightRequests: Map<RequestId, RequestHandle> = new Map();
 
     public constructor(options: ClientOptions) {
         super();
         this.sessionId = options.sessionId;
+        this.reconnect =
+            typeof options.reconnect === "boolean" ? options.reconnect : true;
 
-        if (options.socket) {
+        if (options.type === "unmanaged") {
             this.client = options.socket;
-            this.connected =
-                typeof options.connected === "boolean"
-                    ? options.connected
-                    : true;
+            this.connected = options.connected;
         } else {
             this.client = new JsonSocket(new net.Socket());
-            this.connected =
-                typeof options.connected === "boolean"
-                    ? options.connected
-                    : false;
+            this.connected = false;
         }
 
         this.setup();
@@ -93,9 +101,14 @@ export abstract class BaseClient<
     private setup(): void {
         this.client.on("close", () => {
             this.connected = false;
-            this.connectAfterDelay();
+            this.fire("close", undefined);
+
+            if (this.reconnect) {
+                this.connectAfterDelay();
+            }
         });
         this.client.on("ready", () => {
+            this.connected = true;
             this.fire("ready", undefined);
         });
         this.client.on("data", (msg: Message) => {

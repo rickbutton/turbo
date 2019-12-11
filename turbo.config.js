@@ -8,14 +8,12 @@ module.exports = {
                 name: "debug",
                 panes: [
                     {
-                        type: "component", 
-                        component: "codeview",
-                    }, {
                         type: "component",
-                        component: "foobar",
-                    }
+                        component: "repl",
+                    },
                 ],
-            }, {
+            },
+            {
                 name: "sh",
                 panes: [
                     {

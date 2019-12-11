@@ -9,6 +9,15 @@ interface ClientEvents extends BaseClientEvents {
 }
 
 export class Client extends BaseClient<ClientEvents> {
+    public eval(expr: string): Promise<string> {
+        const req: Request = {
+            type: "eval",
+            id: this.generateRequestId(),
+            payload: expr,
+        };
+        return this.sendRequest(req);
+    }
+
     protected handleUnhandledMessage(msg: Message): void {
         if (msg.type === "sync") {
             this.fire("sync", msg.payload.state);

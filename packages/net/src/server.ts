@@ -14,7 +14,7 @@ const logger = createLogger("daemon");
 class Connection extends BaseClient {
     public readonly id: ClientId;
     constructor(id: ClientId, sessionId: SessionId, socket: ClientSocket) {
-        super({ sessionId, socket });
+        super({ type: "unmanaged", sessionId, socket, connected: true });
         this.id = id;
     }
 
@@ -31,14 +31,17 @@ class Connection extends BaseClient {
         logger.error(`unhandled message with type ${msg.type}`);
     }
     protected handleUnhandledRequest(req: Request): string | undefined {
-        logger.error(`unhandled request with type ${req.type}`);
-        return undefined;
+        if (req.type === "eval") {
+            return `EVAL: ${req.payload}`;
+        } else {
+            logger.error(`unhandled request with type ${req.type}`);
+            return undefined;
+        }
     }
 }
 
 interface DataEvent {
     connection: Connection;
-    data: any;
 }
 interface ConnectedEvent {
     client: Connection;
@@ -113,17 +116,10 @@ export class Server extends EmitterBase<ServerEvents> {
         );
         logger.info(`client:${client.id} connected`);
 
-        socket.on("close", () => {
+        client.on("close", () => {
             logger.verbose(`connection with client:${client.id} closed`);
             this.connections.delete(client);
             this.fire("disconnected", { client });
-        });
-        socket.on("data", (data: any) => {
-            logger.verbose(`received data from client:${client.id}`);
-            this.fire("data", { data, connection: client });
-        });
-        socket.on("error", (error: Error) => {
-            logger.warn(`client:${client.id} error, ${error}`);
         });
 
         this.connections.add(client);

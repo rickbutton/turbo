@@ -2,7 +2,7 @@ import * as chalk from "chalk";
 
 const log = console.log;
 
-class Logger {
+export class Logger {
     private context: string;
     constructor(context: string) {
         this.context = context;

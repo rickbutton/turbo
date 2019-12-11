@@ -18,7 +18,12 @@ function exampleSyncMessage(): SyncMessage {
 describe("Client", () => {
     test("handles the sync event", () => {
         const socket = mockSocket();
-        const client = new Client({ sessionId: "id" as SessionId, socket });
+        const client = new Client({
+            type: "unmanaged",
+            sessionId: "id" as SessionId,
+            socket,
+            connected: true,
+        });
 
         const listener = jest.fn();
         client.on("sync", listener);

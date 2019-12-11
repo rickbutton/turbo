@@ -117,5 +117,5 @@ export function getTurbo(): Turbo {
 
 export { Emitter, EmitterBase } from "./emitter";
 export { JsonSocket } from "./jsonsocket";
-export { createLogger } from "./logger";
+export { createLogger, Logger } from "./logger";
 export { reduce, State, Action, IncrementAction } from "./state";

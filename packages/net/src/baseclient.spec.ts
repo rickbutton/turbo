@@ -20,6 +20,7 @@ describe("BaseClient", () => {
         const socket = mockSocket();
 
         const client = new TestClient({
+            type: "unmanaged",
             sessionId: "id" as SessionId,
             socket,
             connected: false,
@@ -33,7 +34,12 @@ describe("BaseClient", () => {
     test("correctly sends a ping", async () => {
         const socket = mockSocket();
 
-        const client = new TestClient({ sessionId: "id" as SessionId, socket });
+        const client = new TestClient({
+            type: "unmanaged",
+            sessionId: "id" as SessionId,
+            socket,
+            connected: true,
+        });
 
         const promise = client.ping("foobar");
 
@@ -65,7 +71,12 @@ describe("BaseClient", () => {
 
     test("handles the ready event", () => {
         const socket = mockSocket();
-        const client = new TestClient({ sessionId: "id" as SessionId, socket });
+        const client = new TestClient({
+            type: "unmanaged",
+            sessionId: "id" as SessionId,
+            socket,
+            connected: true,
+        });
 
         const listener = jest.fn();
         client.on("ready", listener);
@@ -82,7 +93,12 @@ describe("BaseClient", () => {
 
     test("automatically reconnects on close", () => {
         const socket = mockSocket();
-        const _ = new TestClient({ sessionId: "id" as SessionId, socket });
+        const _ = new TestClient({
+            type: "unmanaged",
+            sessionId: "id" as SessionId,
+            socket,
+            connected: true,
+        });
 
         const callbacks = socket.on.mock.calls.filter(
             ([name]) => name === "close",
