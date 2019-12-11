@@ -1,7 +1,7 @@
 import { BaseClient } from "./baseclient";
 import { mockSocket } from "./mocksocket";
 import { Message, Request, ResponsePayload, RequestId } from "./shared";
-import { SessionId } from "@jug/core";
+import { SessionId } from "@turbo/core";
 
 jest.useFakeTimers();
 jest.mock("uuid/v4", () => jest.fn().mockReturnValue("uuid-foo-bar"));
@@ -27,7 +27,7 @@ describe("BaseClient", () => {
         client.connect();
 
         expect(socket.connect.mock.calls.length).toBe(1);
-        expect(socket.connect.mock.calls).toEqual([["/tmp/jug-session-id"]]);
+        expect(socket.connect.mock.calls).toEqual([["/tmp/turbo-session-id"]]);
     });
 
     test("correctly sends a ping", async () => {

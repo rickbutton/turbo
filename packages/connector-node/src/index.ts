@@ -4,7 +4,7 @@ import {
     Environment,
     TargetFactory,
     EmitterBase,
-} from "@jug/core";
+} from "@turbo/core";
 import * as child from "child_process";
 
 // need to add events for updates to the target

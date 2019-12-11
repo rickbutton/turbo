@@ -3,23 +3,23 @@ import { start } from "./commands/start";
 import { component } from "./commands/component";
 import { daemon } from "./commands/daemon";
 import { target } from "./commands/target";
-import { getJug } from "@jug/core";
+import { getTurbo } from "@turbo/core";
 
-const jug = getJug();
+const turbo = getTurbo();
 
 yargs
-    .command(["start", "$0"], "start a jug session", {}, () => {
-        start(jug);
+    .command(["start", "$0"], "start a turbo session", {}, () => {
+        start(turbo);
     })
-    .command("component <name>", "start a jug component", {}, argv => {
+    .command("component <name>", "start a turbo component", {}, argv => {
         const name = argv.name as string;
-        return component(jug, name);
+        return component(turbo, name);
     })
-    .command("daemon", "start a jug daemon", {}, () => {
-        return daemon(jug);
+    .command("daemon", "start a turbo daemon", {}, () => {
+        return daemon(turbo);
     })
-    .command("target", "start a jug target watcher", {}, () => {
+    .command("target", "start a turbo target watcher", {}, () => {
         " test";
-        return target(jug);
+        return target(turbo);
     })
     .help().argv;

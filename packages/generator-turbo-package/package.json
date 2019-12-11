@@ -1,5 +1,5 @@
 {
-  "name": "generator-jug-package",
+  "name": "generator-turbo-package",
   "version": "1.0.0",
   "files": [
     "generators"

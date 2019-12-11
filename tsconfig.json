@@ -3,7 +3,7 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@jug/*": ["packages/*/src"]
+      "@turbo/*": ["packages/*/src"]
     }
   }
 }

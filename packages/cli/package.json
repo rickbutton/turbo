@@ -1,5 +1,5 @@
 {
-  "name": "@jug/cli",
+  "name": "@turbo/cli",
   "version": "1.0.0",
   "main": "lib/index",
   "types": "lib/index",
@@ -25,9 +25,9 @@
     "typescript": "^3.6.4"
   },
   "dependencies": {
-    "@jug/net": "^1.0.0",
-    "@jug/core": "^1.0.0",
-    "@jug/tmux": "^1.0.0",
+    "@turbo/net": "^1.0.0",
+    "@turbo/core": "^1.0.0",
+    "@turbo/tmux": "^1.0.0",
     "@types/ffi": "^0.2.2",
     "@types/ref": "^0.0.28",
     "@types/ref-array": "^0.0.28",

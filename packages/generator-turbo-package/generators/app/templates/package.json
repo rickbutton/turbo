@@ -1,5 +1,5 @@
 {
-  "name": "@jug/<%= name %>",
+  "name": "@turbo/<%= name %>",
   "version": "1.0.0",
   "main": "lib/index",
   "types": "lib/index",

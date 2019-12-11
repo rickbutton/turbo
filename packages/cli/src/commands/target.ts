@@ -1,4 +1,4 @@
-import { Jug } from "@jug/core";
+import { Turbo } from "@turbo/core";
 import * as process from "process";
 
 function waitForEnter(callback: () => void): void {
@@ -19,9 +19,9 @@ function waitForEnter(callback: () => void): void {
     wait();
 }
 
-export function target(jug: Jug): void {
-    const targetFactory = jug.config.target;
-    const target = targetFactory(jug.env);
+export function target(turbo: Turbo): void {
+    const targetFactory = turbo.config.target;
+    const target = targetFactory(turbo.env);
 
     target.on("started", () => {});
     target.on("stopped", () => {

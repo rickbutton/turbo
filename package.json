@@ -1,5 +1,5 @@
 {
-  "name": "jug",
+  "name": "turbo",
   "private": true,
   "workspaces": [
     "packages/*"
@@ -12,12 +12,12 @@
     "lint": "eslint . --ext .ts",
     "test": "jest",
     "test-watch": "jest --watch",
-    "create-pkg": "yo ./packages/generator-jug-package"
+    "create-pkg": "yo ./packages/generator-turbo-package"
   },
   "jest": {
     "testPathIgnorePatterns": [
       "/node_modules/",
-      "/generator-jug-package/"
+      "/generator-turbo-package/"
     ],
     "testMatch": [
       "**/src/**/(*.)(spec|test).ts"

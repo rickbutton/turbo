@@ -1,4 +1,4 @@
-import { createLogger, State } from "@jug/core";
+import { createLogger, State } from "@turbo/core";
 import { Message, Request } from "./shared";
 import { BaseClient, BaseClientEvents } from "./baseclient";
 

@@ -1,5 +1,5 @@
 {
-  "name": "@jug/connector-node",
+  "name": "@turbo/connector-node",
   "version": "1.0.0",
   "main": "lib/index",
   "types": "lib/index",
@@ -25,6 +25,6 @@
     "typescript": "^3.6.4"
   },
   "dependencies": {
-    "@jug/core": "^1.0.0"
+    "@turbo/core": "^1.0.0"
   }
 }

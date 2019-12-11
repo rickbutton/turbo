@@ -1,5 +1,5 @@
 {
-  "name": "@jug/core",
+  "name": "@turbo/core",
   "version": "1.0.0",
   "main": "lib/index",
   "types": "lib/index",

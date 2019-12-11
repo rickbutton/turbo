@@ -1,16 +1,16 @@
 import {
     SessionId,
     Environment,
-    Jug,
+    Turbo,
     Pane,
     Layout,
     createLogger,
-} from "@jug/core";
+} from "@turbo/core";
 
 const logger = createLogger("tmux");
 
 export function generateSessionId(): SessionId {
-    return `jug-${[...Array(4)]
+    return `turbo-${[...Array(4)]
         .map(() => (~~(Math.random() * 36)).toString(36))
         .join("")}` as SessionId;
 }
@@ -45,24 +45,24 @@ function generatePaneCommands(panes: Pane[], env: Environment): string[][] {
     return commands;
 }
 
-function generateTargetCommands(jug: Jug): string[] {
+function generateTargetCommands(turbo: Turbo): string[] {
     return [
         ";",
         "new-window",
         "-n",
         "target",
-        getNodeCommand(jug.env, ["target"]),
+        getNodeCommand(turbo.env, ["target"]),
     ];
 }
 
 function generateSessionArgs(
     id: SessionId,
     layout: Layout,
-    jug: Jug,
+    turbo: Turbo,
 ): string[] {
     const firstWindow = layout.windows[0];
     const firstPane = firstWindow.panes[0];
-    const firstCommand = generatePaneCommand(firstPane, jug.env);
+    const firstCommand = generatePaneCommand(firstPane, turbo.env);
 
     let commands: string[][] = [
         [
@@ -77,13 +77,13 @@ function generateSessionArgs(
     ];
     const paneCommands = generatePaneCommands(
         firstWindow.panes.slice(1),
-        jug.env,
+        turbo.env,
     );
     commands = commands.concat(paneCommands);
 
     for (const window of layout.windows.slice(1)) {
         const firstPane = window.panes[0];
-        const firstCommand = generatePaneCommand(firstPane, jug.env);
+        const firstCommand = generatePaneCommand(firstPane, turbo.env);
         const windowCommand = [
             ";",
             "new-window",
@@ -95,7 +95,7 @@ function generateSessionArgs(
 
         const paneCommands = generatePaneCommands(
             window.panes.slice(1),
-            jug.env,
+            turbo.env,
         );
         commands = commands.concat(paneCommands);
     }
@@ -104,8 +104,8 @@ function generateSessionArgs(
         "new-window",
         "-n",
         "daemon",
-        ...generateDaemonCommand(jug.env),
-        ...generateTargetCommands(jug),
+        ...generateDaemonCommand(turbo.env),
+        ...generateTargetCommands(turbo),
         ";",
         "select-window",
         "-t:0",
@@ -123,11 +123,11 @@ interface TmuxStartCommand {
 export function generateTmuxStartCommand(
     id: SessionId,
     layout: Layout,
-    jug: Jug,
+    turbo: Turbo,
 ): TmuxStartCommand {
     return {
         command: "tmux",
-        args: generateSessionArgs(id, layout, jug),
+        args: generateSessionArgs(id, layout, turbo),
     };
 }
 

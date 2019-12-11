@@ -1,6 +1,6 @@
 import * as net from "net";
 import * as uuidv4 from "uuid/v4";
-import { JsonSocket, createLogger, SessionId, EmitterBase } from "@jug/core";
+import { JsonSocket, createLogger, SessionId, EmitterBase } from "@turbo/core";
 import {
     Message,
     RequestId,
@@ -75,7 +75,7 @@ export abstract class BaseClient<
 
     public connect(): void {
         if (!this.connected) {
-            this.client.connect(`/tmp/jug-session-${this.sessionId}`);
+            this.client.connect(`/tmp/turbo-session-${this.sessionId}`);
         } else {
             throw new Error("attempted to connect already connected socket");
         }

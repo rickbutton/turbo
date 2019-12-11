@@ -5,7 +5,7 @@ import {
     SessionId,
     EmitterBase,
     State,
-} from "@jug/core";
+} from "@turbo/core";
 import { ClientId, Message, Request } from "./shared";
 import { BaseClient, ClientSocket } from "./baseclient";
 
@@ -69,7 +69,7 @@ export class Server extends EmitterBase<ServerEvents> {
 
     public start(): void {
         logger.verbose("daemon started");
-        this.server.listen(`/tmp/jug-session-${this.sessionId}`);
+        this.server.listen(`/tmp/turbo-session-${this.sessionId}`);
     }
 
     public broadcast(data: any): void {

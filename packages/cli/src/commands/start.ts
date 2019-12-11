@@ -1,5 +1,5 @@
-import { generateTmuxStartCommand, generateSessionId } from "@jug/tmux";
-import { Jug, Layout } from "@jug/core";
+import { generateTmuxStartCommand, generateSessionId } from "@turbo/tmux";
+import { Turbo, Layout } from "@turbo/core";
 import * as ffi from "ffi";
 import * as ref from "ref";
 import * as ArrayType from "ref-array";
@@ -44,12 +44,12 @@ function execvp(command: string, args: string[]): void {
     ]);
 }
 
-export function start(jug: Jug): void {
+export function start(turbo: Turbo): void {
     const id = generateSessionId();
 
-    const layout = jug.config.layout || defaultLayout;
+    const layout = turbo.config.layout || defaultLayout;
 
-    const { command, args } = generateTmuxStartCommand(id, layout, jug);
+    const { command, args } = generateTmuxStartCommand(id, layout, turbo);
 
     // replace current process with spawned tmux
     execvp(command, args);

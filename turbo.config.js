@@ -1,4 +1,4 @@
-const node = require("@jug/connector-node").node;
+const node = require("@turbo/connector-node").node;
 
 module.exports = {
     target: node({ script: "test.js", name: "test.js test" }),

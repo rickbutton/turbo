@@ -1,6 +1,6 @@
-import { Server } from "@jug/net";
-import { Jug, createLogger, State, reduce } from "@jug/core";
-import { getCurrentSessionId } from "@jug/tmux";
+import { Server } from "@turbo/net";
+import { Turbo, createLogger, State, reduce } from "@turbo/core";
+import { getCurrentSessionId } from "@turbo/tmux";
 
 const logger = createLogger("daemon");
 
@@ -9,8 +9,8 @@ let state: State = {
     value: 0,
 };
 
-export function daemon(jug: Jug): void {
-    const sessionId = getCurrentSessionId(jug.env);
+export function daemon(turbo: Turbo): void {
+    const sessionId = getCurrentSessionId(turbo.env);
     if (sessionId) {
         const server = new Server(sessionId);
 

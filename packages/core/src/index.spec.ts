@@ -1,5 +1,5 @@
 import { mocked } from "ts-jest/utils";
-import { getJug } from "./index";
+import { getTurbo } from "./index";
 import * as fs from "fs";
 import * as path from "path";
 import * as child from "child_process";
@@ -23,19 +23,19 @@ jest.mock("process", () => ({
 jest.mock("fs", () => ({
     existsSync: jest.fn().mockImplementation((p: fs.PathLike) => {
         const resolved = path.resolve(p.toString());
-        if (resolved === "/tmp/exists/jug.config.js") return true;
+        if (resolved === "/tmp/exists/turbo.config.js") return true;
         return false;
     }),
 }));
 jest.mock(
-    "/tmp/exists/jug.config.js",
+    "/tmp/exists/turbo.config.js",
     () => ({
         target: {},
     }),
     { virtual: true },
 );
 
-describe("Jug", () => {
+describe("Turbo", () => {
     beforeEach(() => {
         mocked(child.execSync).mockClear();
         mocked(fs.existsSync).mockClear();
@@ -43,41 +43,41 @@ describe("Jug", () => {
 
     describe("env", () => {
         test("getVar returns environment variables", () => {
-            const jug = getJug();
-            expect(jug.env.getVar("FOO")).toBe("BAR");
-            expect(jug.env.getVar("foo")).toBe("bar");
-            expect(jug.env.getVar("BAR")).toBe("BAZ");
-            expect(jug.env.getVar("FAIL")).toBe(undefined);
+            const turbo = getTurbo();
+            expect(turbo.env.getVar("FOO")).toBe("BAR");
+            expect(turbo.env.getVar("foo")).toBe("bar");
+            expect(turbo.env.getVar("BAR")).toBe("BAZ");
+            expect(turbo.env.getVar("FAIL")).toBe(undefined);
         });
 
         describe("nodePath returns the correct path", () => {
             process.argv[0] = "/tmp/foo/node";
-            const jug = getJug();
-            expect(jug.env.nodePath).toBe("/tmp/foo/node");
+            const turbo = getTurbo();
+            expect(turbo.env.nodePath).toBe("/tmp/foo/node");
         });
 
         describe("scriptPath returns the correct path", () => {
             process.argv[1] = "/tmp/foo/myScript.js";
-            const jug = getJug();
-            expect(jug.env.scriptPath).toBe("/tmp/foo/myScript.js");
+            const turbo = getTurbo();
+            expect(turbo.env.scriptPath).toBe("/tmp/foo/myScript.js");
         });
 
         describe("execSync invokes the command and returns the stdout", () => {
-            const jug = getJug();
-            expect(jug.env.execSync("TEST")).toBe("FOOTESTBAR");
-            expect(jug.env.execSync("test test")).toBe("FOOtest testBAR");
+            const turbo = getTurbo();
+            expect(turbo.env.execSync("TEST")).toBe("FOOTESTBAR");
+            expect(turbo.env.execSync("test test")).toBe("FOOtest testBAR");
             expect(mocked(child.execSync).mock.calls.length).toBe(2);
         });
     });
     describe("config", () => {
         test("getConfig looks for the config file with the correct resolution order", () => {
-            const _ = getJug();
+            const _ = getTurbo();
 
             expect(mocked(fs.existsSync).mock.calls).toEqual([
-                ["/tmp/exists/foo/bar/baz/jug.config.js"],
-                ["/tmp/exists/foo/bar/jug.config.js"],
-                ["/tmp/exists/foo/jug.config.js"],
-                ["/tmp/exists/jug.config.js"],
+                ["/tmp/exists/foo/bar/baz/turbo.config.js"],
+                ["/tmp/exists/foo/bar/turbo.config.js"],
+                ["/tmp/exists/foo/turbo.config.js"],
+                ["/tmp/exists/turbo.config.js"],
             ]);
         });
     });

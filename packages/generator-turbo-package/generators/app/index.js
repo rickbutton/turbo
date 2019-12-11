@@ -7,7 +7,7 @@ const path = require("path");
 module.exports = class extends Generator {
     prompting() {
         this.log(
-          yosay(`Welcome to the ${chalk.red('generator-jug-package')} generator!`)
+          yosay(`Welcome to the ${chalk.red('generator-turbo-package')} generator!`)
         );
 
         const prompts = [

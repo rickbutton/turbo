@@ -78,7 +78,7 @@ export type TargetFactory = (env: Environment) => Target;
 
 function validateConfig(config: Config): void {
     if (!config.target) {
-        throw new Error("must specify a target in jug config");
+        throw new Error("must specify a target in turbo config");
     }
 }
 
@@ -86,7 +86,7 @@ function getConfig(basePath?: string): Config {
     const dir = basePath || process.cwd();
     const parsed = path.parse(dir);
 
-    const configFileName = "jug.config.js";
+    const configFileName = "turbo.config.js";
 
     const configPath = path.join(dir, configFileName);
 
@@ -97,16 +97,16 @@ function getConfig(basePath?: string): Config {
     } else if (dir !== parsed.root) {
         return getConfig(path.resolve(dir, ".."));
     } else {
-        throw new Error("unable to find jug.config.js");
+        throw new Error("unable to find turbo.config.js");
     }
 }
 
-export interface Jug {
+export interface Turbo {
     env: Environment;
     config: Config;
 }
 
-export function getJug(): Jug {
+export function getTurbo(): Turbo {
     const env = getEnvironment();
     const config = getConfig();
     return {

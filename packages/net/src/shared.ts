@@ -1,4 +1,4 @@
-import { State } from "@jug/core";
+import { State } from "@turbo/core";
 
 declare const __RequestIdSymbol: unique symbol;
 export type RequestId = string & { readonly __tag: typeof __RequestIdSymbol };

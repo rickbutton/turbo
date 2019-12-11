@@ -1,7 +1,7 @@
 import { Client } from "./client";
 import { mockSocket } from "./mocksocket";
 import { SyncMessage } from "./shared";
-import { SessionId } from "@jug/core";
+import { SessionId } from "@turbo/core";
 
 function exampleSyncMessage(): SyncMessage {
     return {

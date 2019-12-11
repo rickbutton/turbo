@@ -1,11 +1,11 @@
-import { Jug, createLogger, State } from "@jug/core";
-import { Client } from "@jug/net";
-import { getCurrentSessionId } from "@jug/tmux";
+import { Turbo, createLogger, State } from "@turbo/core";
+import { Client } from "@turbo/net";
+import { getCurrentSessionId } from "@turbo/tmux";
 
-export function component(jug: Jug, name: string): void {
+export function component(turbo: Turbo, name: string): void {
     const logger = createLogger(`component:${name}`);
 
-    const sessionId = getCurrentSessionId(jug.env);
+    const sessionId = getCurrentSessionId(turbo.env);
     if (sessionId) {
         const client = new Client({ sessionId });
 

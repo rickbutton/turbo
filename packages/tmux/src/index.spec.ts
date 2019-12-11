@@ -3,10 +3,10 @@ import {
     SessionId,
     Environment,
     Config,
-    Jug,
+    Turbo,
     Layout,
     TargetFactory,
-} from "@jug/core";
+} from "@turbo/core";
 
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
@@ -17,12 +17,12 @@ const TEST_ENV: Environment = {
         throw new Error();
     },
     nodePath: "/tmp/node",
-    scriptPath: "/tmp/jug.js",
+    scriptPath: "/tmp/turbo.js",
 };
 const TEST_CONFIG: Config = {
     target: {} as TargetFactory,
 };
-const TEST_JUG: Jug = {
+const TEST_TURBO: Turbo = {
     env: TEST_ENV,
     config: TEST_CONFIG,
 };
@@ -32,12 +32,12 @@ const POST_CMDS = [
     "new-window",
     "-n",
     "daemon",
-    "/tmp/node /tmp/jug.js daemon",
+    "/tmp/node /tmp/turbo.js daemon",
     ";",
     "new-window",
     "-n",
     "target",
-    "/tmp/node /tmp/jug.js target",
+    "/tmp/node /tmp/turbo.js target",
     ";",
     "select-window",
     "-t:0",
@@ -56,7 +56,7 @@ test("generateTmuxStartCommand creates a command for a single pane", () => {
         ],
     };
 
-    expect(generateTmuxStartCommand(id, layout, TEST_JUG)).toEqual({
+    expect(generateTmuxStartCommand(id, layout, TEST_TURBO)).toEqual({
         command: "tmux",
         args: [
             "new-session",
@@ -86,7 +86,7 @@ test("generateTmuxStartCommand creates a command for multiple panes", () => {
         ],
     };
 
-    expect(generateTmuxStartCommand(id, layout, TEST_JUG)).toEqual({
+    expect(generateTmuxStartCommand(id, layout, TEST_TURBO)).toEqual({
         command: "tmux",
         args: [
             "new-session",
@@ -98,7 +98,7 @@ test("generateTmuxStartCommand creates a command for multiple panes", () => {
             "command",
             ";",
             "split-window",
-            "/tmp/node /tmp/jug.js component foobar",
+            "/tmp/node /tmp/turbo.js component foobar",
             ";",
             "split-window",
             "conch",
@@ -129,7 +129,7 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
         ],
     };
 
-    expect(generateTmuxStartCommand(id, layout, TEST_JUG)).toEqual({
+    expect(generateTmuxStartCommand(id, layout, TEST_TURBO)).toEqual({
         command: "tmux",
         args: [
             "new-session",
@@ -141,7 +141,7 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
             "command",
             ";",
             "split-window",
-            "/tmp/node /tmp/jug.js component foobar",
+            "/tmp/node /tmp/turbo.js component foobar",
             ";",
             "split-window",
             "conch",
