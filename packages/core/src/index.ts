@@ -6,7 +6,7 @@ import * as fs from "fs";
 import { Emitter } from "./emitter";
 
 declare const __sessionIdTag: unique symbol;
-export type SessionId = string & { __tag: typeof __sessionIdTag };
+export type SessionId = string & { readonly __tag: typeof __sessionIdTag };
 
 export interface Environment {
     readonly nodePath: string;

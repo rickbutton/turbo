@@ -1,22 +1,50 @@
 import * as net from "net";
-import { JsonSocket, createLogger, SessionId, EmitterBase } from "@jug/core";
+import {
+    JsonSocket,
+    createLogger,
+    SessionId,
+    EmitterBase,
+    State,
+} from "@jug/core";
+import { ClientId, Message, Request } from "./shared";
+import { BaseClient, ClientSocket } from "./baseclient";
 
 const logger = createLogger("daemon");
 
-interface Client {
-    id: number;
-    send(data: any): void;
+class Connection extends BaseClient {
+    public readonly id: ClientId;
+    constructor(id: ClientId, sessionId: SessionId, socket: ClientSocket) {
+        super({ sessionId, socket });
+        this.id = id;
+    }
+
+    public broadcast(state: State): void {
+        this.sendMessage({
+            type: "sync",
+            payload: {
+                state,
+            },
+        });
+    }
+
+    protected handleUnhandledMessage(msg: Message): void {
+        logger.error(`unhandled message with type ${msg.type}`);
+    }
+    protected handleUnhandledRequest(req: Request): string | undefined {
+        logger.error(`unhandled request with type ${req.type}`);
+        return undefined;
+    }
 }
 
 interface DataEvent {
-    client: Client;
+    connection: Connection;
     data: any;
 }
 interface ConnectedEvent {
-    client: Client;
+    client: Connection;
 }
 interface DisconnectedEvent {
-    client: Client;
+    client: Connection;
 }
 interface ServerEvents {
     data: DataEvent;
@@ -25,10 +53,10 @@ interface ServerEvents {
 }
 
 export class Server extends EmitterBase<ServerEvents> {
-    private lastClientId = 0;
+    private lastClientId: ClientId = 0 as ClientId;
     private sessionId: SessionId;
     private server: net.Server = this.createServer();
-    private connections: Set<Client> = new Set();
+    private connections: Set<Connection> = new Set();
 
     constructor(sessionId: SessionId) {
         super();
@@ -46,7 +74,7 @@ export class Server extends EmitterBase<ServerEvents> {
 
     public broadcast(data: any): void {
         for (const c of this.connections) {
-            c.send(data);
+            c.broadcast(data);
         }
     }
 
@@ -76,14 +104,13 @@ export class Server extends EmitterBase<ServerEvents> {
     private handleSocket(rawSocket: net.Socket): void {
         const socket = new JsonSocket(rawSocket);
 
-        this.lastClientId++;
+        this.lastClientId = (this.lastClientId + 1) as ClientId;
 
-        const client: Client = {
-            id: this.lastClientId,
-            send(data: any): void {
-                socket.write(data);
-            },
-        };
+        const client = new Connection(
+            this.lastClientId,
+            this.sessionId,
+            socket,
+        );
         logger.info(`client:${client.id} connected`);
 
         socket.on("close", () => {
@@ -93,7 +120,7 @@ export class Server extends EmitterBase<ServerEvents> {
         });
         socket.on("data", (data: any) => {
             logger.verbose(`received data from client:${client.id}`);
-            this.fire("data", { data, client });
+            this.fire("data", { data, connection: client });
         });
         socket.on("error", (error: Error) => {
             logger.warn(`client:${client.id} error, ${error}`);

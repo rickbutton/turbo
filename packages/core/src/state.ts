@@ -9,6 +9,7 @@ export interface IncrementAction {
 }
 
 export type Action = IncrementAction;
+export type ActionType = Action["name"];
 
 export function reduce(state: State, action: Action): State {
     if (state.counter !== action.counter) {

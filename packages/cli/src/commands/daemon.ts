@@ -20,7 +20,7 @@ export function daemon(jug: Jug): void {
         });
 
         server.on("connected", event => {
-            event.client.send(state);
+            event.client.broadcast(state);
         });
         server.on("disconnected", _ => {});
 

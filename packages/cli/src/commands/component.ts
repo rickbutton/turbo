@@ -7,11 +7,10 @@ export function component(jug: Jug, name: string): void {
 
     const sessionId = getCurrentSessionId(jug.env);
     if (sessionId) {
-        const client = new Client(sessionId);
+        const client = new Client({ sessionId });
 
-        client.on("ready", () => {});
-        client.on("state", (state: State) => {
-            logger.verbose(JSON.stringify(state));
+        client.on("sync", (_: State) => {
+            logger.debug("received sync message");
         });
 
         client.connect();

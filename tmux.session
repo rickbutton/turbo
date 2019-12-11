@@ -1,4 +1,4 @@
-new-window -n "watch" "vim"
-split-window -h "yarn test-watch"
-split-window -v "yarn watch"
+new-window -n "watch" "nvim;zsh"
+new-window "yarn test-watch;zsh"
+split-window -v "yarn watch;zsh"
 new-window -n "sh"
