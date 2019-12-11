@@ -6,12 +6,6 @@ tests for cli, logger, connector-node, net/server
 
 layout strings (at least a good default)
 
-better name!
-
-ipc with daemon, shared state?
-- clients should identify themselves by type
- - so that # of running instances per type can be limited, i.e. 1 target
-
 cdp integration into shared state
 components render, send actions to daemon?
 - do i need to care about reconciling conflicts?
