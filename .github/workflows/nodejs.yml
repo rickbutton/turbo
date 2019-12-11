@@ -21,7 +21,5 @@ jobs:
                run: |
                    yarn
                    yarn bootstrap
-                   ls node_modules
-                   ls node_modules/@turbo
                    yarn build
                    yarn test
