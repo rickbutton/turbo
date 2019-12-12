@@ -8,8 +8,7 @@ function exampleSyncMessage(): SyncMessage {
         type: "sync",
         payload: {
             state: {
-                counter: 0,
-                value: 0,
+                targets: {},
             },
         },
     };

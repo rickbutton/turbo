@@ -1,4 +1,4 @@
-import { State } from "@turbo/core";
+import { State, Action } from "@turbo/core";
 
 declare const __RequestIdSymbol: unique symbol;
 export type RequestId = string & { readonly __tag: typeof __RequestIdSymbol };
@@ -25,6 +25,7 @@ interface SyncData {
     state: State;
 }
 export type SyncMessage = BaseMessage<"sync", SyncData>;
+export type ActionMessage = BaseMessage<"action", Action>;
 
 export type PingRequest = BaseRequest<"ping", string>;
 export type PingResponse = BaseResponse<string>;
@@ -39,7 +40,11 @@ export type ResponsePayload = Response["payload"];
 export type RequestMessage = BaseMessage<"req", Request>;
 export type ResponseMessage = BaseMessage<"res", Response>;
 
-export type Message = SyncMessage | RequestMessage | ResponseMessage;
+export type Message =
+    | SyncMessage
+    | ActionMessage
+    | RequestMessage
+    | ResponseMessage;
 
 export interface RequestHandle {
     resolve(data: any): void;

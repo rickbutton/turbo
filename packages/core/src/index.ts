@@ -2,7 +2,7 @@ import * as process from "process";
 import * as child from "child_process";
 import * as path from "path";
 import * as fs from "fs";
-
+import * as uuidv4 from "uuid/v4";
 import { Emitter } from "./emitter";
 
 declare const __sessionIdTag: unique symbol;
@@ -63,12 +63,17 @@ export interface Config {
     layout?: Layout;
 }
 
+export interface StartedEvent {
+    interface: {
+        host: string;
+        port: number;
+    };
+}
 export interface TargetEvents {
-    started: undefined;
+    started: StartedEvent;
     stopped: undefined;
 }
 export interface Target extends Emitter<TargetEvents> {
-    // TODO: add event handler on/off here
     readonly name: string;
     readonly isRunning: boolean;
     readonly start: () => void;
@@ -115,7 +120,12 @@ export function getTurbo(): Turbo {
     };
 }
 
+export function uuid(): string {
+    return uuidv4();
+}
+
 export { Emitter, EmitterBase } from "./emitter";
 export { JsonSocket } from "./jsonsocket";
 export { createLogger, Logger } from "./logger";
-export { reduce, State, Action, IncrementAction } from "./state";
+export { State, TargetConnection, Action } from "./state";
+export { StateReducer } from "./reducer";

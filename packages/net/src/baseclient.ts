@@ -1,6 +1,11 @@
 import * as net from "net";
-import * as uuidv4 from "uuid/v4";
-import { JsonSocket, createLogger, SessionId, EmitterBase } from "@turbo/core";
+import {
+    JsonSocket,
+    createLogger,
+    SessionId,
+    EmitterBase,
+    uuid,
+} from "@turbo/core";
 import {
     Message,
     RequestId,
@@ -22,6 +27,7 @@ export interface ClientSocketEvents {
 }
 export interface ClientSocket {
     connect(path: string): void;
+    end(): void;
     write(obj: any): void;
 
     on<T extends keyof ClientSocketEvents>(
@@ -49,6 +55,8 @@ interface ManagedClientOptions {
 }
 type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
 
+const MAX_RETRIES = 2;
+
 export abstract class BaseClient<
     T extends BaseClientEvents = BaseClientEvents
 > extends EmitterBase<T> {
@@ -57,6 +65,7 @@ export abstract class BaseClient<
 
     private connected: boolean;
     private reconnect: boolean;
+    private numRetries = 0;
 
     private inflightRequests: Map<RequestId, RequestHandle> = new Map();
 
@@ -82,11 +91,20 @@ export abstract class BaseClient<
     }
 
     public connect(): void {
+        if (this.numRetries > MAX_RETRIES) {
+            throw new Error("exceeded max retries for connection");
+        }
+
         if (!this.connected) {
             this.client.connect(`/tmp/turbo-session-${this.sessionId}`);
+            this.numRetries++;
         } else {
             throw new Error("attempted to connect already connected socket");
         }
+    }
+
+    public close(): void {
+        this.client.end();
     }
 
     public async ping(payload: string): Promise<PingResponse["payload"]> {
@@ -108,6 +126,7 @@ export abstract class BaseClient<
             }
         });
         this.client.on("ready", () => {
+            this.numRetries = 0;
             this.connected = true;
             this.fire("ready", undefined);
         });
@@ -119,23 +138,23 @@ export abstract class BaseClient<
         });
     }
 
-    private connectAfterDelay(): void {
+    public connectAfterDelay(): void {
         setTimeout(() => {
             this.connect();
-        }, 500);
+        }, 500); // TODO: don't hardcode this timeout
     }
 
     private handleInboundMessage(msg: Message): void {
         if (msg.type === "req") {
-            const payload = this.handleInboundRequest(msg.payload);
-            if (payload) {
-                const res = {
-                    id: msg.payload.id,
-                    payload,
-                };
-                this.sendResponse(res);
-            }
-            this.handleInboundRequest(msg.payload);
+            this.handleInboundRequest(msg.payload).then(payload => {
+                if (payload) {
+                    const res = {
+                        id: msg.payload.id,
+                        payload,
+                    };
+                    this.sendResponse(res);
+                }
+            }); // TODO: return error response
         } else if (msg.type === "res") {
             this.handleInboundResponse(msg.payload);
         } else {
@@ -145,11 +164,11 @@ export abstract class BaseClient<
 
     private handleInboundRequest(
         req: Request,
-    ): Response["payload"] | undefined {
+    ): Promise<Response["payload"] | undefined> {
         if (req.type === "ping") {
-            return req.payload;
+            return Promise.resolve(req.payload);
         } else {
-            return this.handleUnhandledRequest(req);
+            return Promise.resolve(this.handleUnhandledRequest(req));
         }
     }
 
@@ -169,7 +188,7 @@ export abstract class BaseClient<
     protected abstract handleUnhandledMessage(msg: Message): void;
     protected abstract handleUnhandledRequest(
         req: Request,
-    ): ResponsePayload | undefined;
+    ): Promise<ResponsePayload | undefined> | undefined;
 
     protected sendRequest<R extends Response>(
         req: Request,
@@ -212,6 +231,6 @@ export abstract class BaseClient<
     }
 
     protected generateRequestId(): RequestId {
-        return uuidv4() as RequestId;
+        return uuid() as RequestId;
     }
 }

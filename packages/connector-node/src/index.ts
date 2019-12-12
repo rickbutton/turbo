@@ -41,14 +41,20 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
 
     private spawn(): void {
         const nodePath = this.config.nodePath || this.env.nodePath;
+        const args = ["--inspect-brk", this.config.script];
 
-        this.process = child.spawn(nodePath, [this.config.script], {
+        this.process = child.spawn(nodePath, args, {
             stdio: "inherit",
         });
         this.process.on("exit", this.onExit.bind(this));
         this.process.on("kill", this.onExit.bind(this));
 
-        this.fire("started", undefined);
+        this.fire("started", {
+            interface: {
+                host: "127.0.0.1", // TODO: options for these
+                port: 9229,
+            },
+        });
     }
 
     private onExit(): void {

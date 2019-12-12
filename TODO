@@ -2,7 +2,9 @@
 allow specifying target location in layout
 - will likely need to runtime restrict to 1 target
 
-tests for cli, logger, connector-node, net/server
+tests for cli, logger, connector-node, net, core/reducer, core/v8
+
+types for CDP
 
 layout strings (at least a good default)
 
@@ -22,3 +24,5 @@ better logger
 better "press enter to restart message"
 
 ls command
+
+automatically kill tmux when entire session dies?

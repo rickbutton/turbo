@@ -5,65 +5,34 @@ import {
     SessionId,
     EmitterBase,
     State,
+    TargetConnection,
+    Action,
 } from "@turbo/core";
-import { ClientId, Message, Request } from "./shared";
-import { BaseClient, ClientSocket } from "./baseclient";
+import { ClientId } from "./shared";
+import { ServerConnection } from "./serverconnection";
 
 const logger = createLogger("daemon");
 
-class Connection extends BaseClient {
-    public readonly id: ClientId;
-    constructor(id: ClientId, sessionId: SessionId, socket: ClientSocket) {
-        super({ type: "unmanaged", sessionId, socket, connected: true });
-        this.id = id;
-    }
-
-    public broadcast(state: State): void {
-        this.sendMessage({
-            type: "sync",
-            payload: {
-                state,
-            },
-        });
-    }
-
-    protected handleUnhandledMessage(msg: Message): void {
-        logger.error(`unhandled message with type ${msg.type}`);
-    }
-    protected handleUnhandledRequest(req: Request): string | undefined {
-        if (req.type === "eval") {
-            return `EVAL: ${req.payload}`;
-        } else {
-            logger.error(`unhandled request with type ${req.type}`);
-            return undefined;
-        }
-    }
-}
-
-interface DataEvent {
-    connection: Connection;
-}
-interface ConnectedEvent {
-    client: Connection;
-}
-interface DisconnectedEvent {
-    client: Connection;
-}
 interface ServerEvents {
-    data: DataEvent;
-    connected: ConnectedEvent;
-    disconnected: DisconnectedEvent;
+    action: Action;
+    connected: ServerConnection;
+    disconnected: ServerConnection;
+}
+interface Selectors {
+    currentConnection(): TargetConnection | null;
 }
 
 export class Server extends EmitterBase<ServerEvents> {
     private lastClientId: ClientId = 0 as ClientId;
     private sessionId: SessionId;
+    private selectors: Selectors;
     private server: net.Server = this.createServer();
-    private connections: Set<Connection> = new Set();
+    private connections: Set<ServerConnection> = new Set();
 
-    constructor(sessionId: SessionId) {
+    constructor(sessionId: SessionId, selectors: Selectors) {
         super();
         this.sessionId = sessionId;
+        this.selectors = selectors;
 
         process.on("SIGHUP", () => {
             this.server.close();
@@ -71,13 +40,12 @@ export class Server extends EmitterBase<ServerEvents> {
     }
 
     public start(): void {
-        logger.verbose("daemon started");
         this.server.listen(`/tmp/turbo-session-${this.sessionId}`);
     }
 
-    public broadcast(data: any): void {
+    public broadcast(state: State): void {
         for (const c of this.connections) {
-            c.broadcast(data);
+            c.broadcast(state);
         }
     }
 
@@ -109,20 +77,24 @@ export class Server extends EmitterBase<ServerEvents> {
 
         this.lastClientId = (this.lastClientId + 1) as ClientId;
 
-        const client = new Connection(
+        const client = new ServerConnection(
             this.lastClientId,
             this.sessionId,
             socket,
+            this.selectors,
         );
         logger.info(`client:${client.id} connected`);
 
         client.on("close", () => {
             logger.verbose(`connection with client:${client.id} closed`);
             this.connections.delete(client);
-            this.fire("disconnected", { client });
+            this.fire("disconnected", client);
+        });
+        client.on("action", (action: Action) => {
+            this.fire("action", action);
         });
 
         this.connections.add(client);
-        this.fire("connected", { client });
+        this.fire("connected", client);
     }
 }

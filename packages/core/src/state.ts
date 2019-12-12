@@ -1,28 +1,53 @@
+export interface TargetConnection {
+    eval(script: string): Promise<string>;
+}
+
+interface BaseTarget {
+    id: string;
+    interface: {
+        host: string;
+        port: number;
+    };
+}
+export interface ConnectedTarget extends BaseTarget {
+    connected: true;
+    connection: TargetConnection;
+}
+export interface DisconnectedTarget extends BaseTarget {
+    connected: false;
+}
+export type Target = ConnectedTarget | DisconnectedTarget;
+
 export interface State {
-    counter: number;
-    value: number;
+    targets: { [id: string]: Target };
 }
 
-export interface IncrementAction {
-    name: "increment";
-    counter: number;
+export interface TargetStartedAction {
+    type: "tarstart";
+    id: string;
+    interface: {
+        host: string;
+        port: number;
+    };
 }
 
-export type Action = IncrementAction;
-export type ActionType = Action["name"];
-
-export function reduce(state: State, action: Action): State {
-    if (state.counter !== action.counter) {
-        return state;
-    }
-
-    switch (action.name) {
-        case "increment":
-            return {
-                counter: state.counter + 1,
-                value: state.value + 1,
-            };
-        default:
-            return state;
-    }
+export interface TargetStoppedAction {
+    type: "tarstop";
+    id: string;
 }
+export interface TargetConnectedAction {
+    type: "tarconn";
+    id: string;
+    connection: TargetConnection;
+}
+export interface TargetDisconnectedAction {
+    type: "tardis";
+    id: string;
+}
+
+export type Action =
+    | TargetStartedAction
+    | TargetStoppedAction
+    | TargetConnectedAction
+    | TargetDisconnectedAction;
+export type ActionType = Action["type"];

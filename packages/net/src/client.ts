@@ -1,5 +1,5 @@
-import { createLogger, State } from "@turbo/core";
-import { Message, Request } from "./shared";
+import { createLogger, State, Action } from "@turbo/core";
+import { Message, Request, ResponsePayload } from "./shared";
 import { BaseClient, BaseClientEvents } from "./baseclient";
 
 const logger = createLogger("client");
@@ -9,6 +9,12 @@ interface ClientEvents extends BaseClientEvents {
 }
 
 export class Client extends BaseClient<ClientEvents> {
+    public action(action: Action): void {
+        this.sendMessage({
+            type: "action",
+            payload: action,
+        });
+    }
     public eval(expr: string): Promise<string> {
         const req: Request = {
             type: "eval",
@@ -25,8 +31,10 @@ export class Client extends BaseClient<ClientEvents> {
             logger.error(`unhandled message with type ${msg.type}`);
         }
     }
-    protected handleUnhandledRequest(req: Request): string | undefined {
+    protected handleUnhandledRequest(
+        req: Request,
+    ): Promise<ResponsePayload | undefined> {
         logger.error(`unhandled request with type ${req.type}`);
-        return undefined;
+        return Promise.resolve(undefined);
     }
 }

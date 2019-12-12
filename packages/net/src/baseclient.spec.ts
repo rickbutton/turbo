@@ -2,15 +2,16 @@ import { BaseClient } from "./baseclient";
 import { mockSocket } from "./mocksocket";
 import { Message, Request, ResponsePayload, RequestId } from "./shared";
 import { SessionId } from "@turbo/core";
+import * as core from "@turbo/core";
 
 jest.useFakeTimers();
-jest.mock("uuid/v4", () => jest.fn().mockReturnValue("uuid-foo-bar"));
+jest.spyOn(core, "uuid").mockReturnValue("uuid-foo-bar");
 
 class TestClient extends BaseClient {
     protected handleUnhandledMessage(msg: Message): void {
         throw new Error(JSON.stringify(msg));
     }
-    protected handleUnhandledRequest(_: Request): ResponsePayload {
+    protected handleUnhandledRequest(_: Request): Promise<ResponsePayload> {
         throw new Error("foo");
     }
 }

@@ -1,4 +1,4 @@
-import { Turbo, createLogger, Logger, State } from "@turbo/core";
+import { Turbo, createLogger, Logger } from "@turbo/core";
 import { Client } from "@turbo/net";
 import { getCurrentSessionId } from "@turbo/tmux";
 import * as readline from "readline";
@@ -16,7 +16,9 @@ const components: { [key: string]: Component } = {
                 client
                     .eval(expr)
                     .then(value => {
-                        console.log("=> " + JSON.stringify(value));
+                        // TODO: this will eventually be a real remote object
+                        // so we can't always just show it
+                        console.log("=> " + value);
                         read();
                     })
                     .catch(error => {
@@ -33,19 +35,28 @@ export function component(turbo: Turbo, name: string): void {
     const logger = createLogger(`component:${name}`);
 
     const sessionId = getCurrentSessionId(turbo.env);
-    if (sessionId) {
-        const client = new Client({ type: "managed", sessionId });
+    const component = components[name];
 
-        client.on("sync", (_: State) => {});
-        client.on("ready", () => {
-            const component = components[name];
-            if (component) {
-                component(client, logger);
-            }
-        });
-
-        client.connect();
-    } else {
-        logger.error("unable to identify current session");
+    if (!component) {
+        logger.error(`unknown component: ${name}`);
+        return;
     }
+    if (!sessionId) {
+        logger.error("unable to identify current session");
+        return;
+    }
+
+    const client = new Client({ type: "managed", sessionId });
+
+    client.on("ready", () => {
+        component(client, logger);
+    });
+
+    rl.on("SIGINT", () => {
+        rl.close();
+        client.close();
+        process.exit();
+    });
+
+    client.connectAfterDelay();
 }
