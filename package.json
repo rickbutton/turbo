@@ -7,7 +7,7 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "clean": "lerna run clean",
-    "build": "lerna run build",
+    "build": "lerna run clean && lerna run compile",
     "watch": "lerna run compile && lerna run --stream --parallel compile-watch",
     "lint": "eslint . --ext .ts",
     "test": "jest",
