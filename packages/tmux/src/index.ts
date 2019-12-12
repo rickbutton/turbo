@@ -20,19 +20,16 @@ function getNodeCommand(env: Environment, args: string[]): string {
 }
 
 function generateDaemonCommand(env: Environment): string[] {
-    const shell = env.getVar("SHELL") || "sh";
-    return [`${env.nodePath} ${env.scriptPath} daemon;${shell}`];
+    return [`${env.nodePath} ${env.scriptPath} daemon`];
 }
 
 function generatePaneCommand(pane: Pane, env: Environment): string[] {
-    const shell = env.getVar("SHELL") || "sh";
     if (pane.type === "component") {
-        return [
-            `${getNodeCommand(env, ["component", pane.component])};${shell}`,
-        ];
+        return [`${getNodeCommand(env, ["component", pane.component])}`];
     } else if (pane.type === "exec") {
         return [pane.command];
     } else if (pane.type === "shell") {
+        const shell = env.getVar("SHELL") || "sh";
         return [shell];
     } else {
         return [];
@@ -50,13 +47,12 @@ function generatePaneCommands(panes: Pane[], env: Environment): string[][] {
 }
 
 function generateTargetCommands(turbo: Turbo): string[] {
-    const shell = turbo.env.getVar("SHELL") || "sh";
     return [
         ";",
         "new-window",
         "-n",
         "target",
-        `${getNodeCommand(turbo.env, ["target"])};${shell}`,
+        getNodeCommand(turbo.env, ["target"]),
     ];
 }
 
