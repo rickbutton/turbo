@@ -20,6 +20,11 @@ export function repl(
     }
 
     rl.on("line", (line: string) => {
+        if (/^\s*$/.test(line)) {
+            read();
+            return;
+        }
+
         const state = getState();
 
         if (!state) {
