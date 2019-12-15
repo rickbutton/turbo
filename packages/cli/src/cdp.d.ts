@@ -18,6 +18,7 @@ declare module "chrome-remote-interface" {
         Runtime: ProtocolProxyApi.RuntimeApi;
     }
 
-    const mod: (options: Options) => Promise<Client>;
+    export type Factory = (options: Options) => Promise<Client>;
+    const mod: Factory;
     export default mod;
 }
