@@ -1137,6 +1137,13 @@
   dependencies:
     "@babel/types" "^7.3.0"
 
+"@types/blessed@^0.1.14":
+  version "0.1.14"
+  resolved "https://registry.yarnpkg.com/@types/blessed/-/blessed-0.1.14.tgz#0744d383bcee43cd607d580e60bca4b4279933e6"
+  integrity sha512-35F5irGQMNzIoQ1v64Se8Ct2JgstX8XRfhMW4dieBDzMhq6H+0ugt+9tp6BsNkNOnefyM3MVbecHgS0AKHHd7A==
+  dependencies:
+    "@types/node" "*"
+
 "@types/color-name@^1.1.1":
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
@@ -5815,6 +5822,11 @@ neo-async@^2.6.0:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/neo-async/-/neo-async-2.6.1.tgz#ac27ada66167fa8849a6addd837f6b189ad2081c"
   integrity sha512-iyam8fBuCUpWeKPGpaNMetEocMt364qkCsfL9JuhjXX6dRnguRVOfk2GZaDpPjcOKiiXCPINZC1GczQ7iTq3Zw==
+
+neo-blessed@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/neo-blessed/-/neo-blessed-0.2.0.tgz#30f9495fdd104494402b62c6273a9c9b82de4f2b"
+  integrity sha512-C2kC4K+G2QnNQFXUIxTQvqmrdSIzGTX1ZRKeDW6ChmvPRw8rTkTEJzbEQHiHy06d36PCl/yMOCjquCRV8SpSQw==
 
 next-tick@~1.0.0:
   version "1.0.0"

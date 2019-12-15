@@ -16,7 +16,7 @@ export function component(turbo: Turbo, name: string): void {
     const components: { [key: string]: Component } = {
         repl(client: Client, logger: Logger): void {
             function read(): void {
-                rl.question("-> ", expr => {
+                rl.question("> ", expr => {
                     if (!state) {
                         read(); // TODO: show user error
                         return;
@@ -24,7 +24,6 @@ export function component(turbo: Turbo, name: string): void {
 
                     if (expr === "/pause") {
                         client.pause().then(() => {
-                            console.log("=> paused");
                             read();
                         });
                         return;
@@ -39,7 +38,6 @@ export function component(turbo: Turbo, name: string): void {
 
                     if (expr === "/resume") {
                         client.resume().then(() => {
-                            console.log("=> resumed");
                             read();
                         });
                         return;
@@ -52,7 +50,7 @@ export function component(turbo: Turbo, name: string): void {
                         .then(value => {
                             // TODO: this will eventually be a real remote object
                             // so we can't always just show it
-                            console.log("=> " + value.value);
+                            console.log(value.value);
                             read();
                         })
                         .catch(error => {
