@@ -27,7 +27,6 @@
   "dependencies": {
     "@types/uuid": "^3.4.6",
     "chalk": "^3.0.0",
-    "chrome-remote-interface": "^0.28.1",
     "uuid": "^3.3.3"
   }
 }

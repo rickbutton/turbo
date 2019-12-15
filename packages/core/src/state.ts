@@ -1,53 +1,26 @@
-export interface TargetConnection {
+import { Emitter } from "./emitter";
+
+export interface TargetConnectionEvents {
+    close: undefined;
+}
+export interface TargetConnection extends Emitter<TargetConnectionEvents> {
     eval(script: string): Promise<string>;
 }
 
-interface BaseTarget {
-    id: string;
-    interface: {
-        host: string;
-        port: number;
-    };
+interface TargetDescriptor {
+    connected: boolean;
 }
-export interface ConnectedTarget extends BaseTarget {
-    connected: true;
-    connection: TargetConnection;
-}
-export interface DisconnectedTarget extends BaseTarget {
-    connected: false;
-}
-export type Target = ConnectedTarget | DisconnectedTarget;
 
 export interface State {
-    targets: { [id: string]: Target };
+    target: TargetDescriptor;
 }
 
-export interface TargetStartedAction {
-    type: "tarstart";
-    id: string;
-    interface: {
-        host: string;
-        port: number;
-    };
-}
-
-export interface TargetStoppedAction {
-    type: "tarstop";
-    id: string;
-}
 export interface TargetConnectedAction {
-    type: "tarconn";
-    id: string;
-    connection: TargetConnection;
+    type: "target-connect";
 }
 export interface TargetDisconnectedAction {
-    type: "tardis";
-    id: string;
+    type: "target-disconnect";
 }
 
-export type Action =
-    | TargetStartedAction
-    | TargetStoppedAction
-    | TargetConnectedAction
-    | TargetDisconnectedAction;
+export type Action = TargetConnectedAction | TargetDisconnectedAction;
 export type ActionType = Action["type"];

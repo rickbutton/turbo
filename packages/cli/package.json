@@ -25,13 +25,14 @@
     "typescript": "^3.6.4"
   },
   "dependencies": {
-    "@turbo/net": "^1.0.0",
     "@turbo/core": "^1.0.0",
+    "@turbo/net": "^1.0.0",
     "@turbo/tmux": "^1.0.0",
     "@types/ffi": "^0.2.2",
     "@types/ref": "^0.0.28",
     "@types/ref-array": "^0.0.28",
     "@types/yargs": "^13.0.3",
+    "chrome-remote-interface": "^0.28.1",
     "ffi": "github:lxe/node-ffi#node-12",
     "ref": "github:lxe/ref#node-12",
     "ref-array": "github:lxe/ref-array#node-12",

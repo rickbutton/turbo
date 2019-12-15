@@ -1,6 +1,12 @@
 import { BaseClient } from "./baseclient";
 import { mockSocket } from "./mocksocket";
-import { Message, Request, ResponsePayload, RequestId } from "./shared";
+import {
+    ResponsePayload,
+    RequestId,
+    AnyMessage,
+    AnyRequest,
+    RequestType,
+} from "./shared";
 import { SessionId } from "@turbo/core";
 import * as core from "@turbo/core";
 
@@ -8,10 +14,12 @@ jest.useFakeTimers();
 jest.spyOn(core, "uuid").mockReturnValue("uuid-foo-bar");
 
 class TestClient extends BaseClient {
-    protected handleUnhandledMessage(msg: Message): void {
+    protected handleUnhandledMessage(msg: AnyMessage): void {
         throw new Error(JSON.stringify(msg));
     }
-    protected handleUnhandledRequest(_: Request): Promise<ResponsePayload> {
+    protected handleUnhandledRequest(
+        _: AnyRequest,
+    ): Promise<ResponsePayload<RequestType>> {
         throw new Error("foo");
     }
 }
@@ -44,10 +52,11 @@ describe("BaseClient", () => {
 
         const promise = client.ping("foobar");
 
-        const response: Message = {
+        const response: AnyMessage = {
             type: "res",
             payload: {
                 id: "uuid-foo-bar" as RequestId,
+                type: "ping",
                 payload: "foobar",
             },
         };

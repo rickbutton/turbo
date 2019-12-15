@@ -1,30 +1,39 @@
+import { Action, SessionId, State, createLogger } from "@turbo/core";
 import {
-    Action,
-    SessionId,
-    State,
-    createLogger,
-    TargetConnection,
-} from "@turbo/core";
-import { ClientId, Request, Message, ResponsePayload } from "./shared";
+    ClientId,
+    AnyMessage,
+    isMessageType,
+    AnyRequest,
+    Response,
+    RequestType,
+    isRequestType,
+    Request,
+    ResponsePayload,
+} from "./shared";
 import { BaseClient, BaseClientEvents, ClientSocket } from "./baseclient";
 
 const logger = createLogger("serverconnection");
 
-interface Selectors {
-    currentConnection(): TargetConnection | null;
+export type RequestHandler<T extends RequestType> = (
+    connection: ServerConnection,
+    req: Request<T>,
+) => Promise<ResponsePayload<T>>;
+export interface ServerRequestHandler {
+    registerTarget: RequestHandler<"registerTarget">;
+    updateTarget: RequestHandler<"updateTarget">;
+    eval: RequestHandler<"eval">;
 }
-
 interface ConnectionEvents extends BaseClientEvents {
     action: Action;
 }
 export class ServerConnection extends BaseClient<ConnectionEvents> {
     public readonly id: ClientId;
-    private selectors: Selectors;
+    private handler: ServerRequestHandler;
     constructor(
         id: ClientId,
         sessionId: SessionId,
         socket: ClientSocket,
-        selectors: Selectors,
+        handler: ServerRequestHandler,
     ) {
         super({
             type: "unmanaged",
@@ -34,7 +43,7 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
             reconnect: false,
         });
         this.id = id;
-        this.selectors = selectors;
+        this.handler = handler;
     }
 
     public broadcast(state: State): void {
@@ -46,23 +55,22 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
         });
     }
 
-    protected handleUnhandledMessage(msg: Message): void {
-        if (msg.type === "action") {
+    protected handleUnhandledMessage(msg: AnyMessage): void {
+        if (isMessageType("action", msg)) {
             this.fire("action", msg.payload);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }
     }
     protected handleUnhandledRequest(
-        req: Request,
-    ): Promise<ResponsePayload | undefined> {
-        if (req.type === "eval") {
-            const connection = this.selectors.currentConnection();
-            if (connection) {
-                return connection.eval(req.payload);
-            } else {
-                return Promise.resolve("unable to evaluate, no connection");
-            }
+        req: AnyRequest,
+    ): Promise<Response<RequestType>["payload"] | undefined> {
+        if (isRequestType("registerTarget", req)) {
+            return this.handler.registerTarget(this, req);
+        } else if (isRequestType("updateTarget", req)) {
+            return this.handler.updateTarget(this, req);
+        } else if (isRequestType("eval", req)) {
+            return this.handler.eval(this, req);
         } else {
             logger.error(`unhandled request with type ${req.type}`);
             return Promise.resolve(undefined);

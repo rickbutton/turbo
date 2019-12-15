@@ -6,48 +6,73 @@ export type RequestId = string & { readonly __tag: typeof __RequestIdSymbol };
 declare const __ClientIdSymbol: unique symbol;
 export type ClientId = number & { readonly __tag: typeof __ClientIdSymbol };
 
-interface BaseMessage<T extends string, D> {
-    type: T;
-    payload: D;
-}
-
-interface BaseRequest<T extends string, P> {
-    id: RequestId;
-    type: T;
-    payload: P;
-}
-interface BaseResponse<P> {
-    id: RequestId;
-    payload: P;
-}
-
-interface SyncData {
-    state: State;
-}
-export type SyncMessage = BaseMessage<"sync", SyncData>;
-export type ActionMessage = BaseMessage<"action", Action>;
-
-export type PingRequest = BaseRequest<"ping", string>;
-export type PingResponse = BaseResponse<string>;
-
-export type EvalRequest = BaseRequest<"eval", string>;
-export type EvalResponse = BaseResponse<string>;
-
-export type Request = PingRequest | EvalRequest;
-export type Response = PingResponse | EvalResponse;
-export type ResponsePayload = Response["payload"];
-
-export type RequestMessage = BaseMessage<"req", Request>;
-export type ResponseMessage = BaseMessage<"res", Response>;
-
-export type Message =
-    | SyncMessage
-    | ActionMessage
-    | RequestMessage
-    | ResponseMessage;
-
 export interface RequestHandle {
     resolve(data: any): void;
     reject(error: any): void;
     cancelTimeout(): void;
+}
+
+interface RequestResponse<Req, Res> {
+    req: Req;
+    res: Res;
+}
+interface RequestResponseSchema {
+    ping: RequestResponse<string, string>;
+    eval: RequestResponse<{ value: string }, { value: string }>;
+
+    registerTarget: RequestResponse<undefined, { error?: string }>;
+    updateTarget: RequestResponse<
+        { host: string; port: number } | undefined,
+        { error?: string }
+    >;
+}
+export type RequestType = keyof RequestResponseSchema;
+export interface Request<T extends RequestType> {
+    id: RequestId;
+    type: T;
+    payload: RequestResponseSchema[T]["req"];
+}
+export interface Response<T extends RequestType> {
+    id: RequestId;
+    type: T;
+    payload: RequestResponseSchema[T]["res"];
+}
+export type AnyRequest = Request<RequestType>;
+export type AnyResponse = Response<RequestType>;
+export type RequestPayload<T extends RequestType> = Request<T>["payload"];
+export type ResponsePayload<T extends RequestType> = Response<T>["payload"];
+
+interface SyncData {
+    state: State;
+}
+interface MessageSchema {
+    sync: SyncData;
+    action: Action;
+    req: AnyRequest;
+    res: AnyResponse;
+}
+type MessageType = keyof MessageSchema;
+export interface Message<T extends MessageType> {
+    type: T;
+    payload: MessageSchema[T];
+}
+export type AnyMessage = Message<MessageType>;
+
+export function isRequest(message: AnyMessage): message is Message<"req"> {
+    return message.type == "req";
+}
+export function isResponse(message: AnyMessage): message is Message<"res"> {
+    return message.type == "res";
+}
+export function isMessageType<T extends MessageType>(
+    type: T,
+    msg: AnyMessage,
+): msg is Message<T> {
+    return msg.type === type;
+}
+export function isRequestType<T extends RequestType>(
+    type: T,
+    req: AnyRequest,
+): req is Request<T> {
+    return req.type === type;
 }

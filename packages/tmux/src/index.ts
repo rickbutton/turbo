@@ -15,8 +15,14 @@ export function generateSessionId(): SessionId {
         .join("")}` as SessionId;
 }
 
-function getNodeCommand(env: Environment, args: string[]): string {
-    return `${env.nodePath} ${env.scriptPath} ${args.join(" ")}`;
+function getNodeCommand(
+    env: Environment,
+    args: string[],
+    inspect = false,
+): string {
+    return `${env.nodePath}${inspect ? "--inspect-brk " : " "}${
+        env.scriptPath
+    } ${args.join(" ")}`;
 }
 
 function generateDaemonCommand(env: Environment): string[] {

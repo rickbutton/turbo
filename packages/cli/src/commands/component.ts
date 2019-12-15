@@ -18,7 +18,7 @@ const components: { [key: string]: Component } = {
                     .then(value => {
                         // TODO: this will eventually be a real remote object
                         // so we can't always just show it
-                        console.log("=> " + value);
+                        console.log("=> " + value.value);
                         read();
                     })
                     .catch(error => {

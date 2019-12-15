@@ -1,14 +1,14 @@
 import { Client } from "./client";
 import { mockSocket } from "./mocksocket";
-import { SyncMessage } from "./shared";
+import { Message } from "./shared";
 import { SessionId } from "@turbo/core";
 
-function exampleSyncMessage(): SyncMessage {
+function exampleSyncMessage(): Message<"sync"> {
     return {
         type: "sync",
         payload: {
             state: {
-                targets: {},
+                target: { connected: false },
             },
         },
     };

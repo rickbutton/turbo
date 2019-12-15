@@ -4,8 +4,11 @@ import {
     Environment,
     TargetFactory,
     EmitterBase,
+    createLogger,
 } from "@turbo/core";
 import * as child from "child_process";
+
+const logger = createLogger("connector-node");
 
 // need to add events for updates to the target
 class ManagedScript extends EmitterBase<TargetEvents> implements Target {
@@ -49,12 +52,16 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
         this.process.on("exit", this.onExit.bind(this));
         this.process.on("kill", this.onExit.bind(this));
 
-        this.fire("started", {
-            interface: {
-                host: "127.0.0.1", // TODO: options for these
-                port: 9229,
-            },
-        });
+        // wait a little bit for the target node process
+        // to finish opening a port
+        setTimeout(() => {
+            this.fire("started", {
+                interface: {
+                    host: "127.0.0.1", // TODO: options for these
+                    port: 9229,
+                },
+            });
+        }, 500); // TODO: don't hardcode
     }
 
     private onExit(): void {

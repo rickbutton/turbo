@@ -127,5 +127,10 @@ export function uuid(): string {
 export { Emitter, EmitterBase } from "./emitter";
 export { JsonSocket } from "./jsonsocket";
 export { createLogger, Logger } from "./logger";
-export { State, TargetConnection, Action } from "./state";
+export {
+    State,
+    TargetConnection,
+    TargetConnectionEvents,
+    Action,
+} from "./state";
 export { StateReducer } from "./reducer";

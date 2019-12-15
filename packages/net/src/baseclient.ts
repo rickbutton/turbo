@@ -7,13 +7,18 @@ import {
     uuid,
 } from "@turbo/core";
 import {
-    Message,
     RequestId,
     RequestHandle,
     Response,
     Request,
-    PingResponse,
     ResponsePayload,
+    RequestType,
+    AnyMessage,
+    AnyResponse,
+    AnyRequest,
+    isRequest,
+    isResponse,
+    isRequestType,
 } from "./shared";
 
 const logger = createLogger("baseclient");
@@ -107,13 +112,12 @@ export abstract class BaseClient<
         this.client.end();
     }
 
-    public async ping(payload: string): Promise<PingResponse["payload"]> {
-        const res = await this.sendRequest<PingResponse>({
+    public async ping(payload: string): Promise<ResponsePayload<"ping">> {
+        return await this.sendRequest<"ping">({
             type: "ping",
             id: this.generateRequestId(),
             payload,
         });
-        return res;
     }
 
     private setup(): void {
@@ -130,7 +134,7 @@ export abstract class BaseClient<
             this.connected = true;
             this.fire("ready", undefined);
         });
-        this.client.on("data", (msg: Message) => {
+        this.client.on("data", (msg: AnyMessage) => {
             this.handleInboundMessage(msg);
         });
         this.client.on("error", (error: Error) => {
@@ -144,18 +148,18 @@ export abstract class BaseClient<
         }, 500); // TODO: don't hardcode this timeout
     }
 
-    private handleInboundMessage(msg: Message): void {
-        if (msg.type === "req") {
+    private handleInboundMessage(msg: AnyMessage): void {
+        if (isRequest(msg)) {
             this.handleInboundRequest(msg.payload).then(payload => {
                 if (payload) {
-                    const res = {
-                        id: msg.payload.id,
+                    this.sendResponse(
+                        msg.payload.id,
+                        msg.payload.type,
                         payload,
-                    };
-                    this.sendResponse(res);
+                    );
                 }
             }); // TODO: return error response
-        } else if (msg.type === "res") {
+        } else if (isResponse(msg)) {
             this.handleInboundResponse(msg.payload);
         } else {
             this.handleUnhandledMessage(msg);
@@ -163,16 +167,16 @@ export abstract class BaseClient<
     }
 
     private handleInboundRequest(
-        req: Request,
-    ): Promise<Response["payload"] | undefined> {
-        if (req.type === "ping") {
+        req: AnyRequest,
+    ): Promise<AnyResponse["payload"] | undefined> {
+        if (isRequestType("ping", req)) {
             return Promise.resolve(req.payload);
         } else {
             return Promise.resolve(this.handleUnhandledRequest(req));
         }
     }
 
-    private handleInboundResponse(res: Response): void {
+    private handleInboundResponse(res: AnyResponse): void {
         const handle = this.inflightRequests.get(res.id);
         if (handle) {
             this.inflightRequests.delete(res.id);
@@ -185,15 +189,15 @@ export abstract class BaseClient<
         }
     }
 
-    protected abstract handleUnhandledMessage(msg: Message): void;
+    protected abstract handleUnhandledMessage(msg: AnyMessage): void;
     protected abstract handleUnhandledRequest(
-        req: Request,
-    ): Promise<ResponsePayload | undefined> | undefined;
+        req: Request<RequestType>,
+    ): Promise<Response<RequestType>["payload"] | undefined> | undefined;
 
-    protected sendRequest<R extends Response>(
-        req: Request,
-    ): Promise<R["payload"]> {
-        return new Promise<R["payload"]>((resolve, reject) => {
+    protected sendRequest<T extends RequestType>(
+        req: Request<T>,
+    ): Promise<ResponsePayload<T>> {
+        return new Promise<ResponsePayload<T>>((resolve, reject) => {
             const id = setTimeout(() => {
                 reject(new Error("response timeout reached"));
             }, RESPONSE_TIMEOUT);
@@ -213,14 +217,22 @@ export abstract class BaseClient<
         });
     }
 
-    private sendResponse(res: Response): void {
+    private sendResponse<T extends RequestType>(
+        id: RequestId,
+        type: T,
+        payload: ResponsePayload<T>,
+    ): void {
         this.sendMessage({
             type: "res",
-            payload: res,
+            payload: {
+                id,
+                type,
+                payload,
+            },
         });
     }
 
-    protected sendMessage(obj: Message): void {
+    protected sendMessage(obj: AnyMessage): void {
         if (this.connected) {
             this.client.write(obj);
         } else {

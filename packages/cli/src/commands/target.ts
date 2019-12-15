@@ -1,8 +1,9 @@
-import { Turbo, uuid, StartedEvent, createLogger, Target } from "@turbo/core";
+import { Turbo, StartedEvent, createLogger, Target } from "@turbo/core";
 import { getCurrentSessionId } from "@turbo/tmux";
 import { Client } from "@turbo/net";
 import * as process from "process";
 
+// TODO: this shouldn't touch stdin config, because sharing stdio with child
 function waitForEnter(callback: () => void): void {
     function wait(): void {
         process.stdin.setRawMode(true);
@@ -33,8 +34,17 @@ function setup(turbo: Turbo): Target {
 }
 
 export function target(turbo: Turbo): void {
-    const id = uuid();
     const logger = createLogger("target");
+    function handleException(error: Error): void {
+        logger.error(error.message);
+        process.exit(1);
+    }
+    function handleError(res: { error?: string }): void {
+        if (res.error) {
+            logger.error(res.error);
+            process.exit(1);
+        }
+    }
 
     const sessionId = getCurrentSessionId(turbo.env);
 
@@ -42,37 +52,43 @@ export function target(turbo: Turbo): void {
         const target = setup(turbo);
         const client = new Client({ type: "managed", sessionId });
 
-        target.on("started", (event: StartedEvent) => {
-            client.action({
-                type: "tarstart",
-                id,
-                interface: {
-                    host: event.interface.host,
-                    port: event.interface.port,
-                },
-            });
-        });
-        target.on("stopped", () => {
-            client.action({
-                type: "tarstop",
-                id,
-            });
-        });
-
         client.on("ready", () => {
-            target.start();
-        });
-        client.on("close", () => {
-            target.stop();
-        });
+            client
+                .registerTarget()
+                .then(handleError)
+                .catch(handleException)
+                .then(() => {
+                    target.on("started", (event: StartedEvent) => {
+                        client
+                            .updateTarget({
+                                host: event.interface.host,
+                                port: event.interface.port,
+                            })
+                            .then(handleError)
+                            .catch(handleException);
+                    });
 
-        process.on("SIGINT", () => {
-            if (!target.isRunning) {
-                process.exit();
-            } else {
-                target.stop();
-                client.close();
-            }
+                    target.on("stopped", () => {
+                        client
+                            .updateTarget(undefined)
+                            .then(handleError)
+                            .catch(handleException);
+                    });
+
+                    client.on("close", () => {
+                        target.stop();
+                    });
+
+                    process.on("SIGINT", () => {
+                        if (!target.isRunning) {
+                            process.exit();
+                        } else {
+                            target.stop();
+                        }
+                    });
+
+                    target.start();
+                });
         });
 
         client.connectAfterDelay();

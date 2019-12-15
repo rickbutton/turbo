@@ -4,6 +4,7 @@ type EmitterMap<T> = { [K in keyof T]: Set<EmitterCallback<T[K]>> };
 export interface Emitter<T> {
     on<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
     off<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
+    clear<N extends keyof T>(name: N): void;
     fire<N extends keyof T>(name: N, event: T[N]): void;
 }
 
@@ -25,6 +26,9 @@ export abstract class EmitterBase<T> implements Emitter<T> {
                 delete this.map[name];
             }
         }
+    }
+    clear<N extends keyof T>(name: N): void {
+        delete this.map[name];
     }
     fire<N extends keyof T>(name: N, event: T[N]): void {
         if (this.map[name]) {

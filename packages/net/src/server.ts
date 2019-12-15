@@ -5,11 +5,10 @@ import {
     SessionId,
     EmitterBase,
     State,
-    TargetConnection,
     Action,
 } from "@turbo/core";
 import { ClientId } from "./shared";
-import { ServerConnection } from "./serverconnection";
+import { ServerConnection, ServerRequestHandler } from "./serverconnection";
 
 const logger = createLogger("daemon");
 
@@ -18,21 +17,18 @@ interface ServerEvents {
     connected: ServerConnection;
     disconnected: ServerConnection;
 }
-interface Selectors {
-    currentConnection(): TargetConnection | null;
-}
 
 export class Server extends EmitterBase<ServerEvents> {
     private lastClientId: ClientId = 0 as ClientId;
     private sessionId: SessionId;
-    private selectors: Selectors;
     private server: net.Server = this.createServer();
     private connections: Set<ServerConnection> = new Set();
+    private handler: ServerRequestHandler;
 
-    constructor(sessionId: SessionId, selectors: Selectors) {
+    constructor(sessionId: SessionId, handler: ServerRequestHandler) {
         super();
         this.sessionId = sessionId;
-        this.selectors = selectors;
+        this.handler = handler;
 
         process.on("SIGHUP", () => {
             this.server.close();
@@ -81,7 +77,7 @@ export class Server extends EmitterBase<ServerEvents> {
             this.lastClientId,
             this.sessionId,
             socket,
-            this.selectors,
+            this.handler,
         );
         logger.info(`client:${client.id} connected`);
 
