@@ -28,7 +28,6 @@
     "@turbo/core": "^1.0.0",
     "@turbo/net": "^1.0.0",
     "@turbo/tmux": "^1.0.0",
-    "@types/blessed": "^0.1.14",
     "@types/ffi": "^0.2.2",
     "@types/ref": "^0.0.28",
     "@types/ref-array": "^0.0.28",
@@ -37,8 +36,6 @@
     "cli-highlight": "^2.1.4",
     "devtools-protocol": "^0.0.724935",
     "ffi": "github:lxe/node-ffi#node-12",
-    "neo-blessed": "^0.2.0",
-    "node-color-readline": "^1.0.1",
     "ref": "github:lxe/ref#node-12",
     "ref-array": "github:lxe/ref-array#node-12",
     "yargs": "^14.2.0"
