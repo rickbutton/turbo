@@ -132,7 +132,7 @@ export function daemon(turbo: Turbo): void {
     server.on("connected", conn => {
         conn.broadcast(reducer.state);
     });
-    server.on("disconnected", _ => {});
+    //server.on("disconnected", _ => {});
 
     server.on("action", (action: Action) => {
         reducer.action(action);
