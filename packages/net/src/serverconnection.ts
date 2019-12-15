@@ -22,6 +22,8 @@ export interface ServerRequestHandler {
     registerTarget: RequestHandler<"registerTarget">;
     updateTarget: RequestHandler<"updateTarget">;
     eval: RequestHandler<"eval">;
+    pause: RequestHandler<"pause">;
+    resume: RequestHandler<"resume">;
 }
 interface ConnectionEvents extends BaseClientEvents {
     action: Action;
@@ -71,6 +73,10 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
             return this.handler.updateTarget(this, req);
         } else if (isRequestType("eval", req)) {
             return this.handler.eval(this, req);
+        } else if (isRequestType("pause", req)) {
+            return this.handler.pause(this, req);
+        } else if (isRequestType("resume", req)) {
+            return this.handler.resume(this, req);
         } else {
             logger.error(`unhandled request with type ${req.type}`);
             return Promise.resolve(undefined);

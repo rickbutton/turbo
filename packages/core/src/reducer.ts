@@ -29,6 +29,7 @@ export class StateReducer extends EmitterBase<StateReducerEvents> {
                 ...state,
                 target: {
                     connected: true,
+                    runtime: { paused: false },
                 },
             };
         } else if (action.type === "target-disconnect") {
@@ -36,6 +37,28 @@ export class StateReducer extends EmitterBase<StateReducerEvents> {
                 ...state,
                 target: {
                     connected: false,
+                    runtime: { paused: false },
+                },
+            };
+        } else if (action.type === "paused") {
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    runtime: {
+                        paused: true,
+                        callFrames: action.callFrames,
+                    },
+                },
+            };
+        } else if (action.type === "resumed") {
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    runtime: {
+                        paused: false,
+                    },
                 },
             };
         } else {

@@ -46,15 +46,34 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
         const nodePath = this.config.nodePath || this.env.nodePath;
         const args = ["--inspect-brk", this.config.script];
 
-        this.process = child.spawn(nodePath, args, {
-            stdio: "inherit",
-        });
+        logger.info(
+            `starting node process ${nodePath} with args ${args.join(" ")}`,
+        );
+        this.process = child.spawn(nodePath, args);
         this.process.on("exit", this.onExit.bind(this));
         this.process.on("kill", this.onExit.bind(this));
+
+        if (this.process.stdout) {
+            this.process.stdout.on("data", (data: any) => {
+                this.fire("data", data.toString());
+            });
+        }
+        if (this.process.stderr) {
+            this.process.stderr.on("data", (data: any) => {
+                if (
+                    /Waiting for the debugger to disconnect\.\.\.\n$/.test(
+                        data.toString(),
+                    )
+                ) {
+                    this.stop();
+                }
+            });
+        }
 
         // wait a little bit for the target node process
         // to finish opening a port
         setTimeout(() => {
+            logger.info("started");
             this.fire("started", {
                 interface: {
                     host: "127.0.0.1", // TODO: options for these

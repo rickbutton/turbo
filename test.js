@@ -2,8 +2,6 @@ const a = 1;
 const b = 2;
 const c = 3;
 
-console.log("first!");
+debugger;
 
-setTimeout(() => {
-    console.log("log");
-}, 1000);
+console.log("first!");

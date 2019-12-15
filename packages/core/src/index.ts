@@ -72,6 +72,7 @@ export interface StartedEvent {
 export interface TargetEvents {
     started: StartedEvent;
     stopped: undefined;
+    data: string;
 }
 export interface Target extends Emitter<TargetEvents> {
     readonly name: string;
@@ -131,6 +132,8 @@ export {
     State,
     TargetConnection,
     TargetConnectionEvents,
+    CallFrame,
+    CallFrameId,
     Action,
 } from "./state";
 export { StateReducer } from "./reducer";

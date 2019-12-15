@@ -1,4 +1,4 @@
-import { createLogger, State, Action } from "@turbo/core";
+import { createLogger, State, Action, CallFrameId } from "@turbo/core";
 import {
     ResponsePayload,
     AnyMessage,
@@ -43,11 +43,33 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
-    public eval(value: string): Promise<ResponsePayload<"eval">> {
+    public eval(
+        value: string,
+        id: CallFrameId,
+    ): Promise<ResponsePayload<"eval">> {
         return this.sendRequest({
             type: "eval",
             id: this.generateRequestId(),
-            payload: { value },
+            payload: {
+                value,
+                id,
+            },
+        });
+    }
+
+    public pause(): Promise<ResponsePayload<"pause">> {
+        return this.sendRequest({
+            type: "pause",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
+    public resume(): Promise<ResponsePayload<"resume">> {
+        return this.sendRequest({
+            type: "resume",
+            id: this.generateRequestId(),
+            payload: undefined,
         });
     }
 

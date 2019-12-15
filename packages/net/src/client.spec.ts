@@ -8,7 +8,7 @@ function exampleSyncMessage(): Message<"sync"> {
         type: "sync",
         payload: {
             state: {
-                target: { connected: false },
+                target: { connected: false, runtime: { paused: false } },
             },
         },
     };

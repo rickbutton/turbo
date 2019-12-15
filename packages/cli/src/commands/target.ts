@@ -57,38 +57,40 @@ export function target(turbo: Turbo): void {
                 .registerTarget()
                 .then(handleError)
                 .catch(handleException)
-                .then(() => {
-                    target.on("started", (event: StartedEvent) => {
-                        client
-                            .updateTarget({
-                                host: event.interface.host,
-                                port: event.interface.port,
-                            })
-                            .then(handleError)
-                            .catch(handleException);
-                    });
+                .then(() => target.start());
+        });
 
-                    target.on("stopped", () => {
-                        client
-                            .updateTarget(undefined)
-                            .then(handleError)
-                            .catch(handleException);
-                    });
+        target.on("started", (event: StartedEvent) => {
+            client
+                .updateTarget({
+                    host: event.interface.host,
+                    port: event.interface.port,
+                })
+                .then(handleError)
+                .catch(handleException);
+        });
 
-                    client.on("close", () => {
-                        target.stop();
-                    });
+        target.on("stopped", () => {
+            client
+                .updateTarget(undefined)
+                .then(handleError)
+                .catch(handleException);
+        });
 
-                    process.on("SIGINT", () => {
-                        if (!target.isRunning) {
-                            process.exit();
-                        } else {
-                            target.stop();
-                        }
-                    });
+        target.on("data", data => {
+            console.log(data);
+        });
 
-                    target.start();
-                });
+        client.on("close", () => {
+            target.stop();
+        });
+
+        process.on("SIGINT", () => {
+            if (!target.isRunning) {
+                process.exit();
+            } else {
+                target.stop();
+            }
         });
 
         client.connectAfterDelay();

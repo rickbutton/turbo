@@ -151,13 +151,7 @@ export abstract class BaseClient<
     private handleInboundMessage(msg: AnyMessage): void {
         if (isRequest(msg)) {
             this.handleInboundRequest(msg.payload).then(payload => {
-                if (payload) {
-                    this.sendResponse(
-                        msg.payload.id,
-                        msg.payload.type,
-                        payload,
-                    );
-                }
+                this.sendResponse(msg.payload.id, msg.payload.type, payload);
             }); // TODO: return error response
         } else if (isResponse(msg)) {
             this.handleInboundResponse(msg.payload);
@@ -192,7 +186,7 @@ export abstract class BaseClient<
     protected abstract handleUnhandledMessage(msg: AnyMessage): void;
     protected abstract handleUnhandledRequest(
         req: Request<RequestType>,
-    ): Promise<Response<RequestType>["payload"] | undefined> | undefined;
+    ): Promise<Response<RequestType>["payload"]>;
 
     protected sendRequest<T extends RequestType>(
         req: Request<T>,
