@@ -1,4 +1,4 @@
-import * as ChromeRemoteInterface from "chrome-remote-interface";
+import CDP, { Client } from "chrome-remote-interface";
 import {
     createLogger,
     TargetConnection,
@@ -7,14 +7,11 @@ import {
 } from "@turbo/core";
 
 const logger = createLogger("v8");
-const CDP = ChromeRemoteInterface as any;
-
-type CDPClient = any;
 
 class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
-    private client: CDPClient;
+    private client: Client;
 
-    constructor(client: CDPClient) {
+    constructor(client: Client) {
         super();
         this.client = client;
 
