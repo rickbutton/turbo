@@ -1,18 +1,9 @@
-
 allow specifying target location in layout
 - will likely need to runtime restrict to 1 target
 
 tests for cli, logger, connector-node, net, core/reducer, core/v8
 
-types for CDP
-
 layout strings (at least a good default)
-
-cdp integration into shared state
-components render, send actions to daemon?
-- do i need to care about reconciling conflicts?
-  - global counter, inc each action
-  - or counter per topic/type of state?
 
 better logger
 better "press enter to restart message"
@@ -20,3 +11,4 @@ better "press enter to restart message"
 ls command
 
 automatically kill tmux when entire session dies?
+- how to determine when session dies?
