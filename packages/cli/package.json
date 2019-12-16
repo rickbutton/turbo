@@ -6,6 +6,9 @@
   "files": [
     "lib"
   ],
+  "bin": {
+    "turbo": "./lib/index.js"
+  },
   "scripts": {
     "build": "npm run clean && npm run compile",
     "clean": "rm -rf ./lib",

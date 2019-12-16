@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as yargs from "yargs";
 import { start } from "./commands/start";
 import { component } from "./commands/component";
