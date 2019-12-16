@@ -2,6 +2,10 @@ import { Turbo, createLogger } from "@turbo/core";
 import { Client } from "@turbo/net";
 import { getCurrentSessionId } from "@turbo/tmux";
 
+import React from "react";
+import { render } from "ink";
+import { ObjectView } from "../components/object";
+
 const logger = createLogger("eval");
 
 export function evaluate(turbo: Turbo, expr: string): void {
@@ -19,8 +23,21 @@ export function evaluate(turbo: Turbo, expr: string): void {
             process.exit(1);
         } else {
             const topCallFrame = runtime.callFrames[0];
-            const { value } = await client.eval(expr, topCallFrame.id);
-            console.log(value);
+            const result = await client.eval(expr, topCallFrame.id);
+
+            if (result.error) {
+                console.log(result.value);
+            } else if (!result.success) {
+                render(
+                    result.value.exception ? (
+                        <ObjectView object={result.value.exception} />
+                    ) : (
+                        <span>{result.value.text}</span>
+                    ),
+                );
+            } else {
+                render(<ObjectView object={result.value} />);
+            }
             client.close();
             process.exit(0);
         }

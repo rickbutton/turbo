@@ -8,6 +8,10 @@ import {
     CallFrame,
     CallFrameId,
     ScriptId,
+    RemoteObject,
+    ObjectId,
+    RemoteException,
+    EvalResponse,
 } from "@turbo/core";
 
 const logger = createLogger("v8");
@@ -23,6 +27,64 @@ function toCallFrame(callFrame: Protocol.Debugger.CallFrame): CallFrame {
             line: callFrame.location.lineNumber,
             column: callFrame.location.columnNumber,
         },
+    };
+}
+
+function toRemoteObject(obj: Protocol.Runtime.RemoteObject): RemoteObject {
+    if (obj.type === "string") {
+        return { type: "string", value: obj.value };
+    } else if (obj.type === "number") {
+        return {
+            type: "number",
+            value: obj.value,
+            description: obj.description || "",
+        };
+    } else if (obj.type === "boolean") {
+        return { type: "boolean", value: obj.value };
+    } else if (obj.type === "symbol") {
+        return {
+            type: "symbol",
+            description: obj.description || "",
+            objectId: (obj.objectId || "") as ObjectId,
+        };
+    } else if (obj.type === "bigint") {
+        return {
+            type: "bigint",
+            value: obj.unserializableValue || "",
+            description: obj.description || "",
+        };
+    } else if (obj.type === "undefined") {
+        return { type: "undefined" };
+    } else if (obj.type === "function") {
+        return {
+            type: "function",
+            className: obj.className || "",
+            description: obj.description || "",
+            objectId: (obj.objectId || "") as ObjectId,
+        };
+    } else if (obj.type === "object") {
+        return {
+            type: "object",
+            className: obj.className || "",
+            subtype: obj.subtype || "",
+            description: obj.description || "",
+            objectId: (obj.objectId || "") as ObjectId,
+        };
+    } else {
+        throw new Error("unknown v8 type: " + obj.type);
+    }
+}
+
+function toRemoteException(
+    obj: Protocol.Runtime.ExceptionDetails,
+): RemoteException {
+    return {
+        text: obj.text,
+        line: obj.lineNumber,
+        column: obj.columnNumber,
+        scriptId: obj.scriptId as ScriptId,
+        url: obj.url,
+        exception: obj.exception ? toRemoteObject(obj.exception) : undefined,
     };
 }
 
@@ -98,7 +160,7 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
         }
     }
 
-    async eval(script: string, id: CallFrameId): Promise<string> {
+    async eval(script: string, id: CallFrameId): Promise<EvalResponse> {
         logger.debug("v8 eval received: " + script);
         const frame = this.findCallFrame(id);
 
@@ -111,12 +173,20 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
                 callFrameId: frame.callFrameId,
             });
             if (exceptionDetails) {
-                return JSON.stringify(exceptionDetails);
+                return {
+                    error: false,
+                    success: false,
+                    value: toRemoteException(exceptionDetails),
+                };
             } else {
-                return JSON.stringify(result);
+                return {
+                    error: false,
+                    success: true,
+                    value: toRemoteObject(result),
+                };
             }
         } else {
-            return "Invalid call frame ID";
+            return { error: true, value: `invalid call frame: ${id}` };
         }
     }
 

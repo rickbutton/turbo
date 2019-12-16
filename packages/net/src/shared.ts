@@ -1,4 +1,11 @@
-import { State, Action, CallFrameId, ScriptId } from "@turbo/core";
+import {
+    State,
+    Action,
+    CallFrameId,
+    ScriptId,
+    RemoteObject,
+    RemoteException,
+} from "@turbo/core";
 
 declare const __RequestIdSymbol: unique symbol;
 export type RequestId = string & { readonly __tag: typeof __RequestIdSymbol };
@@ -16,6 +23,10 @@ interface EvalRequest {
     value: string;
     id: CallFrameId;
 }
+export type EvalResponse =
+    | { error: false; success: true; value: RemoteObject }
+    | { error: false; success: false; value: RemoteException }
+    | { error: true; value: string };
 
 interface RequestResponse<Req, Res> {
     req: Req;
@@ -24,7 +35,7 @@ interface RequestResponse<Req, Res> {
 interface RequestResponseSchema {
     ping: RequestResponse<string, string>;
 
-    eval: RequestResponse<EvalRequest, { value: string }>;
+    eval: RequestResponse<EvalRequest, EvalResponse>;
     pause: RequestResponse<void, void>;
     resume: RequestResponse<void, void>;
     stepInto: RequestResponse<void, void>;

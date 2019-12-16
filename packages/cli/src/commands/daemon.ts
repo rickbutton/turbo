@@ -100,11 +100,12 @@ export function daemon(turbo: Turbo): void {
         req: Request<"eval">,
     ): Promise<ResponsePayload<"eval">> {
         if (targetConn) {
-            return {
-                value: await targetConn.eval(req.payload.value, req.payload.id),
-            };
+            return await targetConn.eval(req.payload.value, req.payload.id);
         } else {
-            return { value: "Unable to evaluate, is the target connected?" };
+            return {
+                error: true,
+                value: `unable to evaluate because the target is not connected`,
+            };
         }
     }
     async function pause(): Promise<ResponsePayload<"pause">> {

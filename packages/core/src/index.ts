@@ -135,6 +135,10 @@ export {
     CallFrame,
     CallFrameId,
     ScriptId,
+    RemoteObject,
+    RemoteException,
+    ObjectId,
     Action,
+    EvalResponse,
 } from "./state";
 export { StateReducer } from "./reducer";
