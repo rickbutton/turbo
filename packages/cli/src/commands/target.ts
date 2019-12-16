@@ -77,8 +77,11 @@ export function target(turbo: Turbo): void {
                 .catch(handleException);
         });
 
-        target.on("data", data => {
-            console.log(data);
+        target.on("stdout", data => {
+            process.stdout.write(data);
+        });
+        target.on("stderr", data => {
+            process.stderr.write(data);
         });
 
         client.on("close", () => {

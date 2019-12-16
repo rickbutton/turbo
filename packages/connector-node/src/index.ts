@@ -10,6 +10,8 @@ import child from "child_process";
 
 const logger = createLogger("connector-node");
 
+const NODE_EXIT_REGEX = /Waiting for the debugger to disconnect\.\.\.\n$/;
+
 // need to add events for updates to the target
 class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     private process: child.ChildProcess | null = null;
@@ -55,17 +57,15 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
 
         if (this.process.stdout) {
             this.process.stdout.on("data", (data: any) => {
-                this.fire("data", data.toString());
+                this.fire("stdout", data.toString());
             });
         }
         if (this.process.stderr) {
             this.process.stderr.on("data", (data: any) => {
-                if (
-                    /Waiting for the debugger to disconnect\.\.\.\n$/.test(
-                        data.toString(),
-                    )
-                ) {
+                if (NODE_EXIT_REGEX.test(data.toString())) {
                     this.stop();
+                } else {
+                    this.fire("stderr", data.toString());
                 }
             });
         }

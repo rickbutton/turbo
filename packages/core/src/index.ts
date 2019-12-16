@@ -72,7 +72,8 @@ export interface StartedEvent {
 export interface TargetEvents {
     started: StartedEvent;
     stopped: undefined;
-    data: string;
+    stdout: string;
+    stderr: string;
 }
 export interface Target extends Emitter<TargetEvents> {
     readonly name: string;
