@@ -57,6 +57,8 @@ function parse(input: string): Command {
     if (trimmed.startsWith(COMMAND_PREFIX)) {
         if (matchesCommand(trimmed, ["p", "pause"])) {
             return { type: "pause" };
+        } else if (matchesCommand(trimmed, ["r", "c", "resume"])) {
+            return { type: "resume" };
         } else if (matchesCommand(trimmed, ["s", "stepi", "stepInto"])) {
             return { type: "stepInto" };
         } else if (matchesCommand(trimmed, ["n", "step", "stepOver"])) {
