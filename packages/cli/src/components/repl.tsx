@@ -13,6 +13,67 @@ function js(str: string): string {
     return highlight(str, { language: "typescript" });
 }
 
+interface PauseCommand {
+    type: "pause";
+}
+interface ResumeCommand {
+    type: "resume";
+}
+interface StepIntoCommand {
+    type: "stepInto";
+}
+interface StepOutCommand {
+    type: "stepOut";
+}
+interface StepOverCommand {
+    type: "stepOver";
+}
+interface EvalComamnd {
+    type: "eval";
+    value: string;
+}
+interface ErrorCommand {
+    type: "error";
+    value: string;
+}
+type Command =
+    | PauseCommand
+    | ResumeCommand
+    | StepIntoCommand
+    | StepOutCommand
+    | StepOverCommand
+    | ErrorCommand
+    | EvalComamnd;
+
+const COMMAND_PREFIX = ",";
+
+function matchesCommand(input: string, options: string[]): boolean {
+    return options.some(o => COMMAND_PREFIX + o === input.trimRight());
+}
+
+function parse(input: string): Command {
+    const trimmed = input.trimRight();
+
+    if (trimmed.startsWith(COMMAND_PREFIX)) {
+        if (matchesCommand(trimmed, ["p", "pause"])) {
+            return { type: "pause" };
+        } else if (matchesCommand(trimmed, ["s", "stepi", "stepInto"])) {
+            return { type: "stepInto" };
+        } else if (matchesCommand(trimmed, ["n", "step", "stepOver"])) {
+            return { type: "stepOver" };
+        } else if (matchesCommand(trimmed, ["f", "finish", "stepOut"])) {
+            return { type: "stepOut" };
+        } else {
+            return {
+                type: "error",
+                value: `Invalid debugger command ${trimmed}`,
+            };
+        }
+    } else {
+        return { type: "eval", value: input };
+    }
+}
+
 async function handle(
     input: string,
     client: Client,
@@ -26,10 +87,20 @@ async function handle(
     }
     const runtime = state.target.runtime;
 
-    if (input === "/pause") {
+    const cmd = parse(input);
+
+    if (cmd.type == "pause") {
         return client.pause().then(() => null);
-    } else if (input === "/resume") {
+    } else if (cmd.type === "resume") {
         return client.resume().then(() => null);
+    } else if (cmd.type === "stepInto") {
+        return client.stepInto().then(() => null);
+    } else if (cmd.type === "stepOver") {
+        return client.stepOver().then(() => null);
+    } else if (cmd.type === "stepOut") {
+        return client.stepOut().then(() => null);
+    } else if (cmd.type === "error") {
+        return <span>${cmd.value}</span>;
     } else if (!runtime.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {

@@ -135,27 +135,32 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
     }
 
     async resume(): Promise<void> {
+        logger.debug("v8 resume");
         if (this.callFrames) {
             await this.client.Debugger.resume();
         }
     }
     async pause(): Promise<void> {
+        logger.debug("v8 pause");
         if (!this.callFrames) {
             await this.client.Debugger.pause();
         }
     }
     async stepInto(): Promise<void> {
-        if (!this.callFrames) {
+        logger.debug("v8 stepInto");
+        if (this.callFrames) {
             await this.client.Debugger.stepInto({});
         }
     }
     async stepOut(): Promise<void> {
-        if (!this.callFrames) {
+        logger.debug("v8 stepOut");
+        if (this.callFrames) {
             await this.client.Debugger.stepOut();
         }
     }
     async stepOver(): Promise<void> {
-        if (!this.callFrames) {
+        logger.debug("v8 stepOver");
+        if (this.callFrames) {
             await this.client.Debugger.stepOver();
         }
     }

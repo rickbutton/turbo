@@ -133,6 +133,7 @@ export {
     TargetConnection,
     TargetConnectionEvents,
     CallFrame,
+    SourceLocation,
     CallFrameId,
     ScriptId,
     RemoteObject,

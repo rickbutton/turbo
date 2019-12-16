@@ -85,6 +85,30 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
+    public stepInto(): Promise<ResponsePayload<"stepInto">> {
+        return this.sendRequest({
+            type: "stepInto",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
+    public stepOut(): Promise<ResponsePayload<"stepOut">> {
+        return this.sendRequest({
+            type: "stepOut",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
+    public stepOver(): Promise<ResponsePayload<"stepOver">> {
+        return this.sendRequest({
+            type: "stepOver",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
     public getScriptSource(
         scriptId: ScriptId,
     ): Promise<ResponsePayload<"getScriptSource">> {
