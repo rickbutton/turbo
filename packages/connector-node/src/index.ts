@@ -6,7 +6,7 @@ import {
     EmitterBase,
     createLogger,
 } from "@turbo/core";
-import * as child from "child_process";
+import child from "child_process";
 
 const logger = createLogger("connector-node");
 

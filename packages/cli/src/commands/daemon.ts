@@ -75,6 +75,7 @@ export function daemon(turbo: Turbo): void {
                     handleTargetConnection(target);
                     targetConn = target;
                     logger.info("target connnected");
+                    reducer.action({ type: "target-connect" });
                 } catch (error) {
                     logger.info(
                         `target failed to connect: ${error.toString()}`,
@@ -83,9 +84,13 @@ export function daemon(turbo: Turbo): void {
                 }
             } else if (targetConn) {
                 logger.info("target going to disconnect");
-                await targetConn.close();
-                targetConn = null;
-                logger.info("target disconnected");
+                try {
+                    await targetConn.close();
+                    logger.info("target disconnected");
+                } finally {
+                    reducer.action({ type: "target-disconnect" });
+                    targetConn = null;
+                }
             }
             return {};
         }
@@ -116,6 +121,43 @@ export function daemon(turbo: Turbo): void {
         }
         return undefined;
     }
+    async function stepInto(): Promise<ResponsePayload<"stepInto">> {
+        logger.debug("received stepInto command");
+        if (targetConn) {
+            targetConn.stepInto();
+        }
+        return undefined;
+    }
+    async function stepOut(): Promise<ResponsePayload<"stepOut">> {
+        logger.debug("received stepOut command");
+        if (targetConn) {
+            targetConn.stepOut();
+        }
+        return undefined;
+    }
+    async function stepOver(): Promise<ResponsePayload<"stepOver">> {
+        logger.debug("received stepOver command");
+        if (targetConn) {
+            targetConn.stepOver();
+        }
+        return undefined;
+    }
+    async function getScriptSource(
+        _: ServerConnection,
+        req: Request<"getScriptSource">,
+    ): Promise<ResponsePayload<"getScriptSource">> {
+        logger.debug("received getScriptSource command");
+        if (targetConn) {
+            return {
+                script: await targetConn.getScriptSource(req.payload.scriptId),
+            };
+        } else {
+            return {
+                // TODO: better error message
+                script: "target is not connected",
+            };
+        }
+    }
 
     if (!sessionId) {
         logger.error("unable to identify current session");
@@ -127,6 +169,10 @@ export function daemon(turbo: Turbo): void {
         eval: evaluate,
         pause,
         resume,
+        stepInto,
+        stepOut,
+        stepOver,
+        getScriptSource,
     });
 
     server.on("connected", conn => {

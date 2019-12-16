@@ -1,4 +1,4 @@
-import * as ChromeRemoteInterface from "chrome-remote-interface";
+import ChromeRemoteInterface from "chrome-remote-interface";
 import { Client, Protocol, Factory } from "chrome-remote-interface";
 import {
     createLogger,
@@ -7,6 +7,7 @@ import {
     EmitterBase,
     CallFrame,
     CallFrameId,
+    ScriptId,
 } from "@turbo/core";
 
 const logger = createLogger("v8");
@@ -17,6 +18,11 @@ function toCallFrame(callFrame: Protocol.Debugger.CallFrame): CallFrame {
     return {
         id: callFrame.callFrameId as CallFrameId,
         functionName: callFrame.functionName,
+        location: {
+            scriptId: callFrame.location.scriptId as ScriptId,
+            line: callFrame.location.lineNumber,
+            column: callFrame.location.columnNumber,
+        },
     };
 }
 
@@ -76,8 +82,24 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
             await this.client.Debugger.pause();
         }
     }
+    async stepInto(): Promise<void> {
+        if (!this.callFrames) {
+            await this.client.Debugger.stepInto({});
+        }
+    }
+    async stepOut(): Promise<void> {
+        if (!this.callFrames) {
+            await this.client.Debugger.stepOut();
+        }
+    }
+    async stepOver(): Promise<void> {
+        if (!this.callFrames) {
+            await this.client.Debugger.stepOver();
+        }
+    }
 
     async eval(script: string, id: CallFrameId): Promise<string> {
+        logger.debug("v8 eval received: " + script);
         const frame = this.findCallFrame(id);
 
         if (frame) {
@@ -96,6 +118,14 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
         } else {
             return "Invalid call frame ID";
         }
+    }
+
+    async getScriptSource(scriptId: ScriptId): Promise<string> {
+        // TODO: wasm?
+        const { scriptSource } = await this.client.Debugger.getScriptSource({
+            scriptId,
+        });
+        return scriptSource;
     }
 
     public async close(): Promise<void> {

@@ -11,17 +11,10 @@
     "clean": "rm -rf ./lib",
     "compile": "tsc -p tsconfig.build.json",
     "compile-watch": "tsc -w -p tsconfig.build.json",
-    "prepublishOnly": "npm run build",
-    "lint": "eslint . --ext .ts"
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/node": "^12.12.5",
-    "@typescript-eslint/eslint-plugin": "^2.7.0",
-    "@typescript-eslint/parser": "^2.7.0",
-    "eslint": "^6.6.0",
-    "eslint-config-prettier": "^6.5.0",
-    "eslint-plugin-prettier": "^3.1.1",
-    "prettier": "^1.19.1",
     "typescript": "^3.6.4"
   },
   "dependencies": {
@@ -29,6 +22,8 @@
     "@turbo/net": "^1.0.0",
     "@turbo/tmux": "^1.0.0",
     "@types/ffi": "^0.2.2",
+    "@types/ink": "^2.0.3",
+    "@types/react": "^16.9.16",
     "@types/ref": "^0.0.28",
     "@types/ref-array": "^0.0.28",
     "@types/yargs": "^13.0.3",
@@ -36,6 +31,8 @@
     "cli-highlight": "^2.1.4",
     "devtools-protocol": "^0.0.724935",
     "ffi": "github:lxe/node-ffi#node-12",
+    "ink": "^2.6.0",
+    "react": "^16.12.0",
     "ref": "github:lxe/ref#node-12",
     "ref-array": "github:lxe/ref-array#node-12",
     "yargs": "^14.2.0"

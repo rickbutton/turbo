@@ -1,4 +1,10 @@
-import { createLogger, State, Action, CallFrameId } from "@turbo/core";
+import {
+    createLogger,
+    State,
+    Action,
+    CallFrameId,
+    ScriptId,
+} from "@turbo/core";
 import {
     ResponsePayload,
     AnyMessage,
@@ -16,6 +22,12 @@ interface ClientEvents extends BaseClientEvents {
 }
 
 export class Client extends BaseClient<ClientEvents> {
+    private lastState: State | null = null;
+
+    public get state(): State | null {
+        return this.lastState;
+    }
+
     public action(action: Action): void {
         this.sendMessage({
             type: "action",
@@ -73,8 +85,19 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
+    public getScriptSource(
+        scriptId: ScriptId,
+    ): Promise<ResponsePayload<"getScriptSource">> {
+        return this.sendRequest({
+            type: "getScriptSource",
+            id: this.generateRequestId(),
+            payload: { scriptId },
+        });
+    }
+
     protected handleUnhandledMessage(msg: AnyMessage): void {
         if (isMessageType("sync", msg)) {
+            this.lastState = msg.payload.state;
             this.fire("sync", msg.payload.state);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);

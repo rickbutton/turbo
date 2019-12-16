@@ -7,7 +7,11 @@
     "sourceMap": true,
     "noImplicitAny": true,
     "target": "esnext",
-    "lib": ["esnext"]
+    "lib": ["esnext"],
+    "jsx": "react",
+    "esModuleInterop": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false
   },
   "exclude": [
     "node_modules",

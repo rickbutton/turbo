@@ -9,7 +9,7 @@
     "clean": "lerna run clean",
     "build": "lerna run clean && lerna run compile",
     "watch": "lerna run compile && lerna run --stream --parallel compile-watch",
-    "lint": "eslint . --ext .ts",
+    "lint": "eslint . --ext .ts,.tsx",
     "test": "jest",
     "test-watch": "jest --watch",
     "create-pkg": "yo ./packages/generator-turbo-package"
@@ -20,15 +20,22 @@
       "/generator-turbo-package/"
     ],
     "testMatch": [
-      "**/src/**/(*.)(spec|test).ts"
+      "**/src/**/(*.)(spec|test).(ts|tsx)"
     ],
     "preset": "ts-jest"
   },
   "devDependencies": {
     "@types/jest": "^24.0.21",
+    "@typescript-eslint/eslint-plugin": "^2.7.0",
+    "@typescript-eslint/parser": "^2.7.0",
+    "eslint": "^6.6.0",
+    "eslint-config-prettier": "^6.5.0",
+    "eslint-plugin-prettier": "^3.1.1",
+    "eslint-plugin-react": "^7.17.0",
     "husky": "^3.0.9",
     "jest": "^24.9.0",
     "lerna": "^3.18.3",
+    "prettier": "^1.19.1",
     "ts-jest": "^24.1.0",
     "yo": "^3.1.0"
   },

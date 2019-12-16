@@ -16,10 +16,5 @@
     "clean": "true",
     "compile": "true",
     "compile-watch": "true"
-  },
-  "devDependencies": {
-    "eslint-config-prettier": "^6.5.0",
-    "eslint-plugin-prettier": "^3.1.1",
-    "prettier": "^1.19.1"
   }
 }

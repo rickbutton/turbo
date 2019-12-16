@@ -4,9 +4,20 @@ declare const __CallFrameIdSymbol: unique symbol;
 export type CallFrameId = string & {
     readonly __tag: typeof __CallFrameIdSymbol;
 };
+declare const __ScriptIdSymbol: unique symbol;
+export type ScriptId = string & {
+    readonly __tag: typeof __ScriptIdSymbol;
+};
+
+export interface SourceLocation {
+    scriptId: ScriptId;
+    line: number;
+    column?: number;
+}
 export interface CallFrame {
     id: CallFrameId;
     functionName: string;
+    location: SourceLocation;
 }
 
 interface PausedEvent {
@@ -24,6 +35,10 @@ export interface TargetConnection extends Emitter<TargetConnectionEvents> {
     eval(script: string, id: CallFrameId): Promise<string>;
     pause(): Promise<void>;
     resume(): Promise<void>;
+    stepInto(): Promise<void>;
+    stepOut(): Promise<void>;
+    stepOver(): Promise<void>;
+    getScriptSource(scriptId: ScriptId): Promise<string>;
 }
 
 interface TargetRuntimePaused {

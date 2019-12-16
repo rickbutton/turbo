@@ -1,7 +1,7 @@
 import { Turbo, StartedEvent, createLogger, Target } from "@turbo/core";
 import { getCurrentSessionId } from "@turbo/tmux";
 import { Client } from "@turbo/net";
-import * as process from "process";
+import process from "process";
 
 // TODO: this shouldn't touch stdin config, because sharing stdio with child
 function waitForEnter(callback: () => void): void {

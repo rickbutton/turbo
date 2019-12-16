@@ -1,8 +1,8 @@
-import * as process from "process";
-import * as child from "child_process";
-import * as path from "path";
-import * as fs from "fs";
-import * as uuidv4 from "uuid/v4";
+import process from "process";
+import child from "child_process";
+import path from "path";
+import fs from "fs";
+import uuidv4 from "uuid/v4";
 import { Emitter } from "./emitter";
 
 declare const __sessionIdTag: unique symbol;
@@ -134,6 +134,7 @@ export {
     TargetConnectionEvents,
     CallFrame,
     CallFrameId,
+    ScriptId,
     Action,
 } from "./state";
 export { StateReducer } from "./reducer";

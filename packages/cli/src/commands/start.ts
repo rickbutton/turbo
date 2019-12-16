@@ -2,7 +2,7 @@ import { generateTmuxStartCommand, generateSessionId } from "@turbo/tmux";
 import { Turbo, Layout } from "@turbo/core";
 import * as ffi from "ffi";
 import * as ref from "ref";
-import * as ArrayType from "ref-array";
+import ArrayType from "ref-array";
 
 const defaultLayout: Layout = {
     windows: [

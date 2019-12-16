@@ -1,4 +1,4 @@
-import { State, Action, CallFrameId } from "@turbo/core";
+import { State, Action, CallFrameId, ScriptId } from "@turbo/core";
 
 declare const __RequestIdSymbol: unique symbol;
 export type RequestId = string & { readonly __tag: typeof __RequestIdSymbol };
@@ -27,11 +27,18 @@ interface RequestResponseSchema {
     eval: RequestResponse<EvalRequest, { value: string }>;
     pause: RequestResponse<void, void>;
     resume: RequestResponse<void, void>;
+    stepInto: RequestResponse<void, void>;
+    stepOut: RequestResponse<void, void>;
+    stepOver: RequestResponse<void, void>;
 
     registerTarget: RequestResponse<undefined, { error?: string }>;
     updateTarget: RequestResponse<
         { host: string; port: number } | undefined,
         { error?: string }
+    >;
+    getScriptSource: RequestResponse<
+        { scriptId: ScriptId },
+        { script: string }
     >;
 }
 export type RequestType = keyof RequestResponseSchema;

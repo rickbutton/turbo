@@ -9,15 +9,11 @@ module.exports = {
                 panes: [
                     {
                         type: "component",
-                        component: "repl",
+                        component: "code",
                     },
-                ],
-            },
-            {
-                name: "sh",
-                panes: [
                     {
-                        type: "shell",
+                        type: "component",
+                        component: "repl",
                     },
                 ],
             },

@@ -1,8 +1,8 @@
 import { mocked } from "ts-jest/utils";
 import { getTurbo } from "./index";
-import * as fs from "fs";
-import * as path from "path";
-import * as child from "child_process";
+import fs from "fs";
+import path from "path";
+import child from "child_process";
 
 jest.mock("child_process", () => ({
     execSync: jest.fn().mockImplementation((command: string) => {
