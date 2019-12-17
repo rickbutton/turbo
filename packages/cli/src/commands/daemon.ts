@@ -195,4 +195,8 @@ export function daemon(turbo: Turbo): void {
 
     target.start();
     server.start();
+
+    process.on("SIGHUP", () => {
+        process.exit(0);
+    });
 }
