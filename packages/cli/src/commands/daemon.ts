@@ -45,14 +45,6 @@ class Daemon implements ServerRequestHandler {
         target.on("stopped", this.disconnectTarget);
         target.on("stdout", this.onStdout);
         target.on("stderr", this.onStderr);
-
-        process.on("SIGINT", () => {
-            if (!target.isRunning) {
-                process.exit();
-            } else {
-                target.stop();
-            }
-        });
     }
 
     async eval(req: Request<"eval">): Promise<ResponsePayload<"eval">> {
