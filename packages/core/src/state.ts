@@ -83,7 +83,7 @@ export interface RemoteException {
     exception: RemoteObject | undefined;
 }
 
-interface PausedEvent {
+export interface PausedEvent {
     callFrames: CallFrame[];
 }
 
@@ -99,6 +99,7 @@ export type EvalResponse =
     | { error: false; success: false; value: RemoteException }
     | { error: true; value: string };
 export interface TargetConnection extends Emitter<TargetConnectionEvents> {
+    enable(): Promise<void>;
     close(): Promise<void>;
     eval(script: string, id: CallFrameId): Promise<EvalResponse>;
     pause(): Promise<void>;

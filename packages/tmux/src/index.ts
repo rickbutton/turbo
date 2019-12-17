@@ -52,16 +52,6 @@ function generatePaneCommands(panes: Pane[], env: Environment): string[][] {
     return commands;
 }
 
-function generateTargetCommands(turbo: Turbo): string[] {
-    return [
-        ";",
-        "new-window",
-        "-n",
-        "target",
-        getNodeCommand(turbo.env, ["target"]),
-    ];
-}
-
 function generateSessionArgs(
     id: SessionId,
     layout: Layout,
@@ -112,7 +102,6 @@ function generateSessionArgs(
         "-n",
         "daemon",
         ...generateDaemonCommand(turbo.env),
-        ...generateTargetCommands(turbo),
         ";",
         "select-window",
         "-t:0",

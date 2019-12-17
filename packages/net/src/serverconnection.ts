@@ -15,12 +15,9 @@ import { BaseClient, BaseClientEvents, ClientSocket } from "./baseclient";
 const logger = createLogger("serverconnection");
 
 export type RequestHandler<T extends RequestType> = (
-    connection: ServerConnection,
     req: Request<T>,
 ) => Promise<ResponsePayload<T>>;
 export interface ServerRequestHandler {
-    registerTarget: RequestHandler<"registerTarget">;
-    updateTarget: RequestHandler<"updateTarget">;
     eval: RequestHandler<"eval">;
     pause: RequestHandler<"pause">;
     resume: RequestHandler<"resume">;
@@ -71,24 +68,20 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
     protected handleUnhandledRequest(
         req: AnyRequest,
     ): Promise<Response<RequestType>["payload"] | undefined> {
-        if (isRequestType("registerTarget", req)) {
-            return this.handler.registerTarget(this, req);
-        } else if (isRequestType("updateTarget", req)) {
-            return this.handler.updateTarget(this, req);
-        } else if (isRequestType("eval", req)) {
-            return this.handler.eval(this, req);
+        if (isRequestType("eval", req)) {
+            return this.handler.eval(req);
         } else if (isRequestType("pause", req)) {
-            return this.handler.pause(this, req);
+            return this.handler.pause(req);
         } else if (isRequestType("resume", req)) {
-            return this.handler.resume(this, req);
+            return this.handler.resume(req);
         } else if (isRequestType("stepInto", req)) {
-            return this.handler.stepInto(this, req);
+            return this.handler.stepInto(req);
         } else if (isRequestType("stepOut", req)) {
-            return this.handler.stepOut(this, req);
+            return this.handler.stepOut(req);
         } else if (isRequestType("stepOver", req)) {
-            return this.handler.stepOver(this, req);
+            return this.handler.stepOver(req);
         } else if (isRequestType("getScriptSource", req)) {
-            return this.handler.getScriptSource(this, req);
+            return this.handler.getScriptSource(req);
         } else {
             logger.error(`unhandled request with type ${req.type}`);
             return Promise.resolve(undefined);

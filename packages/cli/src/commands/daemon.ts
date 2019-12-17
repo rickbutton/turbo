@@ -1,4 +1,10 @@
-import { Server, ServerConnection, Request, ResponsePayload } from "@turbo/net";
+import {
+    Server,
+    ServerConnection,
+    Request,
+    ResponsePayload,
+    ServerRequestHandler,
+} from "@turbo/net";
 import {
     Turbo,
     createLogger,
@@ -6,11 +12,164 @@ import {
     Action,
     StateReducer,
     TargetConnection,
+    Target,
+    StartedEvent,
+    PausedEvent,
 } from "@turbo/core";
 import { getCurrentSessionId } from "@turbo/tmux";
 import { connect } from "../v8";
 
 const logger = createLogger("daemon");
+
+function setupTarget(turbo: Turbo): Target {
+    const targetFactory = turbo.config.target;
+    const target = targetFactory(turbo.env);
+    return target;
+}
+
+class Daemon implements ServerRequestHandler {
+    private conn: TargetConnection | null = null;
+    private reducer: StateReducer;
+
+    constructor(target: Target, reducer: StateReducer) {
+        this.reducer = reducer;
+
+        this.connectTarget = this.connectTarget.bind(this);
+        this.disconnectTarget = this.disconnectTarget.bind(this);
+        this.onPaused = this.onPaused.bind(this);
+        this.onResumed = this.onResumed.bind(this);
+        this.onStdout = this.onStdout.bind(this);
+        this.onStderr = this.onStderr.bind(this);
+
+        target.on("started", this.connectTarget);
+        target.on("stopped", this.disconnectTarget);
+        target.on("stdout", this.onStdout);
+        target.on("stderr", this.onStderr);
+
+        process.on("SIGINT", () => {
+            if (!target.isRunning) {
+                process.exit();
+            } else {
+                target.stop();
+            }
+        });
+    }
+
+    async eval(req: Request<"eval">): Promise<ResponsePayload<"eval">> {
+        if (this.conn) {
+            return await this.conn.eval(req.payload.value, req.payload.id);
+        } else {
+            return {
+                error: true,
+                value: `unable to evaluate because the target is not this.connected`,
+            };
+        }
+    }
+    async pause(): Promise<ResponsePayload<"pause">> {
+        logger.debug("received pause command");
+        if (this.conn) {
+            this.conn.pause();
+        }
+        return undefined;
+    }
+    async resume(): Promise<ResponsePayload<"resume">> {
+        logger.debug("received resume command");
+        if (this.conn) {
+            this.conn.resume();
+        }
+        return undefined;
+    }
+    async stepInto(): Promise<ResponsePayload<"stepInto">> {
+        logger.debug("received stepInto command");
+        if (this.conn) {
+            this.conn.stepInto();
+        }
+        return undefined;
+    }
+    async stepOut(): Promise<ResponsePayload<"stepOut">> {
+        logger.debug("received stepOut command");
+        if (this.conn) {
+            this.conn.stepOut();
+        }
+        return undefined;
+    }
+    async stepOver(): Promise<ResponsePayload<"stepOver">> {
+        logger.debug("received stepOver command");
+        if (this.conn) {
+            this.conn.stepOver();
+        }
+        return undefined;
+    }
+    async getScriptSource(
+        req: Request<"getScriptSource">,
+    ): Promise<ResponsePayload<"getScriptSource">> {
+        logger.debug("received getScriptSource command");
+        if (this.conn) {
+            return {
+                script: await this.conn.getScriptSource(req.payload.scriptId),
+            };
+        } else {
+            return {
+                // TODO: better error message
+                script: "target is not connected",
+            };
+        }
+    }
+
+    private async connectTarget(event: StartedEvent): Promise<void> {
+        if (!this.conn) {
+            const iface = event.interface;
+            logger.info(`target updated host:${iface.host} port:${iface.port}`);
+            try {
+                const target = await connect(iface.host, iface.port);
+
+                this.conn = target;
+                this.conn.on("paused", this.onPaused);
+                this.conn.on("resumed", this.onResumed);
+
+                this.reducer.action({ type: "target-connect" });
+
+                logger.info("target connnected");
+                await this.conn.enable();
+                logger.info("target enabled");
+            } catch (error) {
+                logger.info(`target failed to connect: ${error.toString()}`);
+                this.conn = null;
+            }
+        }
+    }
+
+    private async disconnectTarget(): Promise<void> {
+        if (this.conn) {
+            logger.info("target disconnected");
+            await this.conn.close();
+
+            this.conn.off("paused", this.onPaused);
+            this.conn.off("resumed", this.onResumed);
+            this.conn = null;
+
+            this.reducer.action({ type: "target-disconnect" });
+        }
+    }
+
+    private onStdout(data: any): void {
+        process.stdout.write(data.toString());
+    }
+    private onStderr(data: any): void {
+        process.stderr.write(data.toString());
+    }
+    private onPaused(event: PausedEvent): void {
+        this.reducer.action({
+            type: "paused",
+            callFrames: event.callFrames,
+        });
+    }
+    private onResumed(): void {
+        this.reducer.action({
+            type: "resumed",
+        });
+    }
+}
 
 export function daemon(turbo: Turbo): void {
     const sessionId = getCurrentSessionId(turbo.env);
@@ -21,173 +180,27 @@ export function daemon(turbo: Turbo): void {
         },
     });
 
-    let serverConn: ServerConnection | null = null;
-    let targetConn: TargetConnection | null = null;
-    function handleServerDisconnection(): void {
-        if (serverConn) {
-            logger.info("target unregistered");
-            serverConn.off("close", handleServerDisconnection);
-            serverConn = null;
-        }
-    }
-    function handleTargetConnection(targetConn: TargetConnection): void {
-        targetConn.on("paused", event => {
-            reducer.action({ type: "paused", callFrames: event.callFrames });
-        });
-        targetConn.on("resumed", _ => {
-            reducer.action({ type: "resumed" });
-        });
-    }
-
-    async function registerTarget(
-        conn: ServerConnection,
-        _: Request<"registerTarget">,
-    ): Promise<ResponsePayload<"registerTarget">> {
-        if (serverConn) {
-            const error = "A target is already connected to the daemon.";
-            logger.error(error);
-            return { error };
-        } else {
-            logger.info("target registered");
-            serverConn = conn;
-            serverConn.on("close", handleServerDisconnection);
-            return {};
-        }
-    }
-    async function updateTarget(
-        conn: ServerConnection,
-        req: Request<"updateTarget">,
-    ): Promise<ResponsePayload<"updateTarget">> {
-        if (conn !== serverConn) {
-            const error =
-                "updateTarget: Not the connection for the current target";
-            logger.error(error);
-            return { error };
-        } else {
-            const iface = req.payload;
-            if (iface) {
-                logger.info(
-                    `target updated host:${iface.host} port:${iface.port}`,
-                );
-                targetConn = null;
-                try {
-                    const target = await connect(iface.host, iface.port);
-                    handleTargetConnection(target);
-                    targetConn = target;
-                    logger.info("target connnected");
-                    reducer.action({ type: "target-connect" });
-                } catch (error) {
-                    logger.info(
-                        `target failed to connect: ${error.toString()}`,
-                    );
-                    targetConn = null;
-                }
-            } else if (targetConn) {
-                logger.info("target going to disconnect");
-                try {
-                    await targetConn.close();
-                    logger.info("target disconnected");
-                } finally {
-                    reducer.action({ type: "target-disconnect" });
-                    targetConn = null;
-                }
-            }
-            return {};
-        }
-    }
-    async function evaluate(
-        _: ServerConnection,
-        req: Request<"eval">,
-    ): Promise<ResponsePayload<"eval">> {
-        if (targetConn) {
-            return await targetConn.eval(req.payload.value, req.payload.id);
-        } else {
-            return {
-                error: true,
-                value: `unable to evaluate because the target is not connected`,
-            };
-        }
-    }
-    async function pause(): Promise<ResponsePayload<"pause">> {
-        logger.debug("received pause command");
-        if (targetConn) {
-            targetConn.pause();
-        }
-        return undefined;
-    }
-    async function resume(): Promise<ResponsePayload<"resume">> {
-        logger.debug("received resume command");
-        if (targetConn) {
-            targetConn.resume();
-        }
-        return undefined;
-    }
-    async function stepInto(): Promise<ResponsePayload<"stepInto">> {
-        logger.debug("received stepInto command");
-        if (targetConn) {
-            targetConn.stepInto();
-        }
-        return undefined;
-    }
-    async function stepOut(): Promise<ResponsePayload<"stepOut">> {
-        logger.debug("received stepOut command");
-        if (targetConn) {
-            targetConn.stepOut();
-        }
-        return undefined;
-    }
-    async function stepOver(): Promise<ResponsePayload<"stepOver">> {
-        logger.debug("received stepOver command");
-        if (targetConn) {
-            targetConn.stepOver();
-        }
-        return undefined;
-    }
-    async function getScriptSource(
-        _: ServerConnection,
-        req: Request<"getScriptSource">,
-    ): Promise<ResponsePayload<"getScriptSource">> {
-        logger.debug("received getScriptSource command");
-        if (targetConn) {
-            return {
-                script: await targetConn.getScriptSource(req.payload.scriptId),
-            };
-        } else {
-            return {
-                // TODO: better error message
-                script: "target is not connected",
-            };
-        }
-    }
-
     if (!sessionId) {
         logger.error("unable to identify current session");
         return;
     }
-    const server = new Server(sessionId, {
-        registerTarget,
-        updateTarget,
-        eval: evaluate,
-        pause,
-        resume,
-        stepInto,
-        stepOut,
-        stepOver,
-        getScriptSource,
-    });
 
-    server.on("connected", conn => {
-        conn.broadcast(reducer.state);
-    });
-    //server.on("disconnected", _ => {});
-
-    server.on("action", (action: Action) => {
-        reducer.action(action);
-    });
+    const target = setupTarget(turbo);
+    const daemon = new Daemon(target, reducer);
+    const server = new Server(sessionId, daemon);
 
     reducer.on("update", (state: State) => {
         server.broadcast(state);
     });
 
+    server.on("connected", (conn: ServerConnection) => {
+        conn.broadcast(reducer.state);
+    });
+
+    server.on("action", (action: Action) => {
+        reducer.action(action);
+    });
+
+    target.start();
     server.start();
 }

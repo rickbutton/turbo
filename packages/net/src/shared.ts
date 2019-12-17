@@ -42,11 +42,6 @@ interface RequestResponseSchema {
     stepOut: RequestResponse<void, void>;
     stepOver: RequestResponse<void, void>;
 
-    registerTarget: RequestResponse<undefined, { error?: string }>;
-    updateTarget: RequestResponse<
-        { host: string; port: number } | undefined,
-        { error?: string }
-    >;
     getScriptSource: RequestResponse<
         { scriptId: ScriptId },
         { script: string }

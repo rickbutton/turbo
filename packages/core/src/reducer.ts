@@ -17,7 +17,6 @@ export class StateReducer extends EmitterBase<StateReducerEvents> {
     public action(action: Action): void {
         const state = this.reduce(action);
         this.state = state;
-        logger.debug(`new state: ${JSON.stringify(state)}`);
 
         this.fire("update", state);
     }

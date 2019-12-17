@@ -11,6 +11,7 @@ import child from "child_process";
 const logger = createLogger("connector-node");
 
 const NODE_EXIT_REGEX = /Waiting for the debugger to disconnect\.\.\.\n$/;
+const NODE_PORT_REGEX = /Debugger listening on ws:\/\/([^:]+):(\d+)/;
 
 // need to add events for updates to the target
 class ManagedScript extends EmitterBase<TargetEvents> implements Target {
@@ -46,7 +47,7 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
 
     private spawn(): void {
         const nodePath = this.config.nodePath || this.env.nodePath;
-        const args = ["--inspect-brk", this.config.script];
+        const args = ["--inspect-brk=0", this.config.script];
 
         logger.info(
             `starting node process ${nodePath} with args ${args.join(" ")}`,
@@ -62,28 +63,36 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
         }
         if (this.process.stderr) {
             this.process.stderr.on("data", (data: any) => {
-                if (NODE_EXIT_REGEX.test(data.toString())) {
+                const str = data.toString();
+
+                if (NODE_EXIT_REGEX.test(str)) {
+                    logger.debug("NODE_EXIT_REGEX matched");
                     this.stop();
-                } else {
-                    this.fire("stderr", data.toString());
+                } else if (NODE_PORT_REGEX.test(str)) {
+                    logger.debug("NODE_PORT_REGEX matched");
+                    const matches = str.match(NODE_PORT_REGEX);
+                    if (matches) {
+                        const host = matches[1];
+                        const port = parseInt(matches[2], 10);
+
+                        logger.debug(`node matched ${host}:${port}`);
+
+                        // hacky delay so that node has enough time
+                        // to actually bind to the port
+                        setTimeout(() => {
+                            this.fire("started", {
+                                interface: { host, port },
+                            });
+                        }, 100); // TODO: option
+                    }
                 }
+                this.fire("stderr", str);
             });
         }
-
-        // wait a little bit for the target node process
-        // to finish opening a port
-        setTimeout(() => {
-            logger.info("started");
-            this.fire("started", {
-                interface: {
-                    host: "127.0.0.1", // TODO: options for these
-                    port: 9229,
-                },
-            });
-        }, 500); // TODO: don't hardcode
     }
 
     private onExit(): void {
+        logger.debug("node onExit");
         this.process = null;
         this.fire("stopped", undefined);
     }

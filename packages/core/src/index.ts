@@ -133,6 +133,7 @@ export {
     State,
     TargetConnection,
     TargetConnectionEvents,
+    PausedEvent,
     CallFrame,
     SourceLocation,
     CallFrameId,

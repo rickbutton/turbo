@@ -5,7 +5,6 @@ import { start } from "./commands/start";
 import { component } from "./commands/component";
 import { evaluate } from "./commands/eval";
 import { daemon } from "./commands/daemon";
-import { target } from "./commands/target";
 import { getTurbo } from "@turbo/core";
 
 const turbo = getTurbo();
@@ -24,9 +23,5 @@ yargs
     })
     .command("daemon", "start a turbo daemon", {}, () => {
         return daemon(turbo);
-    })
-    .command("target", "start a turbo target watcher", {}, () => {
-        " test";
-        return target(turbo);
     })
     .help().argv;

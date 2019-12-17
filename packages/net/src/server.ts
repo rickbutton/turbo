@@ -13,6 +13,7 @@ import { ServerConnection, ServerRequestHandler } from "./serverconnection";
 const logger = createLogger("daemon");
 
 interface ServerEvents {
+    ready: void;
     action: Action;
     connected: ServerConnection;
     disconnected: ServerConnection;
@@ -57,6 +58,9 @@ export class Server extends EmitterBase<ServerEvents> {
         });
         server.on("listening", () => {
             logger.verbose("daemon listening");
+        });
+        server.on("ready", () => {
+            this.fire("ready", undefined);
         });
 
         return server;

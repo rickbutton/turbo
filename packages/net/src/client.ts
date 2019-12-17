@@ -35,26 +35,6 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
-    public registerTarget(): Promise<ResponsePayload<"registerTarget">> {
-        return this.sendRequest({
-            type: "registerTarget",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public updateTarget(
-        target: { host: string; port: number } | undefined,
-    ): Promise<ResponsePayload<"updateTarget">> {
-        return this.sendRequest({
-            type: "updateTarget",
-            id: this.generateRequestId(),
-            payload: target
-                ? { host: target.host, port: target.port }
-                : undefined,
-        });
-    }
-
     public eval(
         value: string,
         id: CallFrameId,

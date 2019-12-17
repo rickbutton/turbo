@@ -93,6 +93,9 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
 
     private callFrames: Protocol.Debugger.CallFrame[] | null = null;
 
+    private enabled = false;
+    private needsResume = false;
+
     constructor(client: Client) {
         super();
         this.client = client;
@@ -102,6 +105,7 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
         let first = true;
 
         this.client.on("disconnect", () => {
+            logger.debug("v8 disconnect event");
             this.fire("close", undefined);
         });
         this.client.on("error", (error: any) => {
@@ -113,7 +117,14 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
             if (first) {
                 first = false;
                 logger.debug("v8 first break received");
-                this.client.Debugger.resume();
+
+                if (this.enabled) {
+                    logger.debug("resuming after first break");
+                    this.client.Debugger.resume();
+                } else {
+                    logger.debug("deferring resume until enabled");
+                    this.needsResume = true;
+                }
             } else {
                 logger.debug("v8 target paused");
                 this.callFrames = event.callFrames;
@@ -125,13 +136,17 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
         this.client.Debugger.resumed(() => {
             this.callFrames = null;
         });
-        this.client.Runtime.executionContextDestroyed(() => {
-            logger.debug("v8 Runtime.executionContextDestroyed");
-            this.client.close();
-        });
+    }
 
+    public async enable(): Promise<void> {
         await this.client.Debugger.enable({});
         await this.client.Runtime.runIfWaitingForDebugger();
+        this.enabled = true;
+        if (this.needsResume) {
+            logger.debug("doing deferred resume");
+            await this.client.Debugger.resume();
+            this.needsResume = false;
+        }
     }
 
     async resume(): Promise<void> {
