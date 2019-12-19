@@ -5,6 +5,7 @@ import {
     ScriptId,
     RemoteObject,
     RemoteException,
+    LogLevel,
 } from "@turbo/core";
 
 declare const __RequestIdSymbol: unique symbol;
@@ -63,10 +64,15 @@ export type AnyResponse = Response<RequestType>;
 export type RequestPayload<T extends RequestType> = Request<T>["payload"];
 export type ResponsePayload<T extends RequestType> = Response<T>["payload"];
 
+interface LogData {
+    level: LogLevel;
+    msg: string;
+}
 interface SyncData {
     state: State;
 }
 interface MessageSchema {
+    log: LogData;
     sync: SyncData;
     action: Action;
     req: AnyRequest;
@@ -78,6 +84,7 @@ export interface Message<T extends MessageType> {
     payload: MessageSchema[T];
 }
 export type AnyMessage = Message<MessageType>;
+export type MessagePayload<T extends MessageType> = Message<T>["payload"];
 
 export function isRequest(message: AnyMessage): message is Message<"req"> {
     return message.type == "req";

@@ -13,8 +13,7 @@ ls command
 automatically kill tmux when entire session dies?
 - how to determine when session dies?
 
-get rid of target command, run target directly as
-child process of daemon, listen for log events and
+listen for log events and
 broadcast as dangling messages to clients, then
 implement log component that streams in log messages
 with optional syntax highlighting

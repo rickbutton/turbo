@@ -1,30 +1,48 @@
 import chalk from "chalk";
+import { EmitterBase } from "./emitter";
 
-const log = console.log;
+export type LogLevel = "error" | "warn" | "info" | "verbose" | "debug";
 
-export class Logger {
-    private context: string;
-    constructor(context: string) {
-        this.context = context;
-    }
+export interface LogEvent {
+    level: LogLevel;
+    msg: string;
+}
+interface LoggerEvents {
+    log: LogEvent;
+}
+class Logger extends EmitterBase<LoggerEvents> {
+    public context = "";
 
     public error(msg: string): void {
-        log(chalk.red("[err] ") + msg);
+        this.fire("log", { level: "error", msg });
     }
     public warn(msg: string): void {
-        log(chalk.yellow("[wrn] ") + msg);
+        this.fire("log", { level: "warn", msg });
     }
     public info(msg: string): void {
-        log(chalk.blue("[nfo] ") + msg);
+        this.fire("log", { level: "info", msg });
     }
     public verbose(msg: string): void {
-        log(chalk.cyan("[ver] ") + msg);
+        this.fire("log", { level: "verbose", msg });
     }
     public debug(msg: string): void {
-        log(chalk.magenta("[dbg] ") + msg);
+        this.fire("log", { level: "debug", msg });
     }
 }
 
-export function createLogger(context: string): Logger {
-    return new Logger(context);
+export const logger = new Logger();
+
+export function format(log: LogEvent): string {
+    switch (log.level) {
+        case "error":
+            return chalk.red("err] ") + log.msg + "\n";
+        case "warn":
+            return chalk.yellow("wrn] ") + log.msg + "\n";
+        case "info":
+            return chalk.blue("nfo] ") + log.msg + "\n";
+        case "verbose":
+            return chalk.magenta("ver] ") + log.msg + "\n";
+        case "debug":
+            return chalk.dim("dbg] ") + log.msg + "\n";
+    }
 }

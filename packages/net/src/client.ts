@@ -1,9 +1,10 @@
 import {
-    createLogger,
+    logger,
     State,
     Action,
     CallFrameId,
     ScriptId,
+    LogEvent,
 } from "@turbo/core";
 import {
     ResponsePayload,
@@ -13,9 +14,7 @@ import {
     Response,
     RequestType,
 } from "./shared";
-import { BaseClient, BaseClientEvents } from "./baseclient";
-
-const logger = createLogger("client");
+import { BaseClient, BaseClientEvents, ClientOptions } from "./baseclient";
 
 interface ClientEvents extends BaseClientEvents {
     sync: State;
@@ -23,6 +22,22 @@ interface ClientEvents extends BaseClientEvents {
 
 export class Client extends BaseClient<ClientEvents> {
     private lastState: State | null = null;
+
+    private bufferLogs = true;
+    private logBuffer: LogEvent[] = [];
+
+    constructor(options: ClientOptions) {
+        super(options);
+
+        logger.on("log", this.sendLog.bind(this));
+        this.on("ready", () => {
+            this.bufferLogs = false;
+            this.flushLogs();
+        });
+        this.on("close", () => {
+            this.bufferLogs = true;
+        });
+    }
 
     public get state(): State | null {
         return this.lastState;
@@ -112,5 +127,24 @@ export class Client extends BaseClient<ClientEvents> {
     ): Promise<Response<RequestType>["payload"] | undefined> {
         logger.error(`unhandled request with type ${req.type}`);
         return Promise.resolve(undefined);
+    }
+
+    private flushLogs(): void {
+        for (const log of this.logBuffer) {
+            this.sendLog(log);
+        }
+        this.logBuffer = [];
+    }
+
+    private sendLog(log: LogEvent): void {
+        console.error("foo");
+        if (this.bufferLogs) {
+            this.logBuffer.push(log);
+        } else {
+            this.sendMessage({
+                type: "log",
+                payload: log,
+            });
+        }
     }
 }

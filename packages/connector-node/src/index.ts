@@ -4,11 +4,9 @@ import {
     Environment,
     TargetFactory,
     EmitterBase,
-    createLogger,
+    logger,
 } from "@turbo/core";
 import child from "child_process";
-
-const logger = createLogger("connector-node");
 
 const NODE_EXIT_REGEX = /Waiting for the debugger to disconnect\.\.\.\n$/;
 const NODE_PORT_REGEX = /Debugger listening on ws:\/\/([^:]+):(\d+)/;

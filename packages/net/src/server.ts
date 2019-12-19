@@ -1,19 +1,18 @@
 import net from "net";
 import {
     JsonSocket,
-    createLogger,
     SessionId,
     EmitterBase,
     State,
     Action,
+    logger,
 } from "@turbo/core";
-import { ClientId } from "./shared";
+import { ClientId, MessagePayload } from "./shared";
 import { ServerConnection, ServerRequestHandler } from "./serverconnection";
-
-const logger = createLogger("daemon");
 
 interface ServerEvents {
     ready: void;
+    log: MessagePayload<"log">;
     action: Action;
     connected: ServerConnection;
     disconnected: ServerConnection;
@@ -92,6 +91,9 @@ export class Server extends EmitterBase<ServerEvents> {
         });
         client.on("action", (action: Action) => {
             this.fire("action", action);
+        });
+        client.on("log", log => {
+            this.fire("log", log);
         });
 
         this.connections.add(client);

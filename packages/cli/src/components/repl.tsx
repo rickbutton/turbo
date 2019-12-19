@@ -1,12 +1,11 @@
 import { highlight } from "cli-highlight";
 import { Client } from "@turbo/net";
-import { createLogger } from "@turbo/core";
+import { logger } from "@turbo/core";
 import React from "react";
 import { Static } from "ink";
 import { Input } from "./input";
 import { ObjectView } from "./object";
 
-const logger = createLogger("repl");
 const PROMPT = "> ";
 
 function js(str: string): string {

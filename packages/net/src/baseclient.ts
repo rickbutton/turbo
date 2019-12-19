@@ -1,11 +1,5 @@
 import net from "net";
-import {
-    JsonSocket,
-    createLogger,
-    SessionId,
-    EmitterBase,
-    uuid,
-} from "@turbo/core";
+import { JsonSocket, logger, SessionId, EmitterBase, uuid } from "@turbo/core";
 import {
     RequestId,
     RequestHandle,
@@ -21,7 +15,6 @@ import {
     isRequestType,
 } from "./shared";
 
-const logger = createLogger("baseclient");
 const RESPONSE_TIMEOUT = 5000;
 
 export interface ClientSocketEvents {
@@ -58,7 +51,7 @@ interface ManagedClientOptions {
     sessionId: SessionId;
     reconnect?: boolean;
 }
-type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
+export type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
 
 const MAX_RETRIES = 2;
 

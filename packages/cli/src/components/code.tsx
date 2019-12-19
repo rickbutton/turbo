@@ -1,12 +1,10 @@
 import { Client } from "@turbo/net";
 import { highlight } from "cli-highlight";
-import { createLogger, SourceLocation } from "@turbo/core";
+import { SourceLocation } from "@turbo/core";
 import React from "react";
 import chalk from "chalk";
 import { Box } from "ink";
 import { useClientState, useScriptSource } from "./helpers";
-
-const logger = createLogger("code");
 
 interface Props {
     client: Client;

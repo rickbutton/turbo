@@ -4,10 +4,11 @@ import {
     Request,
     ResponsePayload,
     ServerRequestHandler,
+    LogServer,
 } from "@turbo/net";
 import {
     Turbo,
-    createLogger,
+    logger,
     State,
     Action,
     StateReducer,
@@ -15,11 +16,10 @@ import {
     Target,
     StartedEvent,
     PausedEvent,
+    format,
 } from "@turbo/core";
 import { getCurrentSessionId } from "@turbo/tmux";
 import { connect } from "../v8";
-
-const logger = createLogger("daemon");
 
 function setupTarget(turbo: Turbo): Target {
     const targetFactory = turbo.config.target;
@@ -38,13 +38,9 @@ class Daemon implements ServerRequestHandler {
         this.disconnectTarget = this.disconnectTarget.bind(this);
         this.onPaused = this.onPaused.bind(this);
         this.onResumed = this.onResumed.bind(this);
-        this.onStdout = this.onStdout.bind(this);
-        this.onStderr = this.onStderr.bind(this);
 
         target.on("started", this.connectTarget);
         target.on("stopped", this.disconnectTarget);
-        target.on("stdout", this.onStdout);
-        target.on("stderr", this.onStderr);
     }
 
     async eval(req: Request<"eval">): Promise<ResponsePayload<"eval">> {
@@ -144,12 +140,6 @@ class Daemon implements ServerRequestHandler {
         }
     }
 
-    private onStdout(data: any): void {
-        process.stdout.write(data.toString());
-    }
-    private onStderr(data: any): void {
-        process.stderr.write(data.toString());
-    }
     private onPaused(event: PausedEvent): void {
         this.reducer.action({
             type: "paused",
@@ -163,34 +153,45 @@ class Daemon implements ServerRequestHandler {
     }
 }
 
-export function daemon(turbo: Turbo): void {
+export async function daemon(turbo: Turbo): Promise<void> {
     const sessionId = getCurrentSessionId(turbo.env);
+
+    if (!sessionId) {
+        console.error("unable to identify current session");
+        return;
+    }
+
+    const turboLogServer = await LogServer.create();
+    const targetLogServer = await LogServer.create();
+
     const reducer = new StateReducer({
         target: {
             connected: false,
             runtime: { paused: false },
         },
+        logStream: {
+            turboSocket: turboLogServer.socketPath,
+            targetSocket: targetLogServer.socketPath,
+        },
     });
-
-    if (!sessionId) {
-        logger.error("unable to identify current session");
-        return;
-    }
-
     const target = setupTarget(turbo);
     const daemon = new Daemon(target, reducer);
     const server = new Server(sessionId, daemon);
 
-    reducer.on("update", (state: State) => {
-        server.broadcast(state);
-    });
+    target.on("stdout", str => targetLogServer.log(str));
+    target.on("stderr", str => targetLogServer.log(str));
+    logger.on("log", log => turboLogServer.log(format(log)));
+    server.on("log", log => turboLogServer.log(format(log)));
 
     server.on("connected", (conn: ServerConnection) => {
         conn.broadcast(reducer.state);
     });
-
     server.on("action", (action: Action) => {
         reducer.action(action);
+    });
+
+    reducer.on("update", (state: State) => {
+        server.broadcast(state);
     });
 
     target.start();

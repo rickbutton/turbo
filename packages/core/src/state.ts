@@ -123,8 +123,14 @@ interface TargetDescriptor {
     runtime: TargetRuntime;
 }
 
+interface LogStreamState {
+    turboSocket: string;
+    targetSocket: string;
+}
+
 export interface State {
     target: TargetDescriptor;
+    logStream: LogStreamState;
 }
 
 export interface TargetConnectedAction {

@@ -1,7 +1,7 @@
 import ChromeRemoteInterface from "chrome-remote-interface";
 import { Client, Protocol, Factory } from "chrome-remote-interface";
 import {
-    createLogger,
+    logger,
     TargetConnection,
     TargetConnectionEvents,
     EmitterBase,
@@ -13,8 +13,6 @@ import {
     RemoteException,
     EvalResponse,
 } from "@turbo/core";
-
-const logger = createLogger("v8");
 
 const CDP = (ChromeRemoteInterface as unknown) as Factory;
 

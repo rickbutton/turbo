@@ -1,13 +1,4 @@
-import {
-    SessionId,
-    Environment,
-    Turbo,
-    Pane,
-    Layout,
-    createLogger,
-} from "@turbo/core";
-
-const logger = createLogger("tmux");
+import { SessionId, Environment, Turbo, Pane, Layout } from "@turbo/core";
 
 export function generateSessionId(): SessionId {
     return `turbo-${[...Array(4)]

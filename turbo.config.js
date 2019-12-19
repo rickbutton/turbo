@@ -15,6 +15,14 @@ module.exports = {
                         type: "component",
                         component: "repl",
                     },
+                    {
+                        type: "component",
+                        component: "log",
+                    },
+                    {
+                        type: "component",
+                        component: "debug",
+                    },
                 ],
             },
         ],

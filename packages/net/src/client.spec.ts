@@ -9,6 +9,10 @@ function exampleSyncMessage(): Message<"sync"> {
         payload: {
             state: {
                 target: { connected: false, runtime: { paused: false } },
+                logStream: {
+                    turboSocket: "",
+                    targetSocket: "",
+                },
             },
         },
     };

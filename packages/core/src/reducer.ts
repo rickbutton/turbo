@@ -1,8 +1,6 @@
 import { EmitterBase } from "./emitter";
-import { createLogger } from "./logger";
+import { logger } from "./logger";
 import { State, Action } from "./state";
-
-const logger = createLogger("reducer");
 
 interface StateReducerEvents {
     update: State;

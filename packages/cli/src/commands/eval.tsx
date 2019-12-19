@@ -1,4 +1,4 @@
-import { Turbo, createLogger } from "@turbo/core";
+import { Turbo, logger } from "@turbo/core";
 import { Client } from "@turbo/net";
 import { getCurrentSessionId } from "@turbo/tmux";
 
@@ -6,12 +6,10 @@ import React from "react";
 import { render } from "ink";
 import { ObjectView } from "../components/object";
 
-const logger = createLogger("eval");
-
 export function evaluate(turbo: Turbo, expr: string): void {
     const sessionId = getCurrentSessionId(turbo.env);
     if (!sessionId) {
-        logger.error("unable to identify current session");
+        console.error("unable to identify current session");
         return;
     }
     const client = new Client({ type: "managed", sessionId });

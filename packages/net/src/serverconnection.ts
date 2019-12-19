@@ -1,4 +1,4 @@
-import { Action, SessionId, State, createLogger } from "@turbo/core";
+import { Action, SessionId, State, logger, LogEvent } from "@turbo/core";
 import {
     ClientId,
     AnyMessage,
@@ -11,8 +11,6 @@ import {
     ResponsePayload,
 } from "./shared";
 import { BaseClient, BaseClientEvents, ClientSocket } from "./baseclient";
-
-const logger = createLogger("serverconnection");
 
 export type RequestHandler<T extends RequestType> = (
     req: Request<T>,
@@ -28,6 +26,7 @@ export interface ServerRequestHandler {
 }
 interface ConnectionEvents extends BaseClientEvents {
     action: Action;
+    log: LogEvent;
 }
 export class ServerConnection extends BaseClient<ConnectionEvents> {
     public readonly id: ClientId;
@@ -61,6 +60,8 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
     protected handleUnhandledMessage(msg: AnyMessage): void {
         if (isMessageType("action", msg)) {
             this.fire("action", msg.payload);
+        } else if (isMessageType("log", msg)) {
+            this.fire("log", msg.payload);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }
