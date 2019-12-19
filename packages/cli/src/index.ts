@@ -6,7 +6,7 @@ process.on("uncaughtException", e => {
     console.error(e.stack);
 });
 
-import * as yargs from "yargs";
+import yargs from "yargs";
 import { start } from "./commands/start";
 import { component } from "./commands/component";
 import { evaluate } from "./commands/eval";
@@ -23,7 +23,15 @@ function makeTurbo(argv: any): Turbo {
     return getTurbo(getOptions(argv));
 }
 
+const LOGO =
+    "   __             __        \n" +
+    "  / /___  _______/ /_  ____ \n" +
+    " / __/ / / / ___/ __ \\/ __ \\\n" +
+    "/ /_/ /_/ / /  / /_/ / /_/ /\n" +
+    "\\__/\\__,_/_/  /_.___/\\____/\n ";
+
 yargs
+    .usage(LOGO)
     .help()
     .option("session", {
         describe: "the desired session id",
@@ -34,13 +42,18 @@ yargs
 
         start(turbo);
     })
-    .command("component <name>", "start a turbo component", {}, argv => {
-        const turbo = makeTurbo(argv);
+    .command(
+        ["component <name>", "comp"],
+        "start a turbo component",
+        {},
+        argv => {
+            const turbo = makeTurbo(argv);
 
-        const name = argv.name as string;
-        return component(turbo, name);
-    })
-    .command("eval <expr>", "evaluate an expression", {}, argv => {
+            const name = argv.name as string;
+            return component(turbo, name);
+        },
+    )
+    .command(["eval <expr>"], "evaluate an expression", {}, argv => {
         const turbo = makeTurbo(argv);
 
         const expr = argv.expr as string;
