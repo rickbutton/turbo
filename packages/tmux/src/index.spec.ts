@@ -27,18 +27,7 @@ const TEST_TURBO: Turbo = {
     options: {},
 };
 
-const POST_CMDS = [
-    ";",
-    "new-window",
-    "-n",
-    "daemon",
-    "/tmp/node /tmp/turbo.js daemon",
-    ";",
-    "select-window",
-    "-t:0",
-    ";",
-    "attach",
-];
+const POST_CMDS = [";", "select-window", "-t:0", ";", "attach"];
 
 test("generateTmuxStartCommand creates a command for a single pane", () => {
     const id = "id" as SessionId;

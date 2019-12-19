@@ -1,4 +1,5 @@
 import net from "net";
+import fs from "fs";
 import { uuid, EmitterBase } from "@turbo/core";
 
 // TODO: promises?
@@ -31,6 +32,9 @@ export class LogServer extends EmitterBase<LogServerEvents> {
         this.server.on("connection", socket => {
             this.connections.add(socket);
 
+            socket.on("end", () => {
+                this.connections.delete(socket);
+            });
             socket.on("close", () => {
                 this.connections.delete(socket);
             });
@@ -43,6 +47,11 @@ export class LogServer extends EmitterBase<LogServerEvents> {
         this.server.on("listening", () => {
             this.fire("ready", undefined);
         });
+        this.server.on("close", () => {
+            try {
+                fs.unlinkSync(this.socketPath);
+            } catch {}
+        });
     }
 
     public start(): void {
@@ -51,7 +60,11 @@ export class LogServer extends EmitterBase<LogServerEvents> {
 
     public log(msg: string): void {
         for (const conn of this.connections) {
-            conn.write(msg);
+            try {
+                conn.write(msg);
+            } catch (e) {
+                console.error(e.message);
+            }
         }
         this.buffer.push(msg);
     }

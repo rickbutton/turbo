@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+// TODO: fix this in yoga-layout-prebuilt
+process.on("uncaughtException", e => {
+    console.error(e.message);
+    console.error(e.stack);
+});
+
 import * as yargs from "yargs";
 import { start } from "./commands/start";
 import { component } from "./commands/component";
@@ -9,7 +15,7 @@ import { getTurbo, TurboOptions, Turbo } from "@turbo/core";
 
 function getOptions(argv: any): TurboOptions {
     return {
-        sessionId: argv.sessionId || undefined,
+        sessionId: argv.session || undefined,
     };
 }
 
@@ -18,6 +24,7 @@ function makeTurbo(argv: any): Turbo {
 }
 
 yargs
+    .help()
     .option("session", {
         describe: "the desired session id",
         alias: ["s"],
@@ -43,5 +50,4 @@ yargs
         const turbo = makeTurbo(argv);
 
         return daemon(turbo);
-    })
-    .help().argv;
+    }).argv;

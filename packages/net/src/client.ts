@@ -137,7 +137,6 @@ export class Client extends BaseClient<ClientEvents> {
     }
 
     private sendLog(log: LogEvent): void {
-        console.error("foo");
         if (this.bufferLogs) {
             this.logBuffer.push(log);
         } else {

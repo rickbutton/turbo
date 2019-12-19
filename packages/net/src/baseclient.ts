@@ -138,7 +138,7 @@ export abstract class BaseClient<
     public connectAfterDelay(): void {
         setTimeout(() => {
             this.connect();
-        }, 500); // TODO: don't hardcode this timeout
+        }, 100); // TODO: don't hardcode this timeout
     }
 
     private handleInboundMessage(msg: AnyMessage): void {

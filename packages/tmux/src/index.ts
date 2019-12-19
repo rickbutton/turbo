@@ -16,10 +16,6 @@ function getNodeCommand(
     } ${args.join(" ")}`;
 }
 
-function generateDaemonCommand(env: Environment): string[] {
-    return [`${env.nodePath} ${env.scriptPath} daemon`];
-}
-
 function generatePaneCommand(pane: Pane, env: Environment): string[] {
     if (pane.type === "component") {
         return [`${getNodeCommand(env, ["component", pane.component])}`];
@@ -87,18 +83,7 @@ function generateSessionArgs(
         );
         commands = commands.concat(paneCommands);
     }
-    commands.push([
-        ";",
-        "new-window",
-        "-n",
-        "daemon",
-        ...generateDaemonCommand(turbo.env),
-        ";",
-        "select-window",
-        "-t:0",
-        ";",
-        "attach",
-    ]);
+    commands.push([";", "select-window", "-t:0", ";", "attach"]);
 
     return commands.flat();
 }

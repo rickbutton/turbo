@@ -1,4 +1,5 @@
 import net from "net";
+import fs from "fs";
 import {
     JsonSocket,
     SessionId,
@@ -20,13 +21,19 @@ interface ServerEvents {
 
 export class Server extends EmitterBase<ServerEvents> {
     private lastClientId: ClientId = 0 as ClientId;
+    private socketPath: string;
     private sessionId: SessionId;
     private server: net.Server = this.createServer();
     private connections: Set<ServerConnection> = new Set();
     private handler: ServerRequestHandler;
 
+    get numConnections(): number {
+        return this.connections.size;
+    }
+
     constructor(sessionId: SessionId, handler: ServerRequestHandler) {
         super();
+        this.socketPath = `/tmp/turbo-session-${sessionId}`;
         this.sessionId = sessionId;
         this.handler = handler;
 
@@ -36,7 +43,11 @@ export class Server extends EmitterBase<ServerEvents> {
     }
 
     public start(): void {
-        this.server.listen(`/tmp/turbo-session-${this.sessionId}`);
+        this.server.listen(this.socketPath);
+    }
+
+    public stop(): void {
+        this.server.close();
     }
 
     public broadcast(state: State): void {
@@ -60,6 +71,9 @@ export class Server extends EmitterBase<ServerEvents> {
         });
         server.on("ready", () => {
             this.fire("ready", undefined);
+        });
+        server.on("close", () => {
+            fs.unlinkSync(this.socketPath);
         });
 
         return server;

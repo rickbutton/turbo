@@ -155,7 +155,6 @@ class Daemon implements ServerRequestHandler {
 
 export async function daemon(turbo: Turbo): Promise<void> {
     const sessionId = getCurrentSessionId(turbo);
-
     if (!sessionId) {
         console.error("unable to identify current session");
         return;
@@ -180,11 +179,36 @@ export async function daemon(turbo: Turbo): Promise<void> {
 
     target.on("stdout", str => targetLogServer.log(str));
     target.on("stderr", str => targetLogServer.log(str));
-    logger.on("log", log => turboLogServer.log(format(log)));
-    server.on("log", log => turboLogServer.log(format(log)));
+    logger.on("log", log => {
+        const msg = format(log);
+        process.stdout.write(msg);
+        turboLogServer.log(msg);
+    });
+    server.on("log", log => {
+        const msg = format(log);
+        process.stdout.write(msg);
+        turboLogServer.log(msg);
+    });
 
     server.on("connected", (conn: ServerConnection) => {
         conn.broadcast(reducer.state);
+
+        let counter = 0;
+        conn.on("close", () => {
+            counter++;
+            const savedCounter = counter;
+            setTimeout(() => {
+                // TODO: wait for log servers as well
+                if (counter === savedCounter && server.numConnections === 0) {
+                    // TODO: log this message somewhere
+                    // TODO: only exit if in config
+                    logger.error(
+                        "closing daemon because all clients disconnected",
+                    );
+                    process.exit(0);
+                }
+            }, 5000); // TODO: don't hardcode
+        });
     });
     server.on("action", (action: Action) => {
         reducer.action(action);
@@ -199,5 +223,13 @@ export async function daemon(turbo: Turbo): Promise<void> {
 
     process.on("SIGHUP", () => {
         process.exit(0);
+    });
+    process.on("SIGINT", () => {
+        process.exit(0);
+    });
+
+    process.on("exit", () => {
+        target.stop();
+        server.stop();
     });
 }

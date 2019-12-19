@@ -1,8 +1,9 @@
 import { generateTmuxStartCommand, generateSessionId } from "@turbo/tmux";
-import { Turbo, Layout } from "@turbo/core";
+import { Turbo, Layout, SessionId } from "@turbo/core";
 import * as ffi from "ffi";
 import * as ref from "ref";
 import ArrayType from "ref-array";
+import child from "child_process";
 
 const defaultLayout: Layout = {
     windows: [
@@ -44,12 +45,27 @@ function execvp(command: string, args: string[]): void {
     ]);
 }
 
+function spawnDaemon(turbo: Turbo, id: SessionId): void {
+    try {
+        const exec = turbo.env.nodePath;
+        const args = [turbo.env.scriptPath, "--session", id, "daemon"];
+        child.spawn(exec, args, { detached: true, stdio: "ignore" });
+    } catch (e) {
+        console.error("failed to spawn daemon");
+        console.error(e);
+        process.exit(1);
+    }
+}
+
 export function start(turbo: Turbo): void {
     const id = generateSessionId();
 
     const layout = turbo.config.layout || defaultLayout;
 
     const { command, args } = generateTmuxStartCommand(id, layout, turbo);
+
+    // spawn daemon in background
+    spawnDaemon(turbo, id);
 
     // replace current process with spawned tmux
     execvp(command, args);
