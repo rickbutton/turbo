@@ -13,11 +13,6 @@ ls command
 automatically kill tmux when entire session dies?
 - how to determine when session dies?
 
-listen for log events and
-broadcast as dangling messages to clients, then
-implement log component that streams in log messages
-with optional syntax highlighting
-
 object expand - allow expanding automatially, defer fetching
 nested props until interaction
 
