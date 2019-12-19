@@ -15,6 +15,11 @@ module.exports = {
                         type: "component",
                         component: "repl",
                     },
+                ],
+            },
+            {
+                name: "logs",
+                panes: [
                     {
                         type: "component",
                         component: "log",
