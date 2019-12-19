@@ -130,6 +130,8 @@ export class Client extends BaseClient<ClientEvents> {
     }
 
     private flushLogs(): void {
+        // TODO: flush logs automatically on process exit to
+        // stdout or file if there are buffered logs
         for (const log of this.logBuffer) {
             this.sendLog(log);
         }
