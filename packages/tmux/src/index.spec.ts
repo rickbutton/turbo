@@ -11,11 +11,10 @@ import {
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
         if (name === "SHELL") return "conch";
+        if (name === "TMUX") return "foobarbaz";
         else return undefined;
     },
-    execSync: () => {
-        throw new Error();
-    },
+    execSync: jest.fn().mockReturnValueOnce("sessionid"),
     nodePath: "/tmp/node",
     scriptPath: "/tmp/turbo.js",
 };
@@ -25,6 +24,7 @@ const TEST_CONFIG: Config = {
 const TEST_TURBO: Turbo = {
     env: TEST_ENV,
     config: TEST_CONFIG,
+    options: {},
 };
 
 const POST_CMDS = [
@@ -154,17 +154,5 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
 });
 
 test("getCurrentSessionId returns the correct id", () => {
-    const execSync = jest.fn().mockReturnValueOnce("sessionid\n");
-
-    expect(
-        getCurrentSessionId({
-            nodePath: "",
-            scriptPath: "",
-            getVar(name: string) {
-                if (name === "TMUX") return "foobarbaz";
-                else return undefined;
-            },
-            execSync,
-        }),
-    ).toBe("sessionid");
+    expect(getCurrentSessionId(TEST_TURBO)).toBe("sessionid");
 });

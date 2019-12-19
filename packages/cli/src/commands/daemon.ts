@@ -154,7 +154,7 @@ class Daemon implements ServerRequestHandler {
 }
 
 export async function daemon(turbo: Turbo): Promise<void> {
-    const sessionId = getCurrentSessionId(turbo.env);
+    const sessionId = getCurrentSessionId(turbo);
 
     if (!sessionId) {
         console.error("unable to identify current session");

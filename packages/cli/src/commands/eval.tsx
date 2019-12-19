@@ -7,7 +7,7 @@ import { render } from "ink";
 import { ObjectView } from "../components/object";
 
 export function evaluate(turbo: Turbo, expr: string): void {
-    const sessionId = getCurrentSessionId(turbo.env);
+    const sessionId = getCurrentSessionId(turbo);
     if (!sessionId) {
         console.error("unable to identify current session");
         return;

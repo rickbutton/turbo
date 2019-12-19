@@ -118,11 +118,15 @@ export function generateTmuxStartCommand(
     };
 }
 
-export function getCurrentSessionId(env: Environment): SessionId | undefined {
-    const inTmux = Boolean(env.getVar("TMUX"));
+export function getCurrentSessionId(turbo: Turbo): SessionId | undefined {
+    if (turbo.options.sessionId) {
+        return turbo.options.sessionId;
+    }
+
+    const inTmux = Boolean(turbo.env.getVar("TMUX"));
 
     if (inTmux) {
-        return env
+        return turbo.env
             .execSync("tmux display-message -p '#S'")
             .toString()
             .split("\n")[0] as SessionId;

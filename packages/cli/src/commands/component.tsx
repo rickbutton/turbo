@@ -30,7 +30,7 @@ const components: { [key: string]: Component } = {
 };
 
 export function component(turbo: Turbo, name: string): void {
-    const sessionId = getCurrentSessionId(turbo.env);
+    const sessionId = getCurrentSessionId(turbo);
     const Component = components[name];
 
     if (!Component) {

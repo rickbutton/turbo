@@ -108,17 +108,22 @@ function getConfig(basePath?: string): Config {
     }
 }
 
+export interface TurboOptions {
+    sessionId?: SessionId;
+}
 export interface Turbo {
     env: Environment;
     config: Config;
+    options: TurboOptions;
 }
 
-export function getTurbo(): Turbo {
+export function getTurbo(options: TurboOptions): Turbo {
     const env = getEnvironment();
     const config = getConfig();
     return {
         env,
         config,
+        options,
     };
 }
 
