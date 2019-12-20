@@ -8,10 +8,9 @@
   ],
   "scripts": {
     "build": "npm run clean && npm run compile",
-    "watch": "npm run build && npm run compile-watch",
-    "clean": "rm -rf ./lib",
-    "compile": "tsc -p tsconfig.build.json",
-    "compile-watch": "tsc -w -p tsconfig.build.json",
+    "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
+    "compile": "tsc -b tsconfig.build.json",
+    "compile-watch": "tsc -w -b tsconfig.build.json",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {

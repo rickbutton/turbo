@@ -1,7 +1,7 @@
 {
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "baseUrl": ".",
+    "baseUrl": "./packages",
     "paths": {
       "@turbo/*": ["packages/*/src"]
     }

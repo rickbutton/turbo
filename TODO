@@ -1,3 +1,7 @@
+switch auto-identify session to putting .turbo files where the daemon ran,
+and then searching upward?
+or putting them in a known directory and iterating over them? - impl ls
+
 allow specifying target location in layout
 - will likely need to runtime restrict to 1 target
 

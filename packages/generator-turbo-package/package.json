@@ -1,5 +1,6 @@
 {
   "name": "generator-turbo-package",
+  "private": true,
   "version": "1.0.0",
   "files": [
     "generators"
@@ -12,7 +13,6 @@
   },
   "scripts": {
     "build": "true",
-    "watch": "true",
     "clean": "true",
     "compile": "true",
     "compile-watch": "true"

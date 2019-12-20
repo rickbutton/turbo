@@ -43,7 +43,7 @@ describe("Turbo", () => {
 
     describe("env", () => {
         test("getVar returns environment variables", () => {
-            const turbo = getTurbo();
+            const turbo = getTurbo({});
             expect(turbo.env.getVar("FOO")).toBe("BAR");
             expect(turbo.env.getVar("foo")).toBe("bar");
             expect(turbo.env.getVar("BAR")).toBe("BAZ");
@@ -52,18 +52,18 @@ describe("Turbo", () => {
 
         describe("nodePath returns the correct path", () => {
             process.argv[0] = "/tmp/foo/node";
-            const turbo = getTurbo();
+            const turbo = getTurbo({});
             expect(turbo.env.nodePath).toBe("/tmp/foo/node");
         });
 
         describe("scriptPath returns the correct path", () => {
             process.argv[1] = "/tmp/foo/myScript.js";
-            const turbo = getTurbo();
+            const turbo = getTurbo({});
             expect(turbo.env.scriptPath).toBe("/tmp/foo/myScript.js");
         });
 
         describe("execSync invokes the command and returns the stdout", () => {
-            const turbo = getTurbo();
+            const turbo = getTurbo({});
             expect(turbo.env.execSync("TEST")).toBe("FOOTESTBAR");
             expect(turbo.env.execSync("test test")).toBe("FOOtest testBAR");
             expect(mocked(child.execSync).mock.calls.length).toBe(2);
@@ -71,7 +71,7 @@ describe("Turbo", () => {
     });
     describe("config", () => {
         test("getConfig looks for the config file with the correct resolution order", () => {
-            const _ = getTurbo();
+            const _ = getTurbo({});
 
             expect(mocked(fs.existsSync).mock.calls).toEqual([
                 ["/tmp/exists/foo/bar/baz/turbo.config.js"],
