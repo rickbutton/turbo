@@ -11,7 +11,8 @@ import { start } from "./commands/start";
 import { component } from "./commands/component";
 import { evaluate } from "./commands/eval";
 import { daemon } from "./commands/daemon";
-import { getTurbo, TurboOptions, Turbo } from "@turbo/core";
+import { TurboOptions, Turbo } from "@turbo/core";
+import { getTurbo } from "./turbo";
 
 function getOptions(argv: any): TurboOptions {
     return {

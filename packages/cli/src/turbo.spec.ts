@@ -1,5 +1,5 @@
+import { getTurbo } from "./turbo";
 import { mocked } from "ts-jest/utils";
-import { getTurbo } from "./index";
 import fs from "fs";
 import path from "path";
 import child from "child_process";

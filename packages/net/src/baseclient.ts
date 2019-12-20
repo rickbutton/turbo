@@ -1,12 +1,5 @@
 import net from "net";
-import {
-    JsonSocket,
-    logger,
-    SessionId,
-    EmitterBase,
-    uuid,
-    Turbo,
-} from "@turbo/core";
+import { logger, SessionId, EmitterBase, uuid, Turbo } from "@turbo/core";
 import {
     RequestId,
     RequestHandle,
@@ -21,6 +14,7 @@ import {
     isResponse,
     isRequestType,
 } from "./shared";
+import { JsonSocket } from "./jsonsocket";
 
 const RESPONSE_TIMEOUT = 5000;
 

@@ -1,4 +1,4 @@
-import { JsonSocket } from "./index";
+import { JsonSocket } from "./jsonsocket";
 
 function mockSocket(): any {
     return {

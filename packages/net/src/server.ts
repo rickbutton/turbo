@@ -1,7 +1,6 @@
 import net from "net";
 import fs from "fs";
 import {
-    JsonSocket,
     SessionId,
     EmitterBase,
     State,
@@ -10,6 +9,7 @@ import {
     Turbo,
 } from "@turbo/core";
 import { ClientId, MessagePayload } from "./shared";
+import { JsonSocket } from "./jsonsocket";
 import { ServerConnection, ServerRequestHandler } from "./serverconnection";
 
 interface ServerEvents {
