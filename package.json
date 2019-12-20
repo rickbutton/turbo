@@ -7,8 +7,8 @@
   "scripts": {
     "bootstrap": "lerna bootstrap",
     "clean": "lerna run clean",
-    "build": "lerna run clean && lerna run compile",
-    "watch": "lerna run compile && lerna run --stream --parallel compile-watch",
+    "build": "tsc -b tsconfig.build.json",
+    "watch": "tsc -b tsconfig.build.json",
     "lint": "eslint . --ext .ts,.tsx",
     "fix": "eslint . --ext .ts,.tsx --fix",
     "test": "jest",
