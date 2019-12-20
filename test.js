@@ -1,12 +1,14 @@
-console.log("start!");
+console.log(
+    "   __             __        \n" +
+        "  / /___  _______/ /_  ____ \n" +
+        " / __/ / / / ___/ __ \\/ __ \\\n" +
+        "/ /_/ /_/ / /  / /_/ / /_/ /\n" +
+        "\\__/\\__,_/_/  /_.___/\\____/\n\n ",
+);
 
-const a = 1;
+console.log("a terminal javascript debugger");
+console.log("built for productivity.");
 
 debugger;
 
-const b = 2;
-const c = 3;
-
-debugger;
-
-console.log("first!");
+console.log("turbo --help");
