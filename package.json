@@ -8,7 +8,7 @@
     "bootstrap": "lerna bootstrap",
     "clean": "lerna run clean",
     "build": "tsc -b tsconfig.build.json",
-    "watch": "tsc -b tsconfig.build.json",
+    "watch": "tsc -b -w tsconfig.build.json",
     "lint": "eslint . --ext .ts,.tsx",
     "fix": "eslint . --ext .ts,.tsx --fix",
     "test": "jest",
