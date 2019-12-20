@@ -14,6 +14,8 @@ export interface Environment {
 
     readonly getVar: (name: string) => string | undefined;
     readonly execSync: (command: string) => string;
+    readonly getTmpFolder: (context: string) => string;
+    readonly getTmpFile: (context: string, name: string) => string;
 }
 
 function getVar(name: string): string | undefined {
@@ -24,6 +26,21 @@ function execSync(command: string): string {
     return child.execSync(command).toString();
 }
 
+function ensureFolderExists(folder: string): void {
+    if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, { recursive: true });
+    }
+}
+function getTmpFolder(context: string): string {
+    const folder = `/tmp/turbo/${context}`;
+    ensureFolderExists(folder);
+    return folder;
+}
+function getTmpFile(context: string, name: string): string {
+    const folder = getTmpFolder(context);
+    return path.join(folder, name);
+}
+
 function getEnvironment(): Environment {
     const nodePath = process.argv[0];
     const scriptPath = process.argv[1];
@@ -32,6 +49,8 @@ function getEnvironment(): Environment {
         scriptPath,
         getVar,
         execSync,
+        getTmpFolder,
+        getTmpFile,
     };
 }
 

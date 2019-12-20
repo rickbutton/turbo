@@ -12,7 +12,7 @@ export function evaluate(turbo: Turbo, expr: string): void {
         console.error("unable to identify current session");
         return;
     }
-    const client = new Client({ type: "managed", sessionId });
+    const client = new Client(turbo, { type: "managed", sessionId });
 
     client.once("sync", async state => {
         const runtime = state.target.runtime;

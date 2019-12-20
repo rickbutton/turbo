@@ -7,6 +7,7 @@ import {
     State,
     Action,
     logger,
+    Turbo,
 } from "@turbo/core";
 import { ClientId, MessagePayload } from "./shared";
 import { ServerConnection, ServerRequestHandler } from "./serverconnection";
@@ -20,6 +21,7 @@ interface ServerEvents {
 }
 
 export class Server extends EmitterBase<ServerEvents> {
+    private turbo: Turbo;
     private lastClientId: ClientId = 0 as ClientId;
     private socketPath: string;
     private sessionId: SessionId;
@@ -31,9 +33,14 @@ export class Server extends EmitterBase<ServerEvents> {
         return this.connections.size;
     }
 
-    constructor(sessionId: SessionId, handler: ServerRequestHandler) {
+    constructor(
+        turbo: Turbo,
+        sessionId: SessionId,
+        handler: ServerRequestHandler,
+    ) {
         super();
-        this.socketPath = `/tmp/turbo-session-${sessionId}`;
+        this.turbo = turbo;
+        this.socketPath = turbo.env.getTmpFile("sessions", sessionId);
         this.sessionId = sessionId;
         this.handler = handler;
 
@@ -91,6 +98,7 @@ export class Server extends EmitterBase<ServerEvents> {
         this.lastClientId = (this.lastClientId + 1) as ClientId;
 
         const client = new ServerConnection(
+            this.turbo,
             this.lastClientId,
             this.sessionId,
             socket,

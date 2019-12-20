@@ -2,6 +2,7 @@ import { Client } from "./client";
 import { mockSocket } from "./mocksocket";
 import { Message } from "./shared";
 import { SessionId } from "@turbo/core";
+import { TEST_TURBO } from "./mocks";
 
 function exampleSyncMessage(): Message<"sync"> {
     return {
@@ -21,7 +22,7 @@ function exampleSyncMessage(): Message<"sync"> {
 describe("Client", () => {
     test("handles the sync event", () => {
         const socket = mockSocket();
-        const client = new Client({
+        const client = new Client(TEST_TURBO, {
             type: "unmanaged",
             sessionId: "id" as SessionId,
             socket,

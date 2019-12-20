@@ -5,6 +5,7 @@ import {
     CallFrameId,
     ScriptId,
     LogEvent,
+    Turbo,
 } from "@turbo/core";
 import {
     ResponsePayload,
@@ -26,8 +27,8 @@ export class Client extends BaseClient<ClientEvents> {
     private bufferLogs = true;
     private logBuffer: LogEvent[] = [];
 
-    constructor(options: ClientOptions) {
-        super(options);
+    constructor(turbo: Turbo, options: ClientOptions) {
+        super(turbo, options);
 
         logger.on("log", this.sendLog.bind(this));
         this.on("ready", () => {

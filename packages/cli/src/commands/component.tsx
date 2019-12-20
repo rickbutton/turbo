@@ -41,7 +41,7 @@ export function component(turbo: Turbo, name: string): void {
         console.error("unable to identify current session");
         return;
     }
-    const client = new Client({ type: "managed", sessionId });
+    const client = new Client(turbo, { type: "managed", sessionId });
 
     client.on("ready", () => {
         if (Component.type === "react") {

@@ -1,6 +1,6 @@
 import net from "net";
 import fs from "fs";
-import { uuid, EmitterBase } from "@turbo/core";
+import { uuid, EmitterBase, Turbo } from "@turbo/core";
 
 // TODO: promises?
 interface LogServerEvents {
@@ -13,9 +13,9 @@ export class LogServer extends EmitterBase<LogServerEvents> {
 
     public readonly socketPath: string;
 
-    public static create(): Promise<LogServer> {
+    public static create(turbo: Turbo): Promise<LogServer> {
         return new Promise<LogServer>(resolve => {
-            const server = new LogServer();
+            const server = new LogServer(turbo);
             server.on("ready", () => {
                 resolve(server);
             });
@@ -23,10 +23,10 @@ export class LogServer extends EmitterBase<LogServerEvents> {
         });
     }
 
-    private constructor() {
+    private constructor(turbo: Turbo) {
         super();
 
-        this.socketPath = `/tmp/turbo-logs-${uuid()}`;
+        this.socketPath = turbo.env.getTmpFile("logs", uuid());
         this.server = net.createServer();
 
         this.server.on("connection", socket => {

@@ -14,6 +14,12 @@ const TEST_ENV: Environment = {
         if (name === "TMUX") return "foobarbaz";
         else return undefined;
     },
+    getTmpFolder() {
+        return "";
+    },
+    getTmpFile() {
+        return "";
+    },
     execSync: jest.fn().mockReturnValueOnce("sessionid"),
     nodePath: "/tmp/node",
     scriptPath: "/tmp/turbo.js",

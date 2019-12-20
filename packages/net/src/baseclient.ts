@@ -1,5 +1,12 @@
 import net from "net";
-import { JsonSocket, logger, SessionId, EmitterBase, uuid } from "@turbo/core";
+import {
+    JsonSocket,
+    logger,
+    SessionId,
+    EmitterBase,
+    uuid,
+    Turbo,
+} from "@turbo/core";
 import {
     RequestId,
     RequestHandle,
@@ -58,6 +65,7 @@ const MAX_RETRIES = 2;
 export abstract class BaseClient<
     T extends BaseClientEvents = BaseClientEvents
 > extends EmitterBase<T> {
+    private socketPath: string;
     private sessionId: SessionId;
     private client: ClientSocket;
 
@@ -67,9 +75,10 @@ export abstract class BaseClient<
 
     private inflightRequests: Map<RequestId, RequestHandle> = new Map();
 
-    public constructor(options: ClientOptions) {
+    public constructor(turbo: Turbo, options: ClientOptions) {
         super();
         this.sessionId = options.sessionId;
+        this.socketPath = turbo.env.getTmpFile("sessions", options.sessionId);
         this.reconnect =
             typeof options.reconnect === "boolean" ? options.reconnect : true;
 
@@ -94,7 +103,7 @@ export abstract class BaseClient<
         }
 
         if (!this.connected) {
-            this.client.connect(`/tmp/turbo-session-${this.sessionId}`);
+            this.client.connect(this.socketPath);
             this.numRetries++;
         } else {
             throw new Error("attempted to connect already connected socket");

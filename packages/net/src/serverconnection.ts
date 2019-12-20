@@ -1,4 +1,4 @@
-import { Action, SessionId, State, logger, LogEvent } from "@turbo/core";
+import { Action, SessionId, State, logger, LogEvent, Turbo } from "@turbo/core";
 import {
     ClientId,
     AnyMessage,
@@ -32,12 +32,13 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
     public readonly id: ClientId;
     private handler: ServerRequestHandler;
     constructor(
+        turbo: Turbo,
         id: ClientId,
         sessionId: SessionId,
         socket: ClientSocket,
         handler: ServerRequestHandler,
     ) {
-        super({
+        super(turbo, {
             type: "unmanaged",
             sessionId,
             socket,

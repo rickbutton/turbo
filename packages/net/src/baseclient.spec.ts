@@ -9,6 +9,7 @@ import {
 } from "./shared";
 import { SessionId } from "@turbo/core";
 import * as core from "@turbo/core";
+import { TEST_TURBO } from "./mocks";
 
 jest.useFakeTimers();
 jest.spyOn(core, "uuid").mockReturnValue("uuid-foo-bar");
@@ -28,7 +29,7 @@ describe("BaseClient", () => {
     test("correctly connects to the unix socket", () => {
         const socket = mockSocket();
 
-        const client = new TestClient({
+        const client = new TestClient(TEST_TURBO, {
             type: "unmanaged",
             sessionId: "id" as SessionId,
             socket,
@@ -37,13 +38,13 @@ describe("BaseClient", () => {
         client.connect();
 
         expect(socket.connect.mock.calls.length).toBe(1);
-        expect(socket.connect.mock.calls).toEqual([["/tmp/turbo-session-id"]]);
+        expect(socket.connect.mock.calls).toEqual([["/tmp/turbo/sessions/id"]]);
     });
 
     test("correctly sends a ping", async () => {
         const socket = mockSocket();
 
-        const client = new TestClient({
+        const client = new TestClient(TEST_TURBO, {
             type: "unmanaged",
             sessionId: "id" as SessionId,
             socket,
@@ -81,7 +82,7 @@ describe("BaseClient", () => {
 
     test("handles the ready event", () => {
         const socket = mockSocket();
-        const client = new TestClient({
+        const client = new TestClient(TEST_TURBO, {
             type: "unmanaged",
             sessionId: "id" as SessionId,
             socket,
@@ -103,7 +104,7 @@ describe("BaseClient", () => {
 
     test("automatically reconnects on close", () => {
         const socket = mockSocket();
-        const _ = new TestClient({
+        const _ = new TestClient(TEST_TURBO, {
             type: "unmanaged",
             sessionId: "id" as SessionId,
             socket,

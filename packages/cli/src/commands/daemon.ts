@@ -160,8 +160,8 @@ export async function daemon(turbo: Turbo): Promise<void> {
         return;
     }
 
-    const turboLogServer = await LogServer.create();
-    const targetLogServer = await LogServer.create();
+    const turboLogServer = await LogServer.create(turbo);
+    const targetLogServer = await LogServer.create(turbo);
 
     const reducer = new StateReducer({
         target: {
@@ -175,7 +175,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
     });
     const target = setupTarget(turbo);
     const daemon = new Daemon(target, reducer);
-    const server = new Server(sessionId, daemon);
+    const server = new Server(turbo, sessionId, daemon);
 
     target.on("stdout", str => targetLogServer.log(str));
     target.on("stderr", str => targetLogServer.log(str));
