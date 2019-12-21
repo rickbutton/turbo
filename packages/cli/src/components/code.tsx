@@ -10,6 +10,16 @@ interface Props {
     client: Client;
 }
 
+function numbers(height: number): string {
+    const width = String(height).length;
+    let str = "";
+
+    for (let i = 0; i < height; i++) {
+        str += String(i + 1).padStart(width, " ") + " \n";
+    }
+    return str;
+}
+
 function gutter(height: number, loc: SourceLocation): string {
     let str = "";
     for (let i = 0; i < height; i++) {
@@ -36,6 +46,7 @@ export function Code(props: Props): JSX.Element {
         //{highlight(script, { language: "typescript" })}
         return (
             <Box flexDirection="row">
+                <Box flexShrink={1}>{numbers(height)}</Box>
                 <Box flexShrink={1}>{gutter(height, loc)}</Box>
                 <Box flexGrow={1}>
                     {highlight(script, { language: "typescript" })}
