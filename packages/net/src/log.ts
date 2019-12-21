@@ -2,7 +2,8 @@ import net from "net";
 import fs from "fs";
 import { uuid, EmitterBase, Turbo } from "@turbo/core";
 
-// TODO: promises?
+const MAX_BUFFER_LENGTH = 4096;
+
 interface LogServerEvents {
     ready: void;
 }
@@ -67,6 +68,9 @@ export class LogServer extends EmitterBase<LogServerEvents> {
             }
         }
         this.buffer.push(msg);
+        if (this.buffer.length > MAX_BUFFER_LENGTH) {
+            this.buffer.shift();
+        }
     }
 }
 
