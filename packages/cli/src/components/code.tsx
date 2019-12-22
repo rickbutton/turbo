@@ -32,6 +32,17 @@ function gutter(height: number, loc: SourceLocation): string {
     return str;
 }
 
+function highlightScript(script: string, loc: SourceLocation): string {
+    const colored = highlight(script, { language: "typescript" });
+    const lines = colored.split("\n");
+
+    return lines
+        .map((line: string, i: number) => {
+            return i === loc.line ? chalk.bgBlackBright(line) : line;
+        })
+        .join("\n");
+}
+
 export function Code(props: Props): JSX.Element {
     const state = useClientState(props.client);
     const script = useScriptSource(props.client, state);
@@ -43,14 +54,11 @@ export function Code(props: Props): JSX.Element {
 
         const height = script.split("\n").length; // TODO, too many allocs
         const loc = topCallFrame.location;
-        //{highlight(script, { language: "typescript" })}
         return (
             <Box flexDirection="row">
                 <Box flexShrink={1}>{numbers(height)}</Box>
                 <Box flexShrink={1}>{gutter(height, loc)}</Box>
-                <Box flexGrow={1}>
-                    {highlight(script, { language: "typescript" })}
-                </Box>
+                <Box flexGrow={1}>{highlightScript(script, loc)}</Box>
             </Box>
         );
     } else {
