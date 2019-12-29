@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 
-// TODO: fix this in yoga-layout-prebuilt
 process.on("uncaughtException", e => {
     console.error(e.message);
     console.error(e.stack);
