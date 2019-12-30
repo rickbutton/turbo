@@ -1,7 +1,7 @@
 import * as yoga from "yoga-layout-prebuilt";
 import { applyStyle } from "./style";
 import stringWidth from "string-width";
-import { BufferTarget } from "./buffertarget";
+import { BufferTarget, MouseEvent } from "./buffertarget";
 
 export interface Container {
     target: BufferTarget;
@@ -9,22 +9,21 @@ export interface Container {
     forceRedraw: boolean;
 }
 
-interface MouseEvent {
-    x: number;
-    y: number;
-}
+const DEFAULT_ORIENTATION = "horizontal";
 
 type Attributes = { [key: string]: any };
 export interface ComplexNode {
     type: "complex";
+    orientation: "horizontal" | "vertical";
     name: string;
     yoga: yoga.YogaNode;
-    wrap: boolean;
+    wrap?: boolean;
     children: Node[];
     parent: ComplexNode | null;
     attributes: Attributes;
 
     onClick?(event: MouseEvent): void;
+    onMouse?(event: MouseEvent): void;
 }
 
 interface TextSize {
@@ -61,6 +60,24 @@ function resolveProperty<G extends (n: ComplexNode) => any>(
     }
 }
 
+function forAllComplexChildren(
+    node: ComplexNode,
+    cb: (node: ComplexNode, x: number, y: number) => void,
+    x = 0,
+    y = 0,
+): void {
+    const offsetX = x + node.yoga.getComputedLeft();
+    const offsetY = x + node.yoga.getComputedTop();
+    for (const child of node.children) {
+        const nodeX = offsetX + child.yoga.getComputedLeft();
+        const nodeY = offsetY + child.yoga.getComputedTop();
+        if (child.type === "complex") {
+            cb(child, nodeX, nodeY);
+            forAllComplexChildren(child, cb, nodeX, nodeY);
+        }
+    }
+}
+
 function forAllTextChildren(
     node: ComplexNode,
     cb: (node: TextNode) => void,
@@ -75,15 +92,16 @@ function forAllTextChildren(
 }
 
 export function createNode(name: string): ComplexNode {
-    return {
+    const node: ComplexNode = {
         type: "complex",
         name: name.toLowerCase(),
         yoga: yoga.Node.create(),
         children: [],
         parent: null,
+        orientation: DEFAULT_ORIENTATION,
         attributes: {},
-        wrap: false,
     };
+    return node;
 }
 
 export function createContainer(target: BufferTarget): Container {
@@ -130,15 +148,55 @@ function noSplit(str: string): string[] {
     return [str.replace(/\r/g, "").replace(/\n/g, "")];
 }
 
+export function calculateTextHeight(node: Node, width: number): number {
+    if (node.type === "complex") {
+        // TODO: assert that flex direction is column
+        let height = 0;
+        for (const child of node.children) {
+            height += calculateTextHeight(child, width);
+        }
+
+        return height;
+    } else {
+        const parent = createNode("div");
+        applyAttributes(parent, {
+            wrap: resolveProperty(node, (n: ComplexNode) => n.wrap) || false,
+        });
+        const text = createTextNode(node.value);
+        text.yoga.setWidth(width);
+        updateTextNodeLayout(text);
+        appendChildNode(parent, text);
+
+        parent.yoga.calculateLayout(width, Number.MAX_SAFE_INTEGER);
+
+        const height = text.yoga.getComputedHeight();
+
+        parent.yoga.free();
+        text.yoga.free();
+
+        return height;
+    }
+}
+
 export function updateTextNodeLayout(node: TextNode): void {
+    if (!node.parent) return;
+
     const childrenToRemove: yoga.YogaNode[] = [];
     for (let i = 0; i < node.yoga.getChildCount(); i++) {
         childrenToRemove.push(node.yoga.getChild(i));
     }
     for (const child of childrenToRemove) {
         node.yoga.removeChild(child);
+        child.free();
     }
     node.parts = [];
+
+    const orientation = node.parent.orientation;
+    node.yoga.setFlexDirection(
+        orientation === "horizontal"
+            ? yoga.FLEX_DIRECTION_ROW
+            : yoga.FLEX_DIRECTION_COLUMN,
+    );
 
     const wrap = resolveProperty(node, n => n.wrap) || false;
     const words = wrap ? splitOnWordStart(node.value) : noSplit(node.value);
@@ -148,8 +206,16 @@ export function updateTextNodeLayout(node: TextNode): void {
             yoga: yoga.Node.create(),
         };
         const width = stringWidth(word);
-        part.yoga.setWidth(width);
-        part.yoga.setHeight(1);
+
+        if (orientation === "horizontal") {
+            part.yoga.setWidth(width);
+            part.yoga.setHeight(1);
+        } else if (orientation === "vertical") {
+            part.yoga.setWidth(1);
+            part.yoga.setHeight(width);
+        } else {
+            throw new Error(`unknown orientation ${orientation}`);
+        }
 
         node.parts.push(part);
         node.yoga.insertChild(part.yoga, node.yoga.getChildCount());
@@ -164,9 +230,7 @@ export function createTextNode(text: string): TextNode {
         value: text,
         yoga: yoga.Node.create(),
     };
-    node.yoga.setFlexDirection(yoga.FLEX_DIRECTION_ROW);
     node.yoga.setFlexWrap(yoga.WRAP_WRAP);
-
     return node;
 }
 
@@ -177,6 +241,10 @@ export function removeChildNode(node: ComplexNode, child: Node): void {
         node.children.splice(index, 1);
         const yoga = node.yoga.getChild(index);
         node.yoga.removeChild(yoga);
+    }
+
+    if (child.type === "text") {
+        updateTextNodeLayout(child);
     }
 }
 
@@ -189,6 +257,10 @@ export function appendChildNode(node: ComplexNode, child: Node): void {
 
     node.children.push(child);
     node.yoga.insertChild(child.yoga, node.yoga.getChildCount());
+
+    if (child.type === "text") {
+        updateTextNodeLayout(child);
+    }
 }
 
 export function insertBeforeNode(
@@ -210,35 +282,36 @@ export function insertBeforeNode(
         node.children.push(child);
         node.yoga.insertChild(child.yoga, node.yoga.getChildCount());
     }
+
+    if (child.type === "text") {
+        updateTextNodeLayout(child);
+    }
 }
 
 export function applyAttributes(
     node: ComplexNode,
     attributes: Attributes,
 ): void {
-    const attrs: Attributes = {};
+    node.attributes = { ...attributes };
 
-    for (const [key, value] of Object.entries(attributes)) {
-        if (key === "style") {
-            applyStyle(node.yoga, value);
-        } else if (key === "wrap") {
-            node.wrap = Boolean(value);
-        } else if (key === "onClick") {
-            node.onClick = value;
-        } else {
-            attrs[key] = value;
-        }
+    if (node.attributes.style) {
+        applyStyle(node.yoga, node.attributes.style);
+    } else {
+        applyStyle(node.yoga, {});
     }
-    node.attributes = attrs;
+    node.wrap = node.attributes.wrap;
+    node.onClick = node.attributes.onClick;
+    node.onMouse = node.attributes.onMouse;
+    node.orientation = node.attributes.orientation || DEFAULT_ORIENTATION;
 }
 
-export function getMostSpecificNodeContainingPosition(
+export function getNodesContainingPosition(
     node: ComplexNode,
     x: number,
     y: number,
     offsetX = 0,
     offsetY = 0,
-): ComplexNode | null {
+): ComplexNode[] {
     const nodeX = offsetX + node.yoga.getComputedLeft();
     const nodeY = offsetY + node.yoga.getComputedTop();
     const width = node.yoga.getComputedWidth();
@@ -249,27 +322,13 @@ export function getMostSpecificNodeContainingPosition(
     const ymin = nodeY;
     const ymax = nodeY + height;
 
-    if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
-        if (!node.children.every(c => c.type === "text")) {
-            for (const child of node.children) {
-                if (child.type == "complex") {
-                    const childMostSpecific = getMostSpecificNodeContainingPosition(
-                        child,
-                        x,
-                        y,
-                        nodeX,
-                        nodeY,
-                    );
-                    if (childMostSpecific) {
-                        return childMostSpecific;
-                    }
-                }
-            }
+    const nodes: ComplexNode[] = [];
+    forAllComplexChildren(node, (n, x, y) => {
+        if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
+            nodes.push(n);
         }
-        return node;
-    } else {
-        return null;
-    }
+    });
+    return nodes;
 }
 
 function drawNode(
@@ -283,11 +342,19 @@ function drawNode(
     const y = offsetY + node.yoga.getComputedTop();
 
     if (node.type === "text" && node.parent) {
+        const vertical = node.parent.orientation === "vertical";
         for (const part of node.parts) {
             const partX = x + part.yoga.getComputedLeft();
             const partY = y + part.yoga.getComputedTop();
-            const partWidth = part.yoga.getComputedWidth();
-            target.put(partX, partY, part.value.substring(0, partWidth));
+            const partWidth = vertical
+                ? part.yoga.getComputedHeight()
+                : part.yoga.getComputedWidth();
+            target.draw(
+                vertical,
+                partX,
+                partY,
+                part.value.substring(0, partWidth),
+            );
         }
     } else if (node.type !== "text") {
         if (node.attributes["unstable_moveCursorToThisPosition"]) {

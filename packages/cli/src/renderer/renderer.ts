@@ -13,7 +13,7 @@ import {
     createContainer,
     applyAttributes,
     drawContainer,
-    getMostSpecificNodeContainingPosition,
+    getNodesContainingPosition,
 } from "./dom";
 import { BufferTarget, BufferTargetContext } from "./buffertarget";
 
@@ -196,15 +196,15 @@ export function render(
     });
     target.on("mouse", event => {
         const { x, y } = event;
-        const target = getMostSpecificNodeContainingPosition(
-            container.node,
-            x,
-            y,
-        );
+        const targets = getNodesContainingPosition(container.node, x, y);
 
-        if (event.type === "MOUSE_LEFT_BUTTON_RELEASED") {
-            if (target && target.onClick) {
-                target.onClick({ x, y });
+        //if (targets.length > 0) throw new Error(targets.length + "");
+        for (const target of targets) {
+            if (event.button === "left" && !event.pressed && target.onClick) {
+                target.onClick(event);
+            }
+            if (target.onMouse) {
+                target.onMouse(event);
             }
         }
     });

@@ -46,7 +46,7 @@ export function Input(props: InputProps): JSX.Element {
     });
 
     return (
-        <Box grow={1}>
+        <Box minHeight={1}>
             {before}
             <Cursor />
             {after}

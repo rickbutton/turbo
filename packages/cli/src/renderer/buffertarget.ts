@@ -6,26 +6,18 @@ export interface ResizeEvent {
     height: number;
 }
 
-export type MouseEventType =
-    | "MOUSE_LEFT_BUTTON_PRESSED"
-    | "MOUSE_LEFT_BUTTON_RELEASED"
-    | "MOUSE_RIGHT_BUTTON_PRESSED"
-    | "MOUSE_RIGHT_BUTTON_RELEASED"
-    | "MOUSE_MIDDLE_BUTTON_PRESSED"
-    | "MOUSE_MIDDLE_BUTTON_RELEASED"
-    | "MOUSE_WHEEL_UP"
-    | "MOUSE_WHEEL_DOWN"
-    | "MOUSE_OTHER_BUTTON_PRESSED"
-    | "MOUSE_OTHER_BUTTON_RELEASED"
-    | "MOUSE_BUTTON_RELEASED";
-
+export type MouseButton =
+    | "left"
+    | "right"
+    | "middle"
+    | "wheel-up"
+    | "wheel-down"
+    | "other";
 export interface MouseEvent {
-    type: MouseEventType;
+    button: MouseButton;
+    pressed: boolean;
     x: number;
     y: number;
-    ctrl: boolean;
-    alt: boolean;
-    shift: boolean;
 }
 
 export const SPECIAL_KEYS = [
@@ -106,7 +98,7 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
     readonly height: number;
     setup(): void;
 
-    put(x: number, y: number, str: string): void;
+    draw(vertical: boolean, x: number, y: number, str: string): void;
     setCursor(x: number, y: number): void;
     clear(): void;
     flush(delta: boolean): void;

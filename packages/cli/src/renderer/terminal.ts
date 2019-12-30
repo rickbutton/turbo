@@ -1,15 +1,93 @@
 import {
     BufferTarget,
     BufferTargetEvents,
-    MouseEvent,
-    MouseEventType,
     KeyName,
     SPECIAL_KEYS,
+    MouseButton,
+    MouseEvent,
 } from "./buffertarget";
 import { terminal, ScreenBuffer } from "terminal-kit";
 import { EmitterBase } from "@turbo/core";
 // eslint-disable-next-line @typescript-eslint/camelcase
 import { unstable_batchedUpdates } from "./renderer";
+
+export type TerminalMouseEventType =
+    | "MOUSE_LEFT_BUTTON_PRESSED"
+    | "MOUSE_LEFT_BUTTON_RELEASED"
+    | "MOUSE_RIGHT_BUTTON_PRESSED"
+    | "MOUSE_RIGHT_BUTTON_RELEASED"
+    | "MOUSE_MIDDLE_BUTTON_PRESSED"
+    | "MOUSE_MIDDLE_BUTTON_RELEASED"
+    | "MOUSE_WHEEL_UP"
+    | "MOUSE_WHEEL_DOWN"
+    | "MOUSE_OTHER_BUTTON_PRESSED"
+    | "MOUSE_OTHER_BUTTON_RELEASED"
+    | "MOUSE_BUTTON_RELEASED";
+
+export interface TerminalMouseEvent {
+    x: number;
+    y: number;
+    ctrl: boolean;
+    alt: boolean;
+    shift: boolean;
+}
+
+function normalizeMouseEvent(
+    type: TerminalMouseEventType,
+    event: TerminalMouseEvent,
+): MouseEvent {
+    let pressed = false;
+    let button: MouseButton = "left";
+    switch (type) {
+        case "MOUSE_LEFT_BUTTON_RELEASED":
+            pressed = false;
+            button = "left";
+            break;
+        case "MOUSE_LEFT_BUTTON_PRESSED":
+            pressed = true;
+            button = "left";
+            break;
+        case "MOUSE_RIGHT_BUTTON_RELEASED":
+            pressed = false;
+            button = "right";
+            break;
+        case "MOUSE_RIGHT_BUTTON_PRESSED":
+            pressed = true;
+            button = "right";
+            break;
+        case "MOUSE_MIDDLE_BUTTON_RELEASED":
+            pressed = false;
+            button = "middle";
+            break;
+        case "MOUSE_MIDDLE_BUTTON_PRESSED":
+            pressed = true;
+            button = "middle";
+            break;
+        case "MOUSE_OTHER_BUTTON_RELEASED":
+            pressed = false;
+            button = "other";
+            break;
+        case "MOUSE_OTHER_BUTTON_PRESSED":
+            pressed = true;
+            button = "other";
+            break;
+        case "MOUSE_WHEEL_UP":
+            pressed = false;
+            button = "wheel-up";
+            break;
+        case "MOUSE_WHEEL_DOWN":
+            pressed = false;
+            button = "wheel-down";
+            break;
+    }
+
+    return {
+        x: event.x,
+        y: event.y,
+        pressed,
+        button,
+    };
+}
 
 function normalizeName(
     name: string,
@@ -98,19 +176,14 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         terminal.on("resize", (width: number, height: number) => {
             this.fire("resize", { width, height });
         });
-        terminal.on("mouse", (type: MouseEventType, data: MouseEvent) => {
-            unstable_batchedUpdates(() => {
-                const { x, y, ctrl, alt, shift } = data;
-                this.fire("mouse", {
-                    type,
-                    x,
-                    y,
-                    ctrl,
-                    alt,
-                    shift,
+        terminal.on(
+            "mouse",
+            (type: TerminalMouseEventType, data: TerminalMouseEvent) => {
+                unstable_batchedUpdates(() => {
+                    this.fire("mouse", normalizeMouseEvent(type, data));
                 });
-            });
-        });
+            },
+        );
         terminal.on("key", (name: string, matches: string[], data: any) => {
             unstable_batchedUpdates(() => {
                 const { key, ctrl, alt, shift } = normalizeName(name, matches);
@@ -137,13 +210,13 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         });
     }
 
-    put(x: number, y: number, str: string): void {
+    draw(vertical: boolean, x: number, y: number, str: string): void {
         this.buffer.put(
             {
                 x,
                 y,
-                dx: 1,
-                dy: 0,
+                dx: vertical ? 0 : 1,
+                dy: vertical ? 1 : 0,
                 attr: {},
                 wrap: false,
             },
