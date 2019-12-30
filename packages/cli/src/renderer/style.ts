@@ -19,6 +19,11 @@ export interface NodeStyle {
     maxHeight?: number | string;
     minWidth?: number | string;
     maxWidth?: number | string;
+
+    marginTop?: number;
+    marginBottom?: number;
+    marginLeft?: number;
+    marginRight?: number;
 }
 
 export function applyStyle(node: yoga.YogaNode, style: NodeStyle): void {
@@ -122,5 +127,26 @@ export function applyStyle(node: yoga.YogaNode, style: NodeStyle): void {
         node.setMaxHeight(style.maxHeight);
     } else {
         node.setMaxHeight(Number.MAX_SAFE_INTEGER);
+    }
+
+    if (typeof style.marginTop !== "undefined") {
+        node.setMargin(yoga.EDGE_TOP, style.marginTop);
+    } else {
+        node.setMargin(yoga.EDGE_TOP, 0);
+    }
+    if (typeof style.marginBottom !== "undefined") {
+        node.setMargin(yoga.EDGE_BOTTOM, style.marginBottom);
+    } else {
+        node.setMargin(yoga.EDGE_BOTTOM, 0);
+    }
+    if (typeof style.marginLeft !== "undefined") {
+        node.setMargin(yoga.EDGE_LEFT, style.marginLeft);
+    } else {
+        node.setMargin(yoga.EDGE_LEFT, 0);
+    }
+    if (typeof style.marginRight !== "undefined") {
+        node.setMargin(yoga.EDGE_RIGHT, style.marginRight);
+    } else {
+        node.setMargin(yoga.EDGE_RIGHT, 0);
     }
 }

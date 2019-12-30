@@ -198,7 +198,6 @@ export function render(
         const { x, y } = event;
         const targets = getNodesContainingPosition(container.node, x, y);
 
-        //if (targets.length > 0) throw new Error(targets.length + "");
         for (const target of targets) {
             if (event.button === "left" && !event.pressed && target.onClick) {
                 target.onClick(event);

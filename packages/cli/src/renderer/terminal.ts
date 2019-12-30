@@ -210,18 +210,48 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         });
     }
 
-    draw(vertical: boolean, x: number, y: number, str: string): void {
-        this.buffer.put(
-            {
-                x,
-                y,
-                dx: vertical ? 0 : 1,
-                dy: vertical ? 1 : 0,
-                attr: {},
-                wrap: false,
-            },
-            str,
-        );
+    draw(
+        vertical: boolean,
+        x: number,
+        y: number,
+        regionX: number,
+        regionY: number,
+        regionWidth: number,
+        regionHeight: number,
+        str: string,
+    ): void {
+        const dx = vertical ? 0 : 1;
+        const dy = vertical ? 1 : 0;
+
+        let targetX = x;
+        let targetY = y;
+        for (const c of str) {
+            const regionXMin = regionX;
+            const regionXMax = regionX + regionWidth;
+            const regionYMin = regionY;
+            const regionYMax = regionY + regionHeight;
+
+            if (
+                targetX >= regionXMin &&
+                targetX <= regionXMax &&
+                targetY >= regionYMin &&
+                targetY <= regionYMax
+            ) {
+                this.buffer.put(
+                    {
+                        dx: 0,
+                        dy: 0,
+                        x: targetX,
+                        y: targetY,
+                        attr: {},
+                        wrap: false,
+                    },
+                    c,
+                );
+            }
+            targetX += dx;
+            targetY += dy;
+        }
     }
     setCursor(x: number, y: number): void {
         this.cursorX = x;

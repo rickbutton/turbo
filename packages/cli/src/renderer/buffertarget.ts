@@ -98,7 +98,16 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
     readonly height: number;
     setup(): void;
 
-    draw(vertical: boolean, x: number, y: number, str: string): void;
+    draw(
+        vertical: boolean,
+        x: number,
+        y: number,
+        regionX: number,
+        regionY: number,
+        regionWidth: number,
+        regionHeight: number,
+        str: string,
+    ): void;
     setCursor(x: number, y: number): void;
     clear(): void;
     flush(delta: boolean): void;

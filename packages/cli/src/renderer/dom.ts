@@ -14,14 +14,17 @@ const DEFAULT_ORIENTATION = "horizontal";
 type Attributes = { [key: string]: any };
 export interface ComplexNode {
     type: "complex";
-    orientation: "horizontal" | "vertical";
     name: string;
     yoga: yoga.YogaNode;
-    wrap?: boolean;
     children: Node[];
     parent: ComplexNode | null;
     attributes: Attributes;
 
+    orientation: "horizontal" | "vertical";
+    wrap: boolean;
+
+    drawTop?: number;
+    drawLeft?: number;
     onClick?(event: MouseEvent): void;
     onMouse?(event: MouseEvent): void;
 }
@@ -66,13 +69,12 @@ function forAllComplexChildren(
     x = 0,
     y = 0,
 ): void {
-    const offsetX = x + node.yoga.getComputedLeft();
-    const offsetY = x + node.yoga.getComputedTop();
+    const nodeX = x + node.yoga.getComputedLeft();
+    const nodeY = y + node.yoga.getComputedTop();
+
+    cb(node, nodeX, nodeY);
     for (const child of node.children) {
-        const nodeX = offsetX + child.yoga.getComputedLeft();
-        const nodeY = offsetY + child.yoga.getComputedTop();
         if (child.type === "complex") {
-            cb(child, nodeX, nodeY);
             forAllComplexChildren(child, cb, nodeX, nodeY);
         }
     }
@@ -98,8 +100,9 @@ export function createNode(name: string): ComplexNode {
         yoga: yoga.Node.create(),
         children: [],
         parent: null,
-        orientation: DEFAULT_ORIENTATION,
         attributes: {},
+        orientation: DEFAULT_ORIENTATION,
+        wrap: false,
     };
     return node;
 }
@@ -160,7 +163,7 @@ export function calculateTextHeight(node: Node, width: number): number {
     } else {
         const parent = createNode("div");
         applyAttributes(parent, {
-            wrap: resolveProperty(node, (n: ComplexNode) => n.wrap) || false,
+            wrap: node.parent ? node.parent.wrap : false,
         });
         const text = createTextNode(node.value);
         text.yoga.setWidth(width);
@@ -198,7 +201,7 @@ export function updateTextNodeLayout(node: TextNode): void {
             : yoga.FLEX_DIRECTION_COLUMN,
     );
 
-    const wrap = resolveProperty(node, n => n.wrap) || false;
+    const wrap = node.parent.wrap;
     const words = wrap ? splitOnWordStart(node.value) : noSplit(node.value);
     for (const word of words) {
         const part: TextNodePart = {
@@ -299,6 +302,8 @@ export function applyAttributes(
     } else {
         applyStyle(node.yoga, {});
     }
+    node.drawTop = node.attributes.drawTop;
+    node.drawLeft = node.attributes.drawLeft;
     node.wrap = node.attributes.wrap;
     node.onClick = node.attributes.onClick;
     node.onMouse = node.attributes.onMouse;
@@ -307,24 +312,24 @@ export function applyAttributes(
 
 export function getNodesContainingPosition(
     node: ComplexNode,
-    x: number,
-    y: number,
-    offsetX = 0,
-    offsetY = 0,
+    positionX: number,
+    positionY: number,
 ): ComplexNode[] {
-    const nodeX = offsetX + node.yoga.getComputedLeft();
-    const nodeY = offsetY + node.yoga.getComputedTop();
-    const width = node.yoga.getComputedWidth();
-    const height = node.yoga.getComputedHeight();
-
-    const xmin = nodeX;
-    const xmax = nodeX + width;
-    const ymin = nodeY;
-    const ymax = nodeY + height;
-
     const nodes: ComplexNode[] = [];
     forAllComplexChildren(node, (n, x, y) => {
-        if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
+        const width = n.yoga.getComputedWidth();
+        const height = n.yoga.getComputedHeight();
+        const xmin = x;
+        const xmax = x + width;
+        const ymin = y;
+        const ymax = y + height;
+
+        if (
+            positionX >= xmin &&
+            positionX <= xmax &&
+            positionY >= ymin &&
+            positionY <= ymax
+        ) {
             nodes.push(n);
         }
     });
@@ -340,6 +345,8 @@ function drawNode(
     const { target } = container;
     const x = offsetX + node.yoga.getComputedLeft();
     const y = offsetY + node.yoga.getComputedTop();
+    const width = node.yoga.getComputedWidth();
+    const height = node.yoga.getComputedHeight();
 
     if (node.type === "text" && node.parent) {
         const vertical = node.parent.orientation === "vertical";
@@ -349,10 +356,18 @@ function drawNode(
             const partWidth = vertical
                 ? part.yoga.getComputedHeight()
                 : part.yoga.getComputedWidth();
+
+            const drawTop = resolveProperty(node, n => n.drawTop) || 0;
+            const drawLeft = resolveProperty(node, n => n.drawLeft) || 0;
+
             target.draw(
                 vertical,
-                partX,
-                partY,
+                partX + drawLeft,
+                partY + drawTop,
+                x,
+                y,
+                width,
+                height,
                 part.value.substring(0, partWidth),
             );
         }

@@ -26,6 +26,14 @@ interface BoxProps {
     maxWidth?: number | string;
     scrollable?: boolean;
 
+    drawTop?: number;
+    drawLeft?: number;
+
+    marginTop?: number;
+    marginBottom?: number;
+    marginLeft?: number;
+    marginRight?: number;
+
     wrap?: boolean;
     onClick?(event: MouseEvent): void;
     onMouse?(event: MouseEvent): void;
@@ -79,12 +87,18 @@ export const Box = React.forwardRef(function InternalBox(
         maxHeight: props.maxHeight,
         minWidth: props.minWidth,
         maxWidth: props.maxWidth,
+        marginTop: props.marginTop,
+        marginBottom: props.marginBottom,
+        marginLeft: props.marginLeft,
+        marginRight: props.marginRight,
     };
     const contentProps = {
         orientation: props.orientation,
         wrap: props.wrap,
         onClick: props.onClick,
         onMouse: props.onMouse,
+        drawTop: props.drawTop,
+        drawLeft: props.drawLeft,
         style,
         ref,
     };
@@ -129,7 +143,7 @@ export const Box = React.forwardRef(function InternalBox(
                         scrollable={false}
                         ref={contentRef}
                     >
-                        {element}
+                        <Box drawTop={-viewportOffset}>{element}</Box>
                     </Box>
                 </Box>
                 <Box
@@ -137,6 +151,7 @@ export const Box = React.forwardRef(function InternalBox(
                     scrollable={false}
                     orientation="vertical"
                     direction="column"
+                    grow={1}
                 >
                     {Array(viewportOffset)
                         .fill(" ")
