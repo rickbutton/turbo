@@ -12,9 +12,9 @@ import {
     Container,
     createContainer,
     applyAttributes,
-    drawContainer,
     getNodesContainingPosition,
 } from "./dom";
+import { drawContainer } from "./draw";
 import { BufferTarget, BufferTargetContext } from "./buffertarget";
 
 type ElementType = string;
