@@ -4,6 +4,7 @@ import {
     findClosestParent,
     forAllTextChildren,
     updateTextNodeLayout,
+    resolveProperty,
 } from "./dom";
 import * as yoga from "yoga-layout-prebuilt";
 
@@ -79,6 +80,9 @@ function drawNode(
             drawOffsetLeft = drawOffsetLeftParent.drawOffsetLeft || 0;
         }
 
+        const color = resolveProperty(node, n => n.color);
+        const bg = resolveProperty(node, n => n.bg);
+
         for (const part of node.parts) {
             const vertical = part.direction === "vertical";
             const partX = x + part.yoga.getComputedLeft();
@@ -94,6 +98,8 @@ function drawNode(
                 xmax,
                 ymin,
                 ymax,
+                color,
+                bg,
                 vertical,
                 part.value.substring(0, partWidth),
             );

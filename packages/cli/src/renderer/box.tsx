@@ -23,6 +23,9 @@ export interface BoxProps {
     minWidth?: number | string;
     maxWidth?: number | string;
 
+    color?: string | number;
+    bg?: string | number;
+
     marginTop?: number;
     marginBottom?: number;
     marginLeft?: number;
@@ -66,6 +69,8 @@ export const Box = React.forwardRef(function InternalBox(
         drawOffsetTop: props.drawOffsetTop,
         drawOffsetLeft: props.drawOffsetLeft,
         drawOverflow: props.drawOverflow,
+        color: props.color,
+        bg: props.bg,
         onClick: props.onClick,
         onMouse: props.onMouse,
         style,

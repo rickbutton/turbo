@@ -218,6 +218,8 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         xmax: number,
         ymin: number,
         ymax: number,
+        color: string | number | undefined,
+        bg: string | number | undefined,
         vertical: boolean,
         str: string,
     ): void {
@@ -239,7 +241,10 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
                         dy: 0,
                         x: targetX,
                         y: targetY,
-                        attr: {},
+                        attr: {
+                            color: color as any,
+                            bgColor: bg as any,
+                        },
                         wrap: false,
                     },
                     c,

@@ -148,7 +148,9 @@ function Test(): JSX.Element {
                 Vitae sapien pellentesque habitant morbi. Mattis enim ut tellus
                 elementum sagittis vitae.
             </ScrollableBox>
-            <Box height={5}>this is a footer</Box>
+            <Box color="red" height={5}>
+                this is a footer
+            </Box>
         </Box>
     );
 }

@@ -21,6 +21,8 @@ export interface ComplexNode {
     parent: ComplexNode | null;
     attributes: Attributes;
 
+    color?: string | number;
+    bg?: string | number;
     textDirection: TextDirection;
     drawOffsetTop?: number;
     drawOffsetLeft?: number;
@@ -340,6 +342,8 @@ export function applyAttributes(
         typeof node.attributes.drawOverflow !== "undefined"
             ? node.attributes.drawOverflow
             : true;
+    node.color = node.attributes.color;
+    node.bg = node.attributes.bg;
     node.wrap = Boolean(node.attributes.wrap);
     node.onClick = node.attributes.onClick;
     node.onMouse = node.attributes.onMouse;

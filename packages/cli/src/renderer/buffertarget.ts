@@ -100,6 +100,8 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
         xmax: number,
         ymin: number,
         ymax: number,
+        color: string | number | undefined,
+        bg: string | number | undefined,
         vertical: boolean,
         str: string,
     ): void;
