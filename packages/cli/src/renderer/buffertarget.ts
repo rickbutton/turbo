@@ -1,11 +1,6 @@
 import React from "react";
 import { Emitter } from "@turbo/core";
 
-export interface ResizeEvent {
-    width: number;
-    height: number;
-}
-
 export type MouseButton =
     | "left"
     | "right"
@@ -89,7 +84,7 @@ interface SpecialInputEvent extends BaseInputEvent {
 export type InputEvent = CharInputEvent | SpecialInputEvent;
 
 export interface BufferTargetEvents {
-    resize: ResizeEvent;
+    resize: undefined;
     mouse: MouseEvent;
     input: InputEvent;
 }
@@ -99,13 +94,13 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
     setup(): void;
 
     draw(
-        vertical: boolean,
         x: number,
         y: number,
-        regionX: number,
-        regionY: number,
-        regionWidth: number,
-        regionHeight: number,
+        xmin: number,
+        xmax: number,
+        ymin: number,
+        ymax: number,
+        vertical: boolean,
         str: string,
     ): void;
     setCursor(x: number, y: number): void;

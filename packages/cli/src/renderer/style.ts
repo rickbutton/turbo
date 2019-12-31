@@ -3,7 +3,7 @@ import * as yoga from "yoga-layout-prebuilt";
 export interface NodeStyle {
     flexGrow?: number;
     flexShrink?: number;
-    flexBasis?: number | "string";
+    flexBasis?: number | string;
     flexDirection?: "row" | "column" | "row-reverse" | "column-reverse";
     alignItems?: "stretch" | "flex-start" | "flex-end" | "center" | "baseline";
     justifyContent?:

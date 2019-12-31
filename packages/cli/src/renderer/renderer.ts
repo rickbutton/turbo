@@ -183,16 +183,18 @@ export function render(
         element,
     );
 
-    reconcilerInstance.updateContainer(
-        rootElement,
-        root,
-        parentComponent,
-        callback || ((): void => undefined),
-    );
+    function doRender(doCallback: boolean): void {
+        reconcilerInstance.updateContainer(
+            rootElement,
+            root,
+            parentComponent,
+            doCallback && callback ? callback : (): void => undefined,
+        );
+    }
 
     target.on("resize", () => {
         container.forceRedraw = true;
-        drawContainer(container);
+        doRender(false);
     });
     target.on("mouse", event => {
         const { x, y } = event;
@@ -207,4 +209,6 @@ export function render(
             }
         }
     });
+
+    doRender(true);
 }

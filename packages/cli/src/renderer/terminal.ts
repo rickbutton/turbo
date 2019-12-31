@@ -150,21 +150,16 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
     private cursorX = 0;
     private cursorY = 0;
 
-    get width(): number {
-        return terminal.width;
-    }
-    get height(): number {
-        return terminal.height;
-    }
+    public width = 0;
+    public height = 0;
+
     public setup(): void {
         if (didSetup) {
             throw new Error(
                 "attempted to setup multiple terminal buffer targets",
             );
         }
-
         didSetup = true;
-        terminal.grabInput({ mouse: "button" });
 
         process.stdin.on("data", data => {
             const str = data.toString();
@@ -173,8 +168,14 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
             }
         });
 
+        this.width = terminal.width;
+        this.height = terminal.height;
+        terminal.grabInput({ mouse: "button" });
+
         terminal.on("resize", (width: number, height: number) => {
-            this.fire("resize", { width, height });
+            this.width = width;
+            this.height = height;
+            this.fire("resize", undefined);
         });
         terminal.on(
             "mouse",
@@ -211,13 +212,13 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
     }
 
     draw(
-        vertical: boolean,
         x: number,
         y: number,
-        regionX: number,
-        regionY: number,
-        regionWidth: number,
-        regionHeight: number,
+        xmin: number,
+        xmax: number,
+        ymin: number,
+        ymax: number,
+        vertical: boolean,
         str: string,
     ): void {
         const dx = vertical ? 0 : 1;
@@ -226,16 +227,11 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         let targetX = x;
         let targetY = y;
         for (const c of str) {
-            const regionXMin = regionX;
-            const regionXMax = regionX + regionWidth;
-            const regionYMin = regionY;
-            const regionYMax = regionY + regionHeight;
-
             if (
-                targetX >= regionXMin &&
-                targetX <= regionXMax &&
-                targetY >= regionYMin &&
-                targetY <= regionYMax
+                targetX >= xmin &&
+                targetX <= xmax &&
+                targetY >= ymin &&
+                targetY <= ymax
             ) {
                 this.buffer.put(
                     {

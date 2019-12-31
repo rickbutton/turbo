@@ -7,6 +7,24 @@ export function useBufferTarget(): BufferTarget {
     return React.useContext(BufferTargetContext);
 }
 
+interface TerminalSize {
+    width: number;
+    height: number;
+}
+export function useTerminalSize(): TerminalSize {
+    const target = useBufferTarget();
+
+    const [width, setWidth] = React.useState(0);
+    const [height, setHeight] = React.useState(0);
+
+    React.useEffect(() => {
+        setWidth(target.width);
+        setHeight(target.height);
+    }, [target.width, target.height]);
+
+    return { width, height };
+}
+
 export function useInput(cb: (event: InputEvent) => void): void {
     const target = useBufferTarget();
 

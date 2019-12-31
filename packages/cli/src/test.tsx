@@ -4,7 +4,7 @@ process.on("uncaughtException", e => {
 });
 
 import React from "react";
-import { render, Box, Terminal, Input } from "./renderer";
+import { render, Box, Terminal, Input, ScrollableBox } from "./renderer";
 
 function Test(): JSX.Element {
     const [counter, setCounter] = React.useState(1);
@@ -29,7 +29,7 @@ function Test(): JSX.Element {
                 </Box>
             </Box>
             <Input />
-            <Box wrap={true} grow={1} scrollable={true} direction="column">
+            <ScrollableBox wrap={true} grow={1} direction="column">
                 Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
                 eiusmod tempor incididunt ut labore et dolore magna aliqua. Eget
                 nunc scelerisque viverra mauris in aliquam sem fringilla ut.
@@ -147,7 +147,7 @@ function Test(): JSX.Element {
                 Tellus cras adipiscing enim eu turpis egestas pretium aenean.
                 Vitae sapien pellentesque habitant morbi. Mattis enim ut tellus
                 elementum sagittis vitae.
-            </Box>
+            </ScrollableBox>
             <Box height={5}>this is a footer</Box>
         </Box>
     );

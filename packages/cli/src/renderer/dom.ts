@@ -1,5 +1,5 @@
 import * as yoga from "yoga-layout-prebuilt";
-import { applyStyle } from "./style";
+import { applyStyle, NodeStyle } from "./style";
 import stringWidth from "string-width";
 import { BufferTarget, MouseEvent } from "./buffertarget";
 
@@ -9,7 +9,8 @@ export interface Container {
     forceRedraw: boolean;
 }
 
-const DEFAULT_ORIENTATION = "horizontal";
+type TextDirection = "horizontal" | "vertical";
+const DEFAULT_TEXT_DIRECTION: TextDirection = "horizontal";
 
 type Attributes = { [key: string]: any };
 export interface ComplexNode {
@@ -20,11 +21,12 @@ export interface ComplexNode {
     parent: ComplexNode | null;
     attributes: Attributes;
 
-    orientation: "horizontal" | "vertical";
+    textDirection: TextDirection;
+    drawOffsetTop?: number;
+    drawOffsetLeft?: number;
+    drawOverflow: boolean;
     wrap: boolean;
 
-    drawTop?: number;
-    drawLeft?: number;
     onClick?(event: MouseEvent): void;
     onMouse?(event: MouseEvent): void;
 }
@@ -35,6 +37,7 @@ interface TextSize {
 }
 
 export interface TextNodePart {
+    direction: TextDirection;
     yoga: yoga.YogaNode;
     value: string;
 }
@@ -47,20 +50,41 @@ export interface TextNode {
 }
 export type Node = ComplexNode | TextNode;
 
-function resolveProperty<G extends (n: ComplexNode) => any>(
+function findClosestParent<M extends (n: ComplexNode) => boolean>(
     node: Node,
-    getter: G,
-): ReturnType<G> | undefined {
+    matcher: M,
+): ComplexNode | undefined {
     if (node.parent) {
-        const parentValue = getter(node.parent);
-        if (typeof parentValue !== "undefined") {
-            return parentValue;
+        if (matcher(node.parent)) {
+            return node.parent;
         } else {
-            return resolveProperty(node.parent, getter);
+            return findClosestParent(node.parent, matcher);
         }
     } else {
         return undefined;
     }
+}
+
+interface AbsoluteLayout {
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+}
+function getAbsoluteLayout(node: Node): AbsoluteLayout {
+    let top = 0,
+        left = 0;
+
+    let n: Node | null = node;
+    while (n !== null) {
+        top += n.yoga.getComputedTop();
+        left += n.yoga.getComputedLeft();
+        n = n.parent;
+    }
+
+    const width = node.yoga.getComputedWidth();
+    const height = node.yoga.getComputedHeight();
+    return { top, left, width, height };
 }
 
 function forAllComplexChildren(
@@ -93,6 +117,23 @@ function forAllTextChildren(
     }
 }
 
+export function cloneNode(node: Node): Node {
+    if (node.type === "text") {
+        const newNode = createTextNode(node.value);
+        updateTextNodeLayout(newNode);
+        return newNode;
+    } else {
+        const newNode = createNode(node.name);
+        applyAttributes(newNode, node.attributes);
+
+        for (const child of node.children) {
+            const newChild = cloneNode(child);
+            appendChildNode(newNode, newChild);
+        }
+        return newNode;
+    }
+}
+
 export function createNode(name: string): ComplexNode {
     const node: ComplexNode = {
         type: "complex",
@@ -101,8 +142,9 @@ export function createNode(name: string): ComplexNode {
         children: [],
         parent: null,
         attributes: {},
-        orientation: DEFAULT_ORIENTATION,
+        textDirection: DEFAULT_TEXT_DIRECTION,
         wrap: false,
+        drawOverflow: true,
     };
     return node;
 }
@@ -148,37 +190,26 @@ function splitOnWordStart(str: string): string[] {
 }
 
 function noSplit(str: string): string[] {
-    return [str.replace(/\r/g, "").replace(/\n/g, "")];
+    return [str];
 }
 
 export function calculateTextHeight(node: Node, width: number): number {
-    if (node.type === "complex") {
-        // TODO: assert that flex direction is column
-        let height = 0;
-        for (const child of node.children) {
-            height += calculateTextHeight(child, width);
-        }
+    const root = createNode("#root");
+    const style: NodeStyle = {
+        width,
+    };
+    applyAttributes(root, { style });
 
-        return height;
-    } else {
-        const parent = createNode("div");
-        applyAttributes(parent, {
-            wrap: node.parent ? node.parent.wrap : false,
-        });
-        const text = createTextNode(node.value);
-        text.yoga.setWidth(width);
-        updateTextNodeLayout(text);
-        appendChildNode(parent, text);
+    const clone = cloneNode(node);
+    appendChildNode(root, clone);
 
-        parent.yoga.calculateLayout(width, Number.MAX_SAFE_INTEGER);
+    forAllTextChildren(root, updateTextNodeLayout);
 
-        const height = text.yoga.getComputedHeight();
+    root.yoga.calculateLayout(width, 1, yoga.DIRECTION_LTR);
 
-        parent.yoga.free();
-        text.yoga.free();
-
-        return height;
-    }
+    const height = clone.yoga.getComputedHeight();
+    root.yoga.freeRecursive();
+    return height;
 }
 
 export function updateTextNodeLayout(node: TextNode): void {
@@ -194,35 +225,42 @@ export function updateTextNodeLayout(node: TextNode): void {
     }
     node.parts = [];
 
-    const orientation = node.parent.orientation;
-    node.yoga.setFlexDirection(
-        orientation === "horizontal"
-            ? yoga.FLEX_DIRECTION_ROW
-            : yoga.FLEX_DIRECTION_COLUMN,
-    );
-
+    const textDirection = node.parent.textDirection;
     const wrap = node.parent.wrap;
+
+    node.yoga.setFlexDirection(yoga.FLEX_DIRECTION_ROW);
+    node.yoga.setFlexWrap(wrap ? yoga.WRAP_WRAP : yoga.WRAP_NO_WRAP);
+
     const words = wrap ? splitOnWordStart(node.value) : noSplit(node.value);
     for (const word of words) {
-        const part: TextNodePart = {
-            value: word,
-            yoga: yoga.Node.create(),
-        };
-        const width = stringWidth(word);
-
-        if (orientation === "horizontal") {
-            part.yoga.setWidth(width);
-            part.yoga.setHeight(1);
-        } else if (orientation === "vertical") {
-            part.yoga.setWidth(1);
-            part.yoga.setHeight(width);
-        } else {
-            throw new Error(`unknown orientation ${orientation}`);
-        }
-
+        const part = createTextNodePart(word, textDirection);
         node.parts.push(part);
         node.yoga.insertChild(part.yoga, node.yoga.getChildCount());
     }
+}
+
+function createTextNodePart(
+    value: string,
+    direction: TextDirection,
+): TextNodePart {
+    const part = {
+        value,
+        direction,
+        yoga: yoga.Node.create(),
+    };
+
+    const width = stringWidth(value);
+    if (direction === "horizontal") {
+        part.yoga.setWidth(width);
+        part.yoga.setHeight(1);
+    } else if (direction === "vertical") {
+        part.yoga.setWidth(1);
+        part.yoga.setHeight(width);
+    } else {
+        throw new Error(`unknown direction ${direction}`);
+    }
+
+    return part;
 }
 
 export function createTextNode(text: string): TextNode {
@@ -302,12 +340,17 @@ export function applyAttributes(
     } else {
         applyStyle(node.yoga, {});
     }
-    node.drawTop = node.attributes.drawTop;
-    node.drawLeft = node.attributes.drawLeft;
-    node.wrap = node.attributes.wrap;
+    node.drawOffsetTop = node.attributes.drawOffsetTop;
+    node.drawOffsetLeft = node.attributes.drawOffsetLeft;
+    node.drawOverflow =
+        typeof node.attributes.drawOverflow !== "undefined"
+            ? node.attributes.drawOverflow
+            : true;
+    node.wrap = Boolean(node.attributes.wrap);
     node.onClick = node.attributes.onClick;
     node.onMouse = node.attributes.onMouse;
-    node.orientation = node.attributes.orientation || DEFAULT_ORIENTATION;
+    node.textDirection =
+        node.attributes.textDirection || DEFAULT_TEXT_DIRECTION;
 }
 
 export function getNodesContainingPosition(
@@ -345,29 +388,63 @@ function drawNode(
     const { target } = container;
     const x = offsetX + node.yoga.getComputedLeft();
     const y = offsetY + node.yoga.getComputedTop();
-    const width = node.yoga.getComputedWidth();
-    const height = node.yoga.getComputedHeight();
 
     if (node.type === "text" && node.parent) {
-        const vertical = node.parent.orientation === "vertical";
+        let xmin = 0,
+            xmax = 0,
+            ymin = 0,
+            ymax = 0,
+            drawOffsetTop = 0,
+            drawOffsetLeft = 0;
+
+        const boundingParent = findClosestParent(
+            node,
+            n => n.drawOverflow === false,
+        );
+        if (!boundingParent) {
+            xmin = x;
+            xmax = x + node.yoga.getComputedWidth() - 1;
+            ymin = y;
+            ymax = y + node.yoga.getComputedHeight() - 1;
+        } else {
+            const boundingLayout = getAbsoluteLayout(boundingParent);
+            xmin = boundingLayout.left;
+            xmax = boundingLayout.left + boundingLayout.width - 1;
+            ymin = boundingLayout.top;
+            ymax = boundingLayout.top + boundingLayout.height - 1;
+        }
+
+        const drawOffsetTopParent = findClosestParent(
+            node,
+            n => n.drawOffsetTop !== undefined,
+        );
+        if (drawOffsetTopParent) {
+            drawOffsetTop = drawOffsetTopParent.drawOffsetTop || 0;
+        }
+        const drawOffsetLeftParent = findClosestParent(
+            node,
+            n => n.drawOffsetLeft !== undefined,
+        );
+        if (drawOffsetLeftParent) {
+            drawOffsetLeft = drawOffsetLeftParent.drawOffsetLeft || 0;
+        }
+
         for (const part of node.parts) {
+            const vertical = part.direction === "vertical";
             const partX = x + part.yoga.getComputedLeft();
             const partY = y + part.yoga.getComputedTop();
             const partWidth = vertical
                 ? part.yoga.getComputedHeight()
                 : part.yoga.getComputedWidth();
 
-            const drawTop = resolveProperty(node, n => n.drawTop) || 0;
-            const drawLeft = resolveProperty(node, n => n.drawLeft) || 0;
-
             target.draw(
+                partX + drawOffsetLeft,
+                partY + drawOffsetTop,
+                xmin,
+                xmax,
+                ymin,
+                ymax,
                 vertical,
-                partX + drawLeft,
-                partY + drawTop,
-                x,
-                y,
-                width,
-                height,
                 part.value.substring(0, partWidth),
             );
         }
@@ -392,8 +469,9 @@ export function drawContainer(container: Container): void {
         delta = false;
     }
 
-    target.clear();
     forAllTextChildren(node, updateTextNodeLayout);
+
+    target.clear();
 
     node.yoga.setWidth(width);
     node.yoga.setHeight(height);
