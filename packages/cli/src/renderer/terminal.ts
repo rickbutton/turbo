@@ -179,6 +179,13 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         terminal.on("resize", (width: number, height: number) => {
             this.width = width;
             this.height = height;
+            this.buffer.resize({
+                xmin: 0,
+                xmax: width,
+                ymin: 0,
+                ymax: height,
+            });
+            terminal.clear();
             this.fire("resize", undefined);
         });
         terminal.on(
