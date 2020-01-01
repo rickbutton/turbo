@@ -1,4 +1,4 @@
-import { getTurbo } from "./turbo";
+import { getEnvironment } from "./env";
 import { mocked } from "ts-jest/utils";
 import fs from "fs";
 import path from "path";
@@ -35,7 +35,7 @@ jest.mock(
     { virtual: true },
 );
 
-describe("Turbo", () => {
+describe("env", () => {
     beforeEach(() => {
         mocked(child.execSync).mockClear();
         mocked(fs.existsSync).mockClear();
@@ -43,35 +43,35 @@ describe("Turbo", () => {
 
     describe("env", () => {
         test("getVar returns environment variables", () => {
-            const turbo = getTurbo({});
-            expect(turbo.env.getVar("FOO")).toBe("BAR");
-            expect(turbo.env.getVar("foo")).toBe("bar");
-            expect(turbo.env.getVar("BAR")).toBe("BAZ");
-            expect(turbo.env.getVar("FAIL")).toBe(undefined);
+            const env = getEnvironment({});
+            expect(env.host.getVar("FOO")).toBe("BAR");
+            expect(env.host.getVar("foo")).toBe("bar");
+            expect(env.host.getVar("BAR")).toBe("BAZ");
+            expect(env.host.getVar("FAIL")).toBe(undefined);
         });
 
         describe("nodePath returns the correct path", () => {
             process.argv[0] = "/tmp/foo/node";
-            const turbo = getTurbo({});
-            expect(turbo.env.nodePath).toBe("/tmp/foo/node");
+            const env = getEnvironment({});
+            expect(env.host.nodePath).toBe("/tmp/foo/node");
         });
 
         describe("scriptPath returns the correct path", () => {
             process.argv[1] = "/tmp/foo/myScript.js";
-            const turbo = getTurbo({});
-            expect(turbo.env.scriptPath).toBe("/tmp/foo/myScript.js");
+            const env = getEnvironment({});
+            expect(env.host.scriptPath).toBe("/tmp/foo/myScript.js");
         });
 
         describe("execSync invokes the command and returns the stdout", () => {
-            const turbo = getTurbo({});
-            expect(turbo.env.execSync("TEST")).toBe("FOOTESTBAR");
-            expect(turbo.env.execSync("test test")).toBe("FOOtest testBAR");
+            const env = getEnvironment({});
+            expect(env.host.execSync("TEST")).toBe("FOOTESTBAR");
+            expect(env.host.execSync("test test")).toBe("FOOtest testBAR");
             expect(mocked(child.execSync).mock.calls.length).toBe(2);
         });
     });
     describe("config", () => {
         test("getConfig looks for the config file with the correct resolution order", () => {
-            const _ = getTurbo({});
+            const _ = getEnvironment({});
 
             expect(mocked(fs.existsSync).mock.calls).toEqual([
                 ["/tmp/exists/foo/bar/baz/turbo.config.js"],

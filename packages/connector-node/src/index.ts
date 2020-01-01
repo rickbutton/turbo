@@ -1,7 +1,7 @@
 import {
     Target,
     TargetEvents,
-    Environment,
+    Host,
     TargetFactory,
     EmitterBase,
     logger,
@@ -15,12 +15,12 @@ const NODE_PORT_REGEX = /Debugger listening on ws:\/\/([^:]+):(\d+)/;
 class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     private process: child.ChildProcess | null = null;
     private config: NodeConnectorConfig;
-    private env: Environment;
+    private host: Host;
 
-    constructor(config: NodeConnectorConfig, env: Environment) {
+    constructor(config: NodeConnectorConfig, host: Host) {
         super();
         this.config = config;
-        this.env = env;
+        this.host = host;
     }
 
     get name(): string {
@@ -44,7 +44,7 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     }
 
     private spawn(): void {
-        const nodePath = this.config.nodePath || this.env.nodePath;
+        const nodePath = this.config.nodePath || this.host.nodePath;
         const args = ["--inspect-brk=0", this.config.script];
 
         logger.info(
@@ -103,7 +103,7 @@ export interface NodeConnectorConfig {
 }
 
 export function node(config: NodeConnectorConfig): TargetFactory {
-    return (env: Environment): Target => {
-        return new ManagedScript(config, env);
+    return (host: Host): Target => {
+        return new ManagedScript(config, host);
     };
 }

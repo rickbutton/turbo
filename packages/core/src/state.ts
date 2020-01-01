@@ -123,14 +123,15 @@ interface TargetDescriptor {
     runtime: TargetRuntime;
 }
 
-interface LogStreamState {
-    turboSocket: string;
-    targetSocket: string;
+export type LogLevel = "error" | "warn" | "info" | "verbose" | "debug";
+export interface LogEvent {
+    level: LogLevel;
+    msg: string;
 }
-
 export interface State {
     target: TargetDescriptor;
-    logStream: LogStreamState;
+    logs: LogEvent[];
+    debug: string[];
 }
 
 export interface TargetConnectedAction {
@@ -146,10 +147,20 @@ export interface TargetPausedAction {
 export interface TargetResumedAction {
     type: "resumed";
 }
+export interface AddLogAction {
+    type: "log";
+    log: LogEvent;
+}
+export interface AddDebugAction {
+    type: "debug";
+    data: string;
+}
 
 export type Action =
     | TargetConnectedAction
     | TargetDisconnectedAction
     | TargetPausedAction
-    | TargetResumedAction;
+    | TargetResumedAction
+    | AddLogAction
+    | AddDebugAction;
 export type ActionType = Action["type"];

@@ -1,8 +1,9 @@
-import { Client } from "@turbo/net";
-import { logger } from "@turbo/core";
+import { logger, State } from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
 import { ObjectView } from "./object";
+import { TurboContext } from "../context";
+import { useTurboContext, useTurboState } from "./helpers";
 
 const PROMPT = "> ";
 
@@ -75,13 +76,10 @@ function parse(input: string): Command {
 
 async function handle(
     input: string,
-    client: Client,
+    context: TurboContext,
+    state: State,
 ): Promise<JSX.Element | null> {
     if (/^\s*$/.test(input)) {
-        return null;
-    }
-    const state = client.state;
-    if (!state) {
         return null;
     }
     const runtime = state.target.runtime;
@@ -89,27 +87,27 @@ async function handle(
     const cmd = parse(input);
 
     if (cmd.type == "pause") {
-        return client.pause().then(() => null);
+        return context.pause().then(() => null);
     } else if (cmd.type === "resume") {
-        return client.resume().then(() => null);
+        return context.resume().then(() => null);
     } else if (cmd.type === "stepInto") {
-        return client.stepInto().then(() => null);
+        return context.stepInto().then(() => null);
     } else if (cmd.type === "stepOver") {
-        return client.stepOver().then(() => null);
+        return context.stepOver().then(() => null);
     } else if (cmd.type === "stepOut") {
-        return client.stepOut().then(() => null);
+        return context.stepOut().then(() => null);
     } else if (cmd.type === "error") {
-        return <span>${cmd.value}</span>;
+        return <Box>${cmd.value}</Box>;
     } else if (!runtime.paused) {
-        return <span>not paused</span>; // TODO - better error? eval global?
+        return <Box>not paused</Box>; // TODO - better error? eval global?
     } else {
         const topCallFrame = runtime.callFrames[0];
 
-        return client
+        return context
             .eval(input, topCallFrame.id)
             .then(result => {
                 if (result.error) {
-                    return <span>{result.value}</span>;
+                    return <Box>{result.value}</Box>;
                 } else if (!result.success) {
                     return result.value.exception ? (
                         <ObjectView
@@ -117,46 +115,52 @@ async function handle(
                             object={result.value.exception}
                         />
                     ) : (
-                        <span>{result.value.text}</span>
+                        <Box>{result.value.text}</Box>
                     );
                 } else {
                     return <ObjectView object={result.value} />;
                 }
             })
             .catch(error => {
-                return <span>`eval error: ${error}`</span>;
+                return <Box>`eval error: ${error}`</Box>;
             });
     }
 }
 
-interface Props {
-    client: Client;
-}
-export function Repl(props: Props): JSX.Element {
+export function Repl(): JSX.Element {
+    const context = useTurboContext();
+    const state = useTurboState();
     const [lines, setLines] = React.useState<JSX.Element[]>([]);
 
     async function onSubmit(value: string): Promise<void> {
         const newLines = [
             ...lines,
-            <span key={lines.length}>{PROMPT + js(value)}</span>,
+            <Box minHeight={1} key={lines.length}>
+                {PROMPT + js(value)}
+            </Box>,
         ];
         setLines(newLines);
 
-        const output = await handle(value, props.client);
+        const output = await handle(value, context, state);
         if (output) {
             setLines([
                 ...newLines,
-                <span key={newLines.length}>{output}</span>,
+                <Box minHeight={1} key={newLines.length}>
+                    {output}
+                </Box>,
             ]);
         }
     }
 
     return (
-        <Box direction="column">
-            <ScrollableBox direction="column" grow={1} snapToBottom={true}>
-                {lines}
-                <Input prompt={PROMPT} onSubmit={onSubmit} />
-            </ScrollableBox>
-        </Box>
+        <ScrollableBox
+            direction="column"
+            wrap={true}
+            grow={1}
+            snapToBottom={true}
+        >
+            {lines}
+            <Input prompt={PROMPT} onSubmit={onSubmit} />
+        </ScrollableBox>
     );
 }

@@ -23,8 +23,6 @@
   "references": [
     { "path": "packages/cli/tsconfig.build.json" },
     { "path": "packages/connector-node/tsconfig.build.json" },
-    { "path": "packages/core/tsconfig.build.json" },
-    { "path": "packages/net/tsconfig.build.json" },
-    { "path": "packages/tmux/tsconfig.build.json" }
+    { "path": "packages/core/tsconfig.build.json" }
   ]
 }

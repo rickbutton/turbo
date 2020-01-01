@@ -48,7 +48,9 @@ export function useInterval(callback: () => void, delay: number): void {
 
     React.useEffect(() => {
         const handler = (): void =>
-            savedCallback.current && savedCallback.current();
+            unstable_batchedUpdates(() => {
+                savedCallback.current && savedCallback.current();
+            });
         const id = setInterval(handler, delay);
         return (): void => clearInterval(id);
     }, [delay]);

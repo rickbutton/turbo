@@ -7,22 +7,10 @@ process.on("uncaughtException", e => {
 });
 
 import yargs from "yargs";
-import { start } from "./commands/start";
-import { component } from "./commands/component";
-import { evaluate } from "./commands/eval";
-import { daemon } from "./commands/daemon";
-import { TurboOptions, Turbo } from "@turbo/core";
-import { getTurbo } from "./turbo";
-
-function getOptions(argv: any): TurboOptions {
-    return {
-        sessionId: argv.session || undefined,
-    };
-}
-
-function makeTurbo(argv: any): Turbo {
-    return getTurbo(getOptions(argv));
-}
+import { logger, TurboOptions, Environment } from "@turbo/core";
+import { getEnvironment } from "./env";
+import { makeContext } from "./context";
+import { renderApp } from "./app";
 
 const LOGO =
     "   __             __        \n" +
@@ -30,38 +18,28 @@ const LOGO =
     " / __/ / / / ___/ __ \\/ __ \\\n" +
     "/ /_/ /_/ / /  / /_/ / /_/ /\n" +
     "\\__/\\__,_/_/  /_.___/\\____/\n ";
+const argv: any = yargs.usage(LOGO).help().argv;
 
-yargs
-    .usage(LOGO)
-    .help()
-    .option("session", {
-        describe: "the desired session id",
-        alias: ["s"],
-    })
-    .command(["start", "$0"], "start a turbo session", {}, argv => {
-        const turbo = makeTurbo(argv);
+function getOptions(argv: any): TurboOptions {
+    return {
+        sessionId: argv.session || undefined,
+    };
+}
 
-        start(turbo);
-    })
-    .command(
-        ["component <name>", "comp"],
-        "start a turbo component",
-        {},
-        argv => {
-            const turbo = makeTurbo(argv);
+function makeEnvironment(argv: any): Environment {
+    return getEnvironment(getOptions(argv));
+}
 
-            const name = argv.name as string;
-            return component(turbo, name);
-        },
-    )
-    .command(["eval <expr>"], "evaluate an expression", {}, argv => {
-        const turbo = makeTurbo(argv);
+function start(argv: any): void {
+    const env = makeEnvironment(argv);
+    const context = makeContext(env);
+    context.start();
 
-        const expr = argv.expr as string;
-        return evaluate(turbo, expr);
-    })
-    .command("daemon", "start a turbo daemon", {}, argv => {
-        const turbo = makeTurbo(argv);
+    process.on("exit", () => {
+        context.stop();
+    });
 
-        return daemon(turbo);
-    }).argv;
+    renderApp({ context });
+}
+
+start(argv);

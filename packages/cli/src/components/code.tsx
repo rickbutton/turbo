@@ -1,12 +1,7 @@
-import { Client } from "@turbo/net";
 import { SourceLocation } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
-import { useClientState, useScriptSource } from "./helpers";
-
-interface Props {
-    client: Client;
-}
+import { useTurboState, useScriptSource } from "./helpers";
 
 function numbers(height: number): JSX.Element[] {
     const width = String(height).length;
@@ -34,13 +29,11 @@ function gutter(height: number, loc: SourceLocation): JSX.Element[] {
     return elements;
 }
 
-export function Code(props: Props): JSX.Element {
-    const state = useClientState(props.client);
-    const script = useScriptSource(props.client, state);
+export function Code(): JSX.Element {
+    const state = useTurboState();
+    const script = useScriptSource();
 
-    if (!state) {
-        return <span>no state</span>;
-    } else if (state.target.runtime.paused) {
+    if (state.target.runtime.paused) {
         const topCallFrame = state.target.runtime.callFrames[0];
 
         const lines = script.split("\n");
@@ -58,6 +51,6 @@ export function Code(props: Props): JSX.Element {
             </ScrollableBox>
         );
     } else {
-        return <span>not paused</span>;
+        return <Box>not paused</Box>;
     }
 }

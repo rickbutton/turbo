@@ -1,21 +1,32 @@
-import { Client } from "@turbo/net";
 import { State } from "@turbo/core";
 import React from "react";
+import { TurboContext } from "../context";
 
-export function useClientState(client: Client): State | null {
-    const [state, setState] = React.useState<State | null>(null);
+export const TurboContextContext = React.createContext<TurboContext>(
+    (null as unknown) as TurboContext,
+);
+export function useTurboContext(): TurboContext {
+    return React.useContext(TurboContextContext);
+}
+
+export function useTurboState(): State {
+    const context = useTurboContext();
+    const [state, setState] = React.useState(context.state);
 
     React.useEffect(() => {
-        const cb = (state: State): void => setState(state);
-        client.on("sync", cb);
-
-        return (): void => client.off("sync", cb);
-    }, [client]);
+        function listen(newState: State): void {
+            setState(newState);
+        }
+        context.on("state", listen);
+        return (): void => context.off("state", listen);
+    });
 
     return state;
 }
 
-export function useScriptSource(client: Client, state: State | null): string {
+export function useScriptSource(): string {
+    const context = useTurboContext();
+    const state = useTurboState();
     const [script, setScript] = React.useState("");
 
     React.useEffect(() => {
@@ -23,9 +34,9 @@ export function useScriptSource(client: Client, state: State | null): string {
             setScript("");
         } else if (state.target.runtime.paused) {
             const topCallFrame = state.target.runtime.callFrames[0];
-            client
+            context
                 .getScriptSource(topCallFrame.location.scriptId)
-                .then(({ script }) => {
+                .then(script => {
                     setScript(script);
                 });
         } else {

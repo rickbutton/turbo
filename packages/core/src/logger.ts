@@ -1,12 +1,7 @@
 import chalk from "chalk";
 import { EmitterBase } from "./emitter";
+import { LogEvent } from "./state";
 
-export type LogLevel = "error" | "warn" | "info" | "verbose" | "debug";
-
-export interface LogEvent {
-    level: LogLevel;
-    msg: string;
-}
 interface LoggerEvents {
     log: LogEvent;
 }

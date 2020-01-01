@@ -2,7 +2,7 @@ import process from "process";
 import path from "path";
 import fs from "fs";
 import child from "child_process";
-import { TurboOptions, Turbo, Environment, Config } from "@turbo/core";
+import { TurboOptions, Environment, Config, Host } from "@turbo/core";
 
 function getVar(name: string): string | undefined {
     return process.env ? process.env[name] : undefined;
@@ -27,7 +27,7 @@ function getTmpFile(context: string, name: string): string {
     return path.join(folder, name);
 }
 
-function getEnvironment(): Environment {
+function getHost(): Host {
     const nodePath = process.argv[0];
     const scriptPath = process.argv[1];
     return {
@@ -65,11 +65,11 @@ function getConfig(basePath?: string): Config {
     }
 }
 
-export function getTurbo(options: TurboOptions): Turbo {
-    const env = getEnvironment();
+export function getEnvironment(options: TurboOptions): Environment {
+    const host = getHost();
     const config = getConfig();
     return {
-        env,
+        host,
         config,
         options,
     };

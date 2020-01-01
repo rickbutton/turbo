@@ -4,7 +4,7 @@ import { Emitter } from "./emitter";
 declare const __sessionIdTag: unique symbol;
 export type SessionId = string & { readonly __tag: typeof __sessionIdTag };
 
-export interface Environment {
+export interface Host {
     readonly nodePath: string;
     readonly scriptPath: string;
 
@@ -14,32 +14,8 @@ export interface Environment {
     readonly getTmpFile: (context: string, name: string) => string;
 }
 
-export interface Layout {
-    readonly windows: Window[];
-}
-
-export interface Window {
-    readonly name: string;
-    readonly panes: Pane[];
-}
-
-interface ComponentPane {
-    readonly type: "component";
-    readonly component: string;
-}
-interface ExecPane {
-    readonly type: "exec";
-    readonly command: string;
-}
-interface ShellPane {
-    readonly type: "shell";
-}
-
-export type Pane = ComponentPane | ExecPane | ShellPane;
-
 export interface Config {
     target: TargetFactory;
-    layout?: Layout;
 }
 
 export interface StartedEvent {
@@ -60,13 +36,13 @@ export interface Target extends Emitter<TargetEvents> {
     readonly start: () => void;
     readonly stop: () => void;
 }
-export type TargetFactory = (env: Environment) => Target;
+export type TargetFactory = (host: Host) => Target;
 
 export interface TurboOptions {
     sessionId?: SessionId;
 }
-export interface Turbo {
-    env: Environment;
+export interface Environment {
+    host: Host;
     config: Config;
     options: TurboOptions;
 }
@@ -76,8 +52,10 @@ export function uuid(): string {
 }
 
 export { Emitter, EmitterBase } from "./emitter";
-export { logger, format, LogEvent, LogLevel } from "./logger";
+export { logger, format } from "./logger";
 export {
+    LogEvent,
+    LogLevel,
     State,
     TargetConnection,
     TargetConnectionEvents,
@@ -92,4 +70,4 @@ export {
     Action,
     EvalResponse,
 } from "./state";
-export { StateReducer } from "./reducer";
+export { reduce, initialState } from "./reducer";

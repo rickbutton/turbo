@@ -4,6 +4,7 @@ import stringWidth from "string-width";
 import { BufferTarget, MouseEvent } from "./buffertarget";
 
 export interface Container {
+    drawing: boolean;
     target: BufferTarget;
     node: ComplexNode;
     forceRedraw: boolean;
@@ -147,6 +148,7 @@ export function createNode(name: string): ComplexNode {
 
 export function createContainer(target: BufferTarget): Container {
     return {
+        drawing: false,
         node: createNode("#root"),
         target,
         forceRedraw: false,
