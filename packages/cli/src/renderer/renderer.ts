@@ -195,7 +195,9 @@ export function render(
 
     target.on("resize", () => {
         container.forceRedraw = true;
-        doRender(false);
+        unstable_batchedUpdates(() => {
+            doRender(false);
+        });
     });
     target.on("mouse", event => {
         const { x, y } = event;
