@@ -16,6 +16,7 @@ import {
 } from "./dom";
 import { drawContainer } from "./draw";
 import { BufferTarget, BufferTargetContext } from "./buffertarget";
+import { getTerminal } from "./terminal";
 
 type ElementType = string;
 type ElementProps = { [key: string]: any };
@@ -159,7 +160,7 @@ export function unstable_batchedUpdates(cb: () => void): void {
 
 export function render(
     element: React.ReactElement<any>,
-    target: BufferTarget,
+    target: BufferTarget = getTerminal(),
     callback?: () => void | null | undefined,
 ): void {
     const isAsync = false;

@@ -4,6 +4,7 @@ import { Box } from "./box";
 import { Cursor } from "./cursor";
 
 interface InputProps {
+    prompt: string;
     onSubmit?(input: string): void;
 }
 export function Input(props: InputProps): JSX.Element {
@@ -46,7 +47,8 @@ export function Input(props: InputProps): JSX.Element {
     });
 
     return (
-        <Box minHeight={1}>
+        <Box minHeight={1} direction="row">
+            {props.prompt}
             {before}
             <Cursor />
             {after}

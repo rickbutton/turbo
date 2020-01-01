@@ -40,46 +40,46 @@ function drawNode(
     const x = offsetX + node.yoga.getComputedLeft();
     const y = offsetY + node.yoga.getComputedTop();
 
+    let xmin = 0,
+        xmax = 0,
+        ymin = 0,
+        ymax = 0,
+        drawOffsetTop = 0,
+        drawOffsetLeft = 0;
+
+    const boundingParent = findClosestParent(
+        node,
+        n => n.drawOverflow === false,
+    );
+    if (!boundingParent) {
+        xmin = x;
+        xmax = x + node.yoga.getComputedWidth() - 1;
+        ymin = y;
+        ymax = y + node.yoga.getComputedHeight() - 1;
+    } else {
+        const boundingLayout = getAbsoluteLayout(boundingParent);
+        xmin = boundingLayout.left;
+        xmax = boundingLayout.left + boundingLayout.width - 1;
+        ymin = boundingLayout.top;
+        ymax = boundingLayout.top + boundingLayout.height - 1;
+    }
+
+    const drawOffsetTopParent = findClosestParent(
+        node,
+        n => n.drawOffsetTop !== undefined,
+    );
+    if (drawOffsetTopParent) {
+        drawOffsetTop = drawOffsetTopParent.drawOffsetTop || 0;
+    }
+    const drawOffsetLeftParent = findClosestParent(
+        node,
+        n => n.drawOffsetLeft !== undefined,
+    );
+    if (drawOffsetLeftParent) {
+        drawOffsetLeft = drawOffsetLeftParent.drawOffsetLeft || 0;
+    }
+
     if (node.type === "text" && node.parent) {
-        let xmin = 0,
-            xmax = 0,
-            ymin = 0,
-            ymax = 0,
-            drawOffsetTop = 0,
-            drawOffsetLeft = 0;
-
-        const boundingParent = findClosestParent(
-            node,
-            n => n.drawOverflow === false,
-        );
-        if (!boundingParent) {
-            xmin = x;
-            xmax = x + node.yoga.getComputedWidth() - 1;
-            ymin = y;
-            ymax = y + node.yoga.getComputedHeight() - 1;
-        } else {
-            const boundingLayout = getAbsoluteLayout(boundingParent);
-            xmin = boundingLayout.left;
-            xmax = boundingLayout.left + boundingLayout.width - 1;
-            ymin = boundingLayout.top;
-            ymax = boundingLayout.top + boundingLayout.height - 1;
-        }
-
-        const drawOffsetTopParent = findClosestParent(
-            node,
-            n => n.drawOffsetTop !== undefined,
-        );
-        if (drawOffsetTopParent) {
-            drawOffsetTop = drawOffsetTopParent.drawOffsetTop || 0;
-        }
-        const drawOffsetLeftParent = findClosestParent(
-            node,
-            n => n.drawOffsetLeft !== undefined,
-        );
-        if (drawOffsetLeftParent) {
-            drawOffsetLeft = drawOffsetLeftParent.drawOffsetLeft || 0;
-        }
-
         const color = resolveProperty(node, n => n.color);
         const bg = resolveProperty(node, n => n.bg);
 
@@ -106,7 +106,9 @@ function drawNode(
         }
     } else if (node.type !== "text") {
         if (node.attributes["unstable_moveCursorToThisPosition"]) {
-            target.setCursor(x, y);
+            const cursorX = x + drawOffsetLeft;
+            const cursorY = y + drawOffsetTop;
+            target.setCursor(cursorX, cursorY, xmin, xmax, ymin, ymax);
         }
 
         for (const child of node.children) {
@@ -131,6 +133,11 @@ export function drawContainer(container: Container): void {
 
     node.yoga.setWidth(width);
     node.yoga.setHeight(height);
+
+    for (const child of node.children) {
+        child.yoga.setWidth(width);
+        child.yoga.setHeight(height);
+    }
 
     const direction = yoga.DIRECTION_LTR;
     node.yoga.calculateLayout(width, height, direction);

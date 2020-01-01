@@ -7,7 +7,7 @@ export interface BoxProps {
     grow?: number;
     shrink?: number;
     basis?: number | string;
-    direction?: "row" | "column";
+    direction?: "row" | "column" | "row-reverse" | "column-reverse";
     alignItems?: "stretch" | "flex-start" | "flex-end" | "center" | "baseline";
     justify?:
         | "flex-start"

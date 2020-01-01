@@ -49,7 +49,28 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
     try {
         const exec = turbo.env.nodePath;
         const args = [turbo.env.scriptPath, "--session", id, "daemon"];
-        child.spawn(exec, args, { detached: true, stdio: "ignore" });
+        const spawned = child.spawn(exec, args, {
+            detached: true,
+            stdio: "ignore",
+        });
+
+        spawned.on("exit", code => {
+            console.error(`daemon died! ${code}`);
+        });
+        spawned.on("error", err => {
+            console.error(err);
+        });
+        if (spawned.stdout) {
+            spawned.stdout.on("data", data => {
+                process.stdout.write(data);
+            });
+        }
+        if (spawned.stderr) {
+            spawned.stderr.on("data", data => {
+                process.stderr.write(data);
+            });
+        }
+        console.log(`spawned daemon: ${exec} ${args.join(" ")}`);
     } catch (e) {
         console.error("failed to spawn daemon");
         console.error(e);
@@ -59,6 +80,7 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
 
 export function start(turbo: Turbo): void {
     const id = generateSessionId();
+    console.log(`starting a turbo session with id ${id}`);
 
     const layout = turbo.config.layout || defaultLayout;
 

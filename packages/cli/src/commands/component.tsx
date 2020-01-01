@@ -2,8 +2,7 @@ import { Turbo, logger } from "@turbo/core";
 import { Client } from "@turbo/net";
 import { getCurrentSessionId } from "@turbo/tmux";
 import React from "react";
-import { render } from "ink";
-
+import { render } from "../renderer";
 import { log } from "../components/log";
 import { Repl } from "../components/repl";
 import { Code } from "../components/code";

@@ -54,7 +54,7 @@ interface ManagedClientOptions {
 }
 export type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
 
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 5;
 
 export abstract class BaseClient<
     T extends BaseClientEvents = BaseClientEvents

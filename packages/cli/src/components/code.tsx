@@ -1,46 +1,37 @@
 import { Client } from "@turbo/net";
-import { highlight } from "cli-highlight";
 import { SourceLocation } from "@turbo/core";
 import React from "react";
-import chalk from "chalk";
-import { Box } from "ink";
+import { Box, ScrollableBox } from "../renderer";
 import { useClientState, useScriptSource } from "./helpers";
 
 interface Props {
     client: Client;
 }
 
-function numbers(height: number): string {
+function numbers(height: number): JSX.Element[] {
     const width = String(height).length;
-    let str = "";
+    const elements: JSX.Element[] = [];
 
     for (let i = 0; i < height; i++) {
-        str += String(i + 1).padStart(width, " ") + " \n";
+        elements.push(<Box key={i}>{String(i + 1).padStart(width, " ")}</Box>);
     }
-    return str;
+    return elements;
 }
 
-function gutter(height: number, loc: SourceLocation): string {
-    let str = "";
+function gutter(height: number, loc: SourceLocation): JSX.Element[] {
+    const elements: JSX.Element[] = [];
     for (let i = 0; i < height; i++) {
         if (i === loc.line) {
-            str += chalk.red("> ") + "\n";
+            elements.push(
+                <Box key={i} color="red">
+                    &gt;{" "}
+                </Box>,
+            );
         } else {
-            str += "  \n";
+            elements.push(<Box key={i} height={1} width={2}></Box>);
         }
     }
-    return str;
-}
-
-function highlightScript(script: string, loc: SourceLocation): string {
-    const colored = highlight(script, { language: "typescript" });
-    const lines = colored.split("\n");
-
-    return lines
-        .map((line: string, i: number) => {
-            return i === loc.line ? chalk.bgBlackBright(line) : line;
-        })
-        .join("\n");
+    return elements;
 }
 
 export function Code(props: Props): JSX.Element {
@@ -52,14 +43,19 @@ export function Code(props: Props): JSX.Element {
     } else if (state.target.runtime.paused) {
         const topCallFrame = state.target.runtime.callFrames[0];
 
-        const height = script.split("\n").length; // TODO, too many allocs
+        const lines = script.split("\n");
+        const height = lines.length;
         const loc = topCallFrame.location;
         return (
-            <Box flexDirection="row">
-                <Box flexShrink={1}>{numbers(height)}</Box>
-                <Box flexShrink={1}>{gutter(height, loc)}</Box>
-                <Box flexGrow={1}>{highlightScript(script, loc)}</Box>
-            </Box>
+            <ScrollableBox grow={1} direction="row">
+                <Box direction="column">{numbers(height)}</Box>
+                <Box direction="column">{gutter(height, loc)}</Box>
+                <Box direction="column" grow={1}>
+                    {lines.map((line, i) => (
+                        <Box key={i}>{line}</Box>
+                    ))}
+                </Box>
+            </ScrollableBox>
         );
     } else {
         return <span>not paused</span>;

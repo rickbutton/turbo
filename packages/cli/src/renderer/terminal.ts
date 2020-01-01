@@ -142,13 +142,17 @@ function normalizeName(
     };
 }
 
+interface CursorLocation {
+    x: number;
+    y: number;
+}
+
 let didSetup = false;
 class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
     private readonly buffer = new ScreenBuffer({
         dst: terminal,
     });
-    private cursorX = 0;
-    private cursorY = 0;
+    private cursor: CursorLocation | null = null;
 
     public width = 0;
     public height = 0;
@@ -254,9 +258,19 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
             targetY += dy;
         }
     }
-    setCursor(x: number, y: number): void {
-        this.cursorX = x;
-        this.cursorY = y;
+    setCursor(
+        x: number,
+        y: number,
+        xmin: number,
+        xmax: number,
+        ymin: number,
+        ymax: number,
+    ): void {
+        if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
+            this.cursor = { x, y };
+        } else {
+            this.cursor = null;
+        }
     }
     clear(): void {
         this.buffer.fill({
@@ -267,9 +281,22 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
     }
     flush(delta: boolean): void {
         this.buffer.draw({ delta });
-        this.buffer.moveTo(this.cursorX, this.cursorY);
-        this.buffer.drawCursor();
+
+        if (this.cursor) {
+            terminal.hideCursor(false as any);
+            this.buffer.moveTo(this.cursor.x, this.cursor.y);
+            this.buffer.drawCursor();
+        } else {
+            terminal.hideCursor();
+            this.buffer.drawCursor();
+        }
     }
 }
 
-export const Terminal: BufferTarget = new TerminalBufferTarget();
+let term: BufferTarget | null = null;
+export function getTerminal(): BufferTarget {
+    if (term === null) {
+        term = new TerminalBufferTarget();
+    }
+    return term;
+}

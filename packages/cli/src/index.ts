@@ -3,6 +3,7 @@
 process.on("uncaughtException", e => {
     console.error(e.message);
     console.error(e.stack);
+    process.exit(1);
 });
 
 import yargs from "yargs";

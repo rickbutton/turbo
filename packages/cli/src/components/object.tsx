@@ -1,10 +1,9 @@
-import { highlight } from "cli-highlight";
 import React from "react";
 import { RemoteObject } from "@turbo/core";
-import chalk from "chalk";
+import { Box } from "../renderer";
 
 function js(str: string): JSX.Element {
-    return <span>{highlight(str, { language: "typescript" })}</span>;
+    return <Box>{str}</Box>;
 }
 
 interface ComplexObjectProps {
@@ -14,7 +13,7 @@ interface ComplexObjectProps {
 function ComplexObject(props: ComplexObjectProps): JSX.Element {
     const { simpleExceptions, object } = props;
     if (object.type !== "object") {
-        return <span>unknown type ${object["type"]}</span>;
+        return <Box>unknown type ${object["type"]}</Box>;
     }
 
     // TODO: array, node, regexp, date, map, set, weapmap, weakset,
@@ -23,11 +22,11 @@ function ComplexObject(props: ComplexObjectProps): JSX.Element {
         const text = simpleExceptions
             ? object.description.split("\n")[0]
             : object.description;
-        return <span>{chalk.red(text)}</span>;
+        return <Box color="red">{text}</Box>;
     } else if (object.subtype === "null") {
-        return <span>{js("null")}</span>;
+        return js("null");
     } else {
-        return <span>{`[${object.className} ${object.type}]`}</span>;
+        return <Box>{`[${object.className} ${object.type}]`}</Box>;
     }
 }
 
@@ -53,5 +52,5 @@ export function ObjectView(props: ObjectViewProps): JSX.Element {
             />
         );
 
-    return <span>unknown type ${object["type"]}</span>;
+    return <Box>unknown type ${object["type"]}</Box>;
 }

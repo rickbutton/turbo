@@ -3,7 +3,7 @@ export { useInterval, useInput, useBufferTarget } from "./hooks";
 export { Box, BoxProps } from "./box";
 export { ScrollableBox } from "./scrollablebox";
 export { Cursor } from "./cursor";
-export { Terminal } from "./terminal";
+export { getTerminal } from "./terminal";
 export { Input } from "./input";
 export { MouseEvent, InputEvent } from "./buffertarget";
 

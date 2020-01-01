@@ -105,7 +105,14 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
         vertical: boolean,
         str: string,
     ): void;
-    setCursor(x: number, y: number): void;
+    setCursor(
+        x: number,
+        y: number,
+        xmin: number,
+        xmax: number,
+        ymin: number,
+        ymax: number,
+    ): void;
     clear(): void;
     flush(delta: boolean): void;
 }

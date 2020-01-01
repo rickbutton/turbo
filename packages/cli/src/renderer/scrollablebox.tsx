@@ -24,13 +24,20 @@ function useSize(ref: React.RefObject<any>): { width: number; height: number } {
     };
 }
 
-export function ScrollableBox(props: BoxProps): JSX.Element {
+interface ScrollableBoxProps extends BoxProps {
+    snapToBottom?: boolean;
+}
+export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
     const contentRef = React.useRef<any>();
     const viewportRef = React.useRef<any>();
     const viewport = useSize(viewportRef);
+    const shouldSnapToBottom = props.snapToBottom || false;
 
     const [contentHeight, setContentHeight] = React.useState(0);
     const [viewportOffset, setViewportOffset] = React.useState(0);
+    const [snappedToBottom, setSnappedToBottom] = React.useState(
+        props.snapToBottom,
+    );
     const [barHeight, setBarHeight] = React.useState(0);
 
     const minViewportOffset = 0;
@@ -47,22 +54,43 @@ export function ScrollableBox(props: BoxProps): JSX.Element {
     }, [props.children, contentRef.current, viewport.width]);
 
     React.useLayoutEffect(() => {
-        updateViewportOffset(viewportOffset);
+        updateViewportOffset(viewportOffset, false);
         updateBarHeight();
     }, [viewport.height, contentHeight]);
 
-    function updateViewportOffset(offset: number): void {
-        if (offset < minViewportOffset) {
-            setViewportOffset(minViewportOffset);
+    function updateViewportOffset(
+        offset: number,
+        userInteraction: boolean,
+    ): void {
+        let newOffset = 0;
+        if (snappedToBottom && !userInteraction) {
+            newOffset = maxViewportOffset;
+        } else if (offset < minViewportOffset) {
+            newOffset = minViewportOffset;
         } else if (offset > maxViewportOffset) {
-            setViewportOffset(maxViewportOffset);
+            newOffset = maxViewportOffset;
         } else {
-            setViewportOffset(offset);
+            newOffset = offset;
         }
+
+        if (shouldSnapToBottom && newOffset === maxViewportOffset) {
+            // should snap, and reached bottom
+            setSnappedToBottom(true);
+            setViewportOffset(maxViewportOffset);
+        }
+        if (userInteraction && newOffset !== viewportOffset) {
+            // user moved viewport, should snap
+            setSnappedToBottom(false);
+        }
+        setViewportOffset(newOffset);
     }
 
     function updateBarHeight(): void {
-        if (viewport.height !== 0 && contentHeight !== 0) {
+        if (
+            viewport.height !== 0 &&
+            contentHeight !== 0 &&
+            viewport.height < contentHeight
+        ) {
             setBarHeight(
                 Math.ceil(viewport.height * (viewport.height / contentHeight)),
             );
@@ -73,15 +101,16 @@ export function ScrollableBox(props: BoxProps): JSX.Element {
 
     function onMouse(event: MouseEvent): void {
         if (event.button === "wheel-up") {
-            updateViewportOffset(viewportOffset - 4);
+            updateViewportOffset(viewportOffset - 4, true);
         } else if (event.button === "wheel-down") {
-            updateViewportOffset(viewportOffset + 4);
+            updateViewportOffset(viewportOffset + 4, true);
         }
     }
 
     const viewportPercent = viewportOffset / maxViewportOffset;
+
     return (
-        <Box ref={viewportRef} onMouse={onMouse} drawOverflow={false}>
+        <Box ref={viewportRef} onMouse={onMouse} drawOverflow={false} grow={1}>
             <Box {...props} drawOffsetTop={-viewportOffset} ref={contentRef}>
                 {props.children}
             </Box>
@@ -92,7 +121,6 @@ export function ScrollableBox(props: BoxProps): JSX.Element {
                 marginTop={Math.ceil(
                     viewportPercent * (viewport.height - barHeight),
                 )}
-                grow={1}
             >
                 {Array(barHeight)
                     .fill("┃")

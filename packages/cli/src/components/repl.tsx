@@ -1,15 +1,13 @@
-import { highlight } from "cli-highlight";
 import { Client } from "@turbo/net";
 import { logger } from "@turbo/core";
 import React from "react";
-import { Static } from "ink";
-import { Input } from "./input";
+import { Box, Input, ScrollableBox } from "../renderer";
 import { ObjectView } from "./object";
 
 const PROMPT = "> ";
 
 function js(str: string): string {
-    return highlight(str, { language: "typescript" });
+    return str;
 }
 
 interface PauseCommand {
@@ -154,9 +152,11 @@ export function Repl(props: Props): JSX.Element {
     }
 
     return (
-        <span>
-            <Static>{lines}</Static>
-            <Input prompt={PROMPT} onSubmit={onSubmit} />
-        </span>
+        <Box direction="column">
+            <ScrollableBox direction="column" grow={1} snapToBottom={true}>
+                {lines}
+                <Input prompt={PROMPT} onSubmit={onSubmit} />
+            </ScrollableBox>
+        </Box>
     );
 }
