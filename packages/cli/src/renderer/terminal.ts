@@ -229,17 +229,19 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         ymax: number,
         color: string | number | undefined,
     ): void {
-        this.buffer.fill({
-            attr: {
-                bgColor: color,
-            },
-            region: {
-                xmin,
-                xmax,
-                ymin,
-                ymax,
-            },
-        } as any);
+        if (color) {
+            this.buffer.fill({
+                attr: {
+                    bgColor: color,
+                },
+                region: {
+                    xmin,
+                    xmax,
+                    ymin,
+                    ymax,
+                },
+            } as any);
+        }
     }
 
     draw(
