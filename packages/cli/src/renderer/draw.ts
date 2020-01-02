@@ -119,10 +119,7 @@ function drawNode(
     }
 }
 
-let count = 0;
 export function drawContainer(container: Container): void {
-    count++;
-
     const { node, target } = container;
     const { width, height } = target;
     if (container.drawing) {
@@ -154,9 +151,6 @@ export function drawContainer(container: Container): void {
     const x = node.yoga.getComputedLeft();
     const y = node.yoga.getComputedTop();
 
-    if (count === 50) {
-        debugger;
-    }
     drawNode(node, x, y, container);
 
     target.flush(delta);
