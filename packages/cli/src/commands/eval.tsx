@@ -3,7 +3,7 @@ import { Client } from "@turbo/net";
 import { getCurrentSessionId } from "@turbo/tmux";
 
 import React from "react";
-import { render } from "ink";
+import { render } from "../renderer";
 import { ObjectView } from "../components/object";
 
 export function evaluate(turbo: Turbo, expr: string): void {

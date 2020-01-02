@@ -222,6 +222,26 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         });
     }
 
+    fillBg(
+        xmin: number,
+        xmax: number,
+        ymin: number,
+        ymax: number,
+        color: string | number | undefined,
+    ): void {
+        this.buffer.fill({
+            attr: {
+                bgColor: color,
+            },
+            region: {
+                xmin,
+                xmax,
+                ymin,
+                ymax,
+            },
+        } as any);
+    }
+
     draw(
         x: number,
         y: number,

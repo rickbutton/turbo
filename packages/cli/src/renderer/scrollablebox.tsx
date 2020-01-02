@@ -43,7 +43,7 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
     const minViewportOffset = 0;
     const maxViewportOffset = Math.max(0, contentHeight - viewport.height + 1);
 
-    React.useLayoutEffect(() => {
+    React.useEffect(() => {
         if (contentRef.current && viewport.width !== 0) {
             const height = unstable_calculateTextHeight(
                 contentRef.current,
@@ -53,7 +53,7 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
         }
     }, [props.children, contentRef.current, viewport.width]);
 
-    React.useLayoutEffect(() => {
+    React.useEffect(() => {
         updateViewportOffset(viewportOffset, false);
         updateBarHeight();
     }, [viewport.height, contentHeight]);
@@ -75,14 +75,14 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
 
         if (shouldSnapToBottom && newOffset === maxViewportOffset) {
             // should snap, and reached bottom
-            setSnappedToBottom(true);
             setViewportOffset(maxViewportOffset);
+            setSnappedToBottom(true);
+        } else {
+            const shouldUnsnap =
+                userInteraction && newOffset !== viewportOffset;
+            setSnappedToBottom(shouldUnsnap);
+            setViewportOffset(newOffset);
         }
-        if (userInteraction && newOffset !== viewportOffset) {
-            // user moved viewport, should snap
-            setSnappedToBottom(false);
-        }
-        setViewportOffset(newOffset);
     }
 
     function updateBarHeight(): void {
@@ -110,8 +110,38 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
     const viewportPercent = viewportOffset / maxViewportOffset;
 
     return (
-        <Box ref={viewportRef} onMouse={onMouse} drawOverflow={false} grow={1}>
-            <Box {...props} drawOffsetTop={-viewportOffset} ref={contentRef}>
+        <Box
+            grow={props.grow}
+            shrink={props.shrink}
+            basis={props.basis}
+            height={props.height}
+            width={props.width}
+            minHeight={props.height}
+            maxHeight={props.height}
+            minWidth={props.width}
+            maxWidth={props.width}
+            marginTop={props.marginTop}
+            marginBottom={props.marginBottom}
+            marginLeft={props.marginLeft}
+            marginRight={props.marginRight}
+            drawOffsetTop={props.drawOffsetTop}
+            drawOffsetLeft={props.drawOffsetLeft}
+            drawOverflow={false} // hard coded
+            ref={viewportRef}
+            onClick={props.onClick}
+            onMouse={onMouse}
+        >
+            <Box
+                grow={1}
+                direction={props.direction}
+                alignItems={props.alignItems}
+                justify={props.justify}
+                color={props.color}
+                bg={props.bg}
+                wrap={props.wrap}
+                drawOffsetTop={-viewportOffset}
+                ref={contentRef}
+            >
                 {props.children}
             </Box>
             <Box

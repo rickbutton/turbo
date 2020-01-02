@@ -185,19 +185,19 @@ export function render(
     );
 
     function doRender(doCallback: boolean): void {
-        reconcilerInstance.updateContainer(
-            rootElement,
-            root,
-            parentComponent,
-            doCallback && callback ? callback : (): void => undefined,
-        );
+        unstable_batchedUpdates(() => {
+            reconcilerInstance.updateContainer(
+                rootElement,
+                root,
+                parentComponent,
+                doCallback && callback ? callback : (): void => undefined,
+            );
+        });
     }
 
     target.on("resize", () => {
         container.forceRedraw = true;
-        unstable_batchedUpdates(() => {
-            doRender(false);
-        });
+        doRender(false);
     });
     target.on("mouse", event => {
         const { x, y } = event;

@@ -31,6 +31,11 @@ export interface BoxProps {
     marginLeft?: number;
     marginRight?: number;
 
+    paddingTop?: number;
+    paddingBottom?: number;
+    paddingLeft?: number;
+    paddingRight?: number;
+
     drawOffsetTop?: number;
     drawOffsetLeft?: number;
     drawOverflow?: boolean;
@@ -62,6 +67,10 @@ export const Box = React.forwardRef(function InternalBox(
         marginBottom: props.marginBottom,
         marginLeft: props.marginLeft,
         marginRight: props.marginRight,
+        paddingTop: props.paddingTop,
+        paddingBottom: props.paddingBottom,
+        paddingLeft: props.paddingLeft,
+        paddingRight: props.paddingRight,
     };
     const contentProps = {
         textDirection: props.textDirection,
