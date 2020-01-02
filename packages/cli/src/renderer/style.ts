@@ -24,6 +24,10 @@ export interface NodeStyle {
     marginBottom?: number;
     marginLeft?: number;
     marginRight?: number;
+    paddingTop?: number;
+    paddingBottom?: number;
+    paddingLeft?: number;
+    paddingRight?: number;
 }
 
 export function applyStyle(node: yoga.YogaNode, style: NodeStyle): void {
@@ -148,5 +152,26 @@ export function applyStyle(node: yoga.YogaNode, style: NodeStyle): void {
         node.setMargin(yoga.EDGE_RIGHT, style.marginRight);
     } else {
         node.setMargin(yoga.EDGE_RIGHT, 0);
+    }
+
+    if (typeof style.paddingTop !== "undefined") {
+        node.setPadding(yoga.EDGE_TOP, style.paddingTop);
+    } else {
+        node.setPadding(yoga.EDGE_TOP, 0);
+    }
+    if (typeof style.paddingBottom !== "undefined") {
+        node.setPadding(yoga.EDGE_BOTTOM, style.paddingBottom);
+    } else {
+        node.setPadding(yoga.EDGE_BOTTOM, 0);
+    }
+    if (typeof style.paddingLeft !== "undefined") {
+        node.setPadding(yoga.EDGE_LEFT, style.paddingLeft);
+    } else {
+        node.setPadding(yoga.EDGE_LEFT, 0);
+    }
+    if (typeof style.paddingRight !== "undefined") {
+        node.setPadding(yoga.EDGE_RIGHT, style.paddingRight);
+    } else {
+        node.setPadding(yoga.EDGE_RIGHT, 0);
     }
 }

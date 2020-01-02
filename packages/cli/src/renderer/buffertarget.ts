@@ -93,6 +93,13 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
     readonly height: number;
     setup(): void;
 
+    fillBg(
+        xmin: number,
+        xmax: number,
+        ymin: number,
+        ymax: number,
+        color: string | number | undefined,
+    ): void;
     draw(
         x: number,
         y: number,

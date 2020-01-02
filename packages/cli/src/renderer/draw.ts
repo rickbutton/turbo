@@ -111,6 +111,8 @@ function drawNode(
             target.setCursor(cursorX, cursorY, xmin, xmax, ymin, ymax);
         }
 
+        target.fillBg(xmin, xmax, ymin, ymax, node.bg);
+
         for (const child of node.children) {
             drawNode(child, x, y, container);
         }
