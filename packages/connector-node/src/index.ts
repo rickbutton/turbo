@@ -27,6 +27,7 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
         return this.config.name || "node";
     }
     start(): void {
+        logger.debug("process: " + (this.process !== null));
         if (this.process === null) {
             this.spawn();
         }
@@ -34,6 +35,7 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     stop(): void {
         if (this.process !== null) {
             this.process.kill();
+            this.process = null;
         }
     }
     get isRunning(): boolean {

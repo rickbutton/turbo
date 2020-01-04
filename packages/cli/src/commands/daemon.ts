@@ -29,10 +29,12 @@ function setupTarget(turbo: Turbo): Target {
 
 class Daemon implements ServerRequestHandler {
     private conn: TargetConnection | null = null;
+    private target: Target;
     private reducer: StateReducer;
 
     constructor(target: Target, reducer: StateReducer) {
         this.reducer = reducer;
+        this.target = target;
 
         this.connectTarget = this.connectTarget.bind(this);
         this.disconnectTarget = this.disconnectTarget.bind(this);
@@ -86,6 +88,22 @@ class Daemon implements ServerRequestHandler {
         if (this.conn) {
             this.conn.stepOver();
         }
+        return undefined;
+    }
+    async start(): Promise<ResponsePayload<"start">> {
+        logger.debug("received start command");
+        this.target.start();
+        return undefined;
+    }
+    async stop(): Promise<ResponsePayload<"start">> {
+        logger.debug("received start command");
+        this.target.stop();
+        return undefined;
+    }
+    async restart(): Promise<ResponsePayload<"start">> {
+        logger.debug("received start command");
+        this.target.stop();
+        this.target.once("stopped", () => this.target.start());
         return undefined;
     }
     async getScriptSource(

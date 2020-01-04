@@ -105,6 +105,30 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
+    public start(): Promise<ResponsePayload<"start">> {
+        return this.sendRequest({
+            type: "start",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
+    public stop(): Promise<ResponsePayload<"stop">> {
+        return this.sendRequest({
+            type: "stop",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
+    public restart(): Promise<ResponsePayload<"restart">> {
+        return this.sendRequest({
+            type: "restart",
+            id: this.generateRequestId(),
+            payload: undefined,
+        });
+    }
+
     public getScriptSource(
         scriptId: ScriptId,
     ): Promise<ResponsePayload<"getScriptSource">> {

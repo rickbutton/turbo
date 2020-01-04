@@ -10,6 +10,15 @@ function js(str: string): string {
     return str;
 }
 
+interface StartCommand {
+    type: "start";
+}
+interface StopCommand {
+    type: "stop";
+}
+interface RestartCommand {
+    type: "restart";
+}
 interface PauseCommand {
     type: "pause";
 }
@@ -34,6 +43,9 @@ interface ErrorCommand {
     value: string;
 }
 type Command =
+    | StopCommand
+    | StartCommand
+    | RestartCommand
     | PauseCommand
     | ResumeCommand
     | StepIntoCommand
@@ -42,32 +54,31 @@ type Command =
     | ErrorCommand
     | EvalComamnd;
 
-const COMMAND_PREFIX = ",";
-
 function matchesCommand(input: string, options: string[]): boolean {
-    return options.some(o => COMMAND_PREFIX + o === input.trimRight());
+    return options.some(o => input === o || input.startsWith(o + " "));
 }
 
 function parse(input: string): Command {
-    const trimmed = input.trimRight();
+    const trimmed = input.trim();
 
-    if (trimmed.startsWith(COMMAND_PREFIX)) {
-        if (matchesCommand(trimmed, ["p", "pause"])) {
-            return { type: "pause" };
-        } else if (matchesCommand(trimmed, ["r", "c", "resume"])) {
-            return { type: "resume" };
-        } else if (matchesCommand(trimmed, ["s", "stepi", "stepInto"])) {
-            return { type: "stepInto" };
-        } else if (matchesCommand(trimmed, ["n", "step", "stepOver"])) {
-            return { type: "stepOver" };
-        } else if (matchesCommand(trimmed, ["f", "finish", "stepOut"])) {
-            return { type: "stepOut" };
-        } else {
-            return {
-                type: "error",
-                value: `Invalid debugger command ${trimmed}`,
-            };
-        }
+    if (matchesCommand(trimmed, ["start", "run"])) {
+        return { type: "start" };
+    } else if (matchesCommand(trimmed, ["stop"])) {
+        return { type: "stop" };
+    } else if (matchesCommand(trimmed, ["restart"])) {
+        return { type: "restart" };
+    } else if (matchesCommand(trimmed, ["p", "pause"])) {
+        return { type: "pause" };
+    } else if (matchesCommand(trimmed, ["r", "c", "resume"])) {
+        return { type: "resume" };
+    } else if (matchesCommand(trimmed, ["s", "stepi", "stepInto"])) {
+        return { type: "stepInto" };
+    } else if (matchesCommand(trimmed, ["n", "step", "stepOver"])) {
+        return { type: "stepOver" };
+    } else if (matchesCommand(trimmed, ["f", "finish", "stepOut"])) {
+        return { type: "stepOut" };
+    } else if (matchesCommand(trimmed, ["e", "eval"])) {
+        return { type: "eval", value: input.replace(/^(e|eval) /, "") };
     } else {
         return { type: "eval", value: input };
     }
@@ -88,7 +99,13 @@ async function handle(
 
     const cmd = parse(input);
 
-    if (cmd.type == "pause") {
+    if (cmd.type == "start") {
+        return client.start().then(() => null);
+    } else if (cmd.type == "stop") {
+        return client.stop().then(() => null);
+    } else if (cmd.type == "restart") {
+        return client.restart().then(() => null);
+    } else if (cmd.type == "pause") {
         return client.pause().then(() => null);
     } else if (cmd.type === "resume") {
         return client.resume().then(() => null);
@@ -106,7 +123,7 @@ async function handle(
         const topCallFrame = runtime.callFrames[0];
 
         return client
-            .eval(input, topCallFrame.id)
+            .eval(cmd.value, topCallFrame.id)
             .then(result => {
                 if (result.error) {
                     return <span>{result.value}</span>;

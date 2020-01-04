@@ -22,6 +22,9 @@ export interface ServerRequestHandler {
     stepInto: RequestHandler<"stepInto">;
     stepOut: RequestHandler<"stepOut">;
     stepOver: RequestHandler<"stepOver">;
+    start: RequestHandler<"start">;
+    stop: RequestHandler<"stop">;
+    restart: RequestHandler<"restart">;
     getScriptSource: RequestHandler<"getScriptSource">;
 }
 interface ConnectionEvents extends BaseClientEvents {
@@ -84,6 +87,12 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
             return this.handler.stepOver(req);
         } else if (isRequestType("getScriptSource", req)) {
             return this.handler.getScriptSource(req);
+        } else if (isRequestType("start", req)) {
+            return this.handler.start(req);
+        } else if (isRequestType("stop", req)) {
+            return this.handler.stop(req);
+        } else if (isRequestType("restart", req)) {
+            return this.handler.restart(req);
         } else {
             logger.error(`unhandled request with type ${req.type}`);
             return Promise.resolve(undefined);

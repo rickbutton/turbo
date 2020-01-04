@@ -43,6 +43,10 @@ interface RequestResponseSchema {
     stepOut: RequestResponse<void, void>;
     stepOver: RequestResponse<void, void>;
 
+    start: RequestResponse<void, void>;
+    restart: RequestResponse<void, void>;
+    stop: RequestResponse<void, void>;
+
     getScriptSource: RequestResponse<
         { scriptId: ScriptId },
         { script: string }
