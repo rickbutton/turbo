@@ -4,7 +4,7 @@ import { getCurrentSessionId } from "@turbo/tmux";
 
 import React from "react";
 import { render } from "../renderer";
-import { ObjectView } from "../components/object";
+import { Eval } from "../components/eval";
 
 export function evaluate(turbo: Turbo, expr: string): void {
     const sessionId = getCurrentSessionId(turbo);
@@ -23,19 +23,7 @@ export function evaluate(turbo: Turbo, expr: string): void {
             const topCallFrame = runtime.callFrames[0];
             const result = await client.eval(expr, topCallFrame.id);
 
-            if (result.error) {
-                console.log(result.value);
-            } else if (!result.success) {
-                render(
-                    result.value.exception ? (
-                        <ObjectView object={result.value.exception} />
-                    ) : (
-                        <span>{result.value.text}</span>
-                    ),
-                );
-            } else {
-                render(<ObjectView object={result.value} />);
-            }
+            render(<Eval result={result} />);
             client.close();
             process.exit(0);
         }

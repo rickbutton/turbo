@@ -2,7 +2,7 @@ import { Client } from "@turbo/net";
 import { logger } from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
-import { ObjectView } from "./object";
+import { Eval } from "./eval";
 
 const PROMPT = "> ";
 
@@ -34,6 +34,9 @@ interface StepOutCommand {
 interface StepOverCommand {
     type: "stepOver";
 }
+interface BackTraceCommand {
+    type: "backtrace";
+}
 interface EvalComamnd {
     type: "eval";
     value: string;
@@ -51,6 +54,7 @@ type Command =
     | StepIntoCommand
     | StepOutCommand
     | StepOverCommand
+    | BackTraceCommand
     | ErrorCommand
     | EvalComamnd;
 
@@ -77,6 +81,8 @@ function parse(input: string): Command {
         return { type: "stepOver" };
     } else if (matchesCommand(trimmed, ["f", "finish", "stepOut"])) {
         return { type: "stepOut" };
+    } else if (matchesCommand(trimmed, ["bt", "backtrace"])) {
+        return { type: "backtrace" };
     } else if (matchesCommand(trimmed, ["e", "eval"])) {
         return { type: "eval", value: input.replace(/^(e|eval) /, "") };
     } else {
@@ -99,7 +105,9 @@ async function handle(
 
     const cmd = parse(input);
 
-    if (cmd.type == "start") {
+    if (cmd.type === "error") {
+        return <span>${cmd.value}</span>;
+    } else if (cmd.type == "start") {
         return client.start().then(() => null);
     } else if (cmd.type == "stop") {
         return client.stop().then(() => null);
@@ -115,8 +123,8 @@ async function handle(
         return client.stepOver().then(() => null);
     } else if (cmd.type === "stepOut") {
         return client.stepOut().then(() => null);
-    } else if (cmd.type === "error") {
-        return <span>${cmd.value}</span>;
+    } else if (cmd.type === "backtrace") {
+        return null;
     } else if (!runtime.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
@@ -124,22 +132,7 @@ async function handle(
 
         return client
             .eval(cmd.value, topCallFrame.id)
-            .then(result => {
-                if (result.error) {
-                    return <span>{result.value}</span>;
-                } else if (!result.success) {
-                    return result.value.exception ? (
-                        <ObjectView
-                            simpleExceptions={true}
-                            object={result.value.exception}
-                        />
-                    ) : (
-                        <span>{result.value.text}</span>
-                    );
-                } else {
-                    return <ObjectView object={result.value} />;
-                }
-            })
+            .then(result => <Eval result={result} />)
             .catch(error => {
                 return <span>`eval error: ${error}`</span>;
             });

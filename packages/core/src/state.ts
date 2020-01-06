@@ -95,9 +95,9 @@ export interface TargetConnectionEvents {
 }
 
 export type EvalResponse =
-    | { error: false; success: true; value: RemoteObject }
-    | { error: false; success: false; value: RemoteException }
-    | { error: true; value: string };
+    | { error: false; value: RemoteObject }
+    | { error: true; value: RemoteException | string };
+
 export interface TargetConnection extends Emitter<TargetConnectionEvents> {
     enable(): Promise<void>;
     close(): Promise<void>;

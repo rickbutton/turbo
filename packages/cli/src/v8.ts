@@ -192,14 +192,12 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
             });
             if (exceptionDetails) {
                 return {
-                    error: false,
-                    success: false,
+                    error: true,
                     value: toRemoteException(exceptionDetails),
                 };
             } else {
                 return {
                     error: false,
-                    success: true,
                     value: toRemoteObject(result),
                 };
             }

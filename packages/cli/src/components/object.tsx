@@ -8,49 +8,49 @@ function js(str: string): JSX.Element {
 
 interface ComplexObjectProps {
     simpleExceptions: boolean;
-    object: RemoteObject;
+    value: RemoteObject;
 }
 function ComplexObject(props: ComplexObjectProps): JSX.Element {
-    const { simpleExceptions, object } = props;
-    if (object.type !== "object") {
-        return <Box>unknown type ${object["type"]}</Box>;
+    const { simpleExceptions, value } = props;
+    if (value.type !== "object") {
+        return <Box>unknown type ${value["type"]}</Box>;
     }
 
     // TODO: array, node, regexp, date, map, set, weapmap, weakset,
     // iterator, generator, proxy, typedarray, arraybuffer, dataview
-    if (object.subtype === "error") {
+    if (value.subtype === "error") {
         const text = simpleExceptions
-            ? object.description.split("\n")[0]
-            : object.description;
+            ? value.description.split("\n")[0]
+            : value.description;
         return <Box color="red">{text}</Box>;
-    } else if (object.subtype === "null") {
+    } else if (value.subtype === "null") {
         return js("null");
     } else {
-        return <Box>{`[${object.className} ${object.type}]`}</Box>;
+        return <Box>{`[${value.className} ${value.type}]`}</Box>;
     }
 }
 
 interface ObjectViewProps {
     simpleExceptions?: boolean;
-    object: RemoteObject;
+    value: RemoteObject;
 }
 export function ObjectView(props: ObjectViewProps): JSX.Element {
-    const { simpleExceptions, object } = props;
+    const { simpleExceptions, value } = props;
 
-    if (object.type === "string") return js('"' + object.value + '"');
-    if (object.type === "number") return js(object.description);
-    if (object.type === "boolean") return js(String(object.value));
-    if (object.type === "symbol") return js(object.description);
-    if (object.type === "bigint") return js(object.description);
-    if (object.type === "undefined") return js("undefined");
-    if (object.type === "function") return js("function"); // TODO: expand
-    if (object.type === "object")
+    if (value.type === "string") return js('"' + value.value + '"');
+    if (value.type === "number") return js(value.description);
+    if (value.type === "boolean") return js(String(value.value));
+    if (value.type === "symbol") return js(value.description);
+    if (value.type === "bigint") return js(value.description);
+    if (value.type === "undefined") return js("undefined");
+    if (value.type === "function") return js("function"); // TODO: expand
+    if (value.type === "object")
         return (
             <ComplexObject
                 simpleExceptions={simpleExceptions || false}
-                object={object}
+                value={value}
             />
         );
 
-    return <Box>unknown type ${object["type"]}</Box>;
+    return <Box>unknown type ${value["type"]}</Box>;
 }

@@ -24,10 +24,16 @@ interface EvalRequest {
     value: string;
     id: CallFrameId;
 }
-export type EvalResponse =
-    | { error: false; success: true; value: RemoteObject }
-    | { error: false; success: false; value: RemoteException }
-    | { error: true; value: string };
+
+interface SuccessEvalResponse {
+    error: false;
+    value: RemoteObject;
+}
+interface ErrorEvalResponse {
+    error: true;
+    value: RemoteException | string;
+}
+export type EvalResponse = SuccessEvalResponse | ErrorEvalResponse;
 
 interface RequestResponse<Req, Res> {
     req: Req;

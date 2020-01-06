@@ -102,8 +102,12 @@ class Daemon implements ServerRequestHandler {
     }
     async restart(): Promise<ResponsePayload<"start">> {
         logger.debug("received start command");
-        this.target.stop();
-        this.target.once("stopped", () => this.target.start());
+        if (this.target.isRunning) {
+            this.target.stop();
+            this.target.once("stopped", () => this.target.start());
+        } else {
+            this.target.start();
+        }
         return undefined;
     }
     async getScriptSource(

@@ -11,7 +11,7 @@ import child from "child_process";
 const NODE_EXIT_REGEX = /Waiting for the debugger to disconnect\.\.\.\n$/;
 const NODE_PORT_REGEX = /Debugger listening on ws:\/\/([^:]+):(\d+)/;
 
-// need to add events for updates to the target
+// TODO: need to add events for updates to the target
 class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     private process: child.ChildProcess | null = null;
     private config: NodeConnectorConfig;
