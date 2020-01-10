@@ -19,7 +19,7 @@ export function useTerminalSize(): TerminalSize {
 
     React.useEffect(() => {
         setWidth(target.width);
-        setHeight(target.height);
+        setHeight(target.height || 0);
     }, [target.width, target.height]);
 
     return { width, height };

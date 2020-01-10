@@ -23,7 +23,7 @@ export function evaluate(turbo: Turbo, expr: string): void {
             const topCallFrame = runtime.callFrames[0];
             const result = await client.eval(expr, topCallFrame.id);
 
-            render(<Eval result={result} />);
+            render(<Eval result={result} />, "stdout");
             client.close();
             process.exit(0);
         }

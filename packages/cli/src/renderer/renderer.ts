@@ -15,8 +15,8 @@ import {
     getNodesContainingPosition,
 } from "./dom";
 import { drawContainer } from "./draw";
-import { BufferTarget, BufferTargetContext } from "./buffertarget";
-import { getTerminal } from "./terminal";
+import { BufferTargetContext, BufferTargetMode } from "./buffertarget";
+import { TerminalBufferTarget } from "./terminal";
 
 type ElementType = string;
 type ElementProps = { [key: string]: any };
@@ -160,9 +160,11 @@ export function unstable_batchedUpdates(cb: () => void): void {
 
 export function render(
     element: React.ReactElement<any>,
-    target: BufferTarget = getTerminal(),
+    mode: BufferTargetMode = "fullscreen",
     callback?: () => void | null | undefined,
 ): void {
+    const target = new TerminalBufferTarget(mode);
+
     const isAsync = false;
     const shouldHydrate = false;
 

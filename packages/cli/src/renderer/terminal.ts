@@ -1,10 +1,10 @@
 import {
-    BufferTarget,
     BufferTargetEvents,
     KeyName,
     SPECIAL_KEYS,
     MouseButton,
     MouseEvent,
+    BufferTargetMode,
 } from "./buffertarget";
 import { terminal, ScreenBuffer } from "terminal-kit";
 import { EmitterBase } from "@turbo/core";
@@ -147,47 +147,52 @@ interface CursorLocation {
     y: number;
 }
 
-let didSetup = false;
-class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
+export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
     private readonly buffer = new ScreenBuffer({
         dst: terminal,
     });
     private cursor: CursorLocation | null = null;
+    private mode: BufferTargetMode;
 
     public width = 0;
-    public height = 0;
+    public height: number | undefined = 0;
+
+    public constructor(mode: BufferTargetMode) {
+        super();
+        this.mode = mode;
+    }
 
     public setup(): void {
-        if (didSetup) {
-            throw new Error(
-                "attempted to setup multiple terminal buffer targets",
-            );
-        }
-        didSetup = true;
+        if (this.mode === "fullscreen") {
+            this.width = terminal.width;
+            this.height = terminal.height;
 
-        process.stdin.on("data", data => {
-            const str = data.toString();
-            if (str === "\x03") {
-                process.exit(0);
-            }
-        });
-
-        this.width = terminal.width;
-        this.height = terminal.height;
-        terminal.grabInput({ mouse: "button" });
-
-        terminal.on("resize", (width: number, height: number) => {
-            this.width = width;
-            this.height = height;
-            this.buffer.resize({
-                xmin: 0,
-                xmax: width,
-                ymin: 0,
-                ymax: height,
+            process.stdin.on("data", data => {
+                const str = data.toString();
+                if (str === "\x03") {
+                    process.exit(0);
+                }
             });
-            terminal.clear();
-            this.fire("resize", undefined);
-        });
+
+            terminal.grabInput({ mouse: "button" });
+
+            terminal.on("resize", (width: number, height: number) => {
+                this.width = width;
+                this.height = height;
+                this.buffer.resize({
+                    xmin: 0,
+                    xmax: width,
+                    ymin: 0,
+                    ymax: height,
+                });
+                terminal.clear();
+                this.fire("resize", undefined);
+            });
+        } else {
+            this.width = terminal.width;
+            this.height = undefined;
+        }
+
         terminal.on(
             "mouse",
             (type: TerminalMouseEventType, data: TerminalMouseEvent) => {
@@ -229,19 +234,17 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         ymax: number,
         color: string | number | undefined,
     ): void {
-        if (color) {
-            this.buffer.fill({
-                attr: {
-                    bgColor: color,
-                },
-                region: {
-                    xmin,
-                    xmax,
-                    ymin,
-                    ymax,
-                },
-            } as any);
-        }
+        this.buffer.fill({
+            attr: {
+                bgColor: color,
+            },
+            region: {
+                xmin,
+                xmax,
+                ymin,
+                ymax,
+            },
+        } as any);
     }
 
     draw(
@@ -287,21 +290,16 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
             targetY += dy;
         }
     }
-    setCursor(
-        x: number,
-        y: number,
-        xmin: number,
-        xmax: number,
-        ymin: number,
-        ymax: number,
-    ): void {
-        if (x >= xmin && x <= xmax && y >= ymin && y <= ymax) {
-            this.cursor = { x, y };
-        } else {
-            this.cursor = null;
-        }
+    setCursor(x: number, y: number): void {
+        this.cursor = { x, y };
     }
-    clear(): void {
+    clearCursor(): void {
+        this.cursor = null;
+    }
+    prepare(width: number, height: number): void {
+        if (this.width !== width || this.height !== height) {
+            this.buffer.resize({ width, height, x: 0, y: 0 });
+        }
         this.buffer.fill({
             attr: {
                 bgDefaultColor: true,
@@ -309,23 +307,20 @@ class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         });
     }
     flush(delta: boolean): void {
-        this.buffer.draw({ delta });
+        if (this.mode === "fullscreen") {
+            this.buffer.draw({ delta });
 
-        if (this.cursor) {
-            terminal.hideCursor(false as any);
-            this.buffer.moveTo(this.cursor.x, this.cursor.y);
-            this.buffer.drawCursor();
+            if (this.cursor) {
+                terminal.hideCursor(false as any);
+                this.buffer.moveTo(this.cursor.x, this.cursor.y);
+                this.buffer.drawCursor();
+            } else {
+                terminal.hideCursor();
+                this.buffer.drawCursor();
+            }
         } else {
-            terminal.hideCursor();
-            this.buffer.drawCursor();
+            const output = this.buffer.dumpChars();
+            process.stdout.write(output);
         }
     }
-}
-
-let term: BufferTarget | null = null;
-export function getTerminal(): BufferTarget {
-    if (term === null) {
-        term = new TerminalBufferTarget();
-    }
-    return term;
 }

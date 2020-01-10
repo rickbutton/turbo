@@ -108,10 +108,21 @@ function drawNode(
         if (node.attributes["unstable_moveCursorToThisPosition"]) {
             const cursorX = x + drawOffsetLeft;
             const cursorY = y + drawOffsetTop;
-            target.setCursor(cursorX, cursorY, xmin, xmax, ymin, ymax);
+            if (
+                cursorX >= xmin &&
+                cursorX <= xmax &&
+                cursorY >= ymin &&
+                cursorY <= ymax
+            ) {
+                target.setCursor(cursorX, cursorY);
+            } else {
+                target.clearCursor();
+            }
         }
 
-        target.fillBg(xmin, xmax, ymin, ymax, node.bg);
+        if (node.bg !== undefined) {
+            target.fillBg(xmin, xmax, ymin, ymax, node.bg);
+        }
 
         for (const child of node.children) {
             drawNode(child, x, y, container);
@@ -135,14 +146,20 @@ export function drawContainer(container: Container): void {
 
     forAllTextChildren(node, updateTextNodeLayout);
 
-    target.clear();
-
     node.yoga.setWidth(width);
-    node.yoga.setHeight(height);
+    if (typeof height !== "undefined") {
+        node.yoga.setHeight(height);
+    } else {
+        node.yoga.setHeightAuto();
+    }
 
     for (const child of node.children) {
         child.yoga.setWidth(width);
-        child.yoga.setHeight(height);
+        if (typeof height !== "undefined") {
+            child.yoga.setHeight(height);
+        } else {
+            child.yoga.setHeightAuto();
+        }
     }
 
     const direction = yoga.DIRECTION_LTR;
@@ -151,6 +168,9 @@ export function drawContainer(container: Container): void {
     const x = node.yoga.getComputedLeft();
     const y = node.yoga.getComputedTop();
 
+    const realWidth = node.yoga.getComputedWidth();
+    const realHeight = node.yoga.getComputedHeight();
+    target.prepare(realWidth, realHeight);
     drawNode(node, x, y, container);
 
     target.flush(delta);

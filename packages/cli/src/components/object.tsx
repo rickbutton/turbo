@@ -6,6 +6,21 @@ function js(str: string): JSX.Element {
     return <Box>{str}</Box>;
 }
 
+function formatString(str: string): JSX.Element {
+    const lines = str.split("\n");
+    return (
+        <Box direction="column">
+            {lines.map((l, i) => (
+                <Box key={i}>
+                    {i === 0 ? '"' : ""}
+                    {l}
+                    {i === lines.length - 1 ? '"' : ""}
+                </Box>
+            ))}
+        </Box>
+    );
+}
+
 interface ComplexObjectProps {
     simpleExceptions: boolean;
     value: RemoteObject;
@@ -37,7 +52,7 @@ interface ObjectViewProps {
 export function ObjectView(props: ObjectViewProps): JSX.Element {
     const { simpleExceptions, value } = props;
 
-    if (value.type === "string") return js('"' + value.value + '"');
+    if (value.type === "string") return formatString(value.value);
     if (value.type === "number") return js(value.description);
     if (value.type === "boolean") return js(String(value.value));
     if (value.type === "symbol") return js(value.description);

@@ -88,9 +88,10 @@ export interface BufferTargetEvents {
     mouse: MouseEvent;
     input: InputEvent;
 }
+export type BufferTargetMode = "fullscreen" | "stdout";
 export interface BufferTarget extends Emitter<BufferTargetEvents> {
     readonly width: number;
-    readonly height: number;
+    readonly height: number | undefined;
     setup(): void;
 
     fillBg(
@@ -98,7 +99,7 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
         xmax: number,
         ymin: number,
         ymax: number,
-        color: string | number | undefined,
+        color: string | number,
     ): void;
     draw(
         x: number,
@@ -112,15 +113,9 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
         vertical: boolean,
         str: string,
     ): void;
-    setCursor(
-        x: number,
-        y: number,
-        xmin: number,
-        xmax: number,
-        ymin: number,
-        ymax: number,
-    ): void;
-    clear(): void;
+    setCursor(x: number, y: number): void;
+    clearCursor(): void;
+    prepare(width: number, height: number): void;
     flush(delta: boolean): void;
 }
 
