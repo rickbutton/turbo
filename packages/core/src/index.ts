@@ -87,9 +87,11 @@ export {
     CallFrameId,
     ScriptId,
     RemoteObject,
+    RemoteObjectProperty,
     RemoteException,
     ObjectId,
     Action,
     EvalResponse,
+    GetPropertiesResponse,
 } from "./state";
 export { StateReducer } from "./reducer";

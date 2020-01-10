@@ -90,10 +90,27 @@ export function forAllComplexChildren(
     x = 0,
     y = 0,
 ): void {
+    let drawOffsetTop = 0,
+        drawOffsetLeft = 0;
+    const drawOffsetTopParent = findClosestParent(
+        node,
+        n => n.drawOffsetTop !== undefined,
+    );
+    if (drawOffsetTopParent) {
+        drawOffsetTop = drawOffsetTopParent.drawOffsetTop || 0;
+    }
+    const drawOffsetLeftParent = findClosestParent(
+        node,
+        n => n.drawOffsetLeft !== undefined,
+    );
+    if (drawOffsetLeftParent) {
+        drawOffsetLeft = drawOffsetLeftParent.drawOffsetLeft || 0;
+    }
+
     const nodeX = x + node.yoga.getComputedLeft();
     const nodeY = y + node.yoga.getComputedTop();
 
-    cb(node, nodeX, nodeY);
+    cb(node, nodeX + drawOffsetLeft, nodeY + drawOffsetTop);
     for (const child of node.children) {
         if (child.type === "complex") {
             forAllComplexChildren(child, cb, nodeX, nodeY);

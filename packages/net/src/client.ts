@@ -6,6 +6,7 @@ import {
     ScriptId,
     LogEvent,
     Turbo,
+    ObjectId,
 } from "@turbo/core";
 import {
     ResponsePayload,
@@ -62,6 +63,16 @@ export class Client extends BaseClient<ClientEvents> {
                 value,
                 id,
             },
+        });
+    }
+
+    public getProperties(
+        objectId: ObjectId,
+    ): Promise<ResponsePayload<"getProperties">> {
+        return this.sendRequest({
+            type: "getProperties",
+            id: this.generateRequestId(),
+            payload: objectId,
         });
     }
 

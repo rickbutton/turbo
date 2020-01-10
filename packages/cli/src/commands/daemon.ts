@@ -55,6 +55,18 @@ class Daemon implements ServerRequestHandler {
             };
         }
     }
+    async getProperties(
+        req: Request<"getProperties">,
+    ): Promise<ResponsePayload<"getProperties">> {
+        if (this.conn) {
+            return await this.conn.getProperties(req.payload);
+        } else {
+            return {
+                error: true,
+                value: `unable to get properties because the target is not this.connected`,
+            };
+        }
+    }
     async pause(): Promise<ResponsePayload<"pause">> {
         logger.debug("received pause command");
         if (this.conn) {

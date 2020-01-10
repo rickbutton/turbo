@@ -3,6 +3,7 @@ import { logger } from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
 import { Eval } from "./eval";
+import { useClient } from "./helpers";
 
 const PROMPT = "> ";
 
@@ -139,10 +140,8 @@ async function handle(
     }
 }
 
-interface Props {
-    client: Client;
-}
-export function Repl(props: Props): JSX.Element {
+export function Repl(): JSX.Element {
+    const client = useClient();
     const [lines, setLines] = React.useState<JSX.Element[]>([]);
 
     async function onSubmit(value: string): Promise<void> {
@@ -152,7 +151,7 @@ export function Repl(props: Props): JSX.Element {
         ];
         setLines(newLines);
 
-        const output = await handle(value, props.client);
+        const output = await handle(value, client);
         if (output) {
             setLines([
                 ...newLines,

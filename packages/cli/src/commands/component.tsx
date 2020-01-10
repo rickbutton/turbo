@@ -6,10 +6,7 @@ import { render } from "../renderer";
 import { log } from "../components/log";
 import { Repl } from "../components/repl";
 import { Code } from "../components/code";
-
-interface ComponentProps {
-    client: Client;
-}
+import { ClientContext } from "../components/helpers";
 
 interface StandardComponent {
     type: "standard";
@@ -17,7 +14,7 @@ interface StandardComponent {
 }
 interface ReactComponent {
     type: "react";
-    value: (props: ComponentProps) => JSX.Element;
+    value: () => JSX.Element;
 }
 type Component = StandardComponent | ReactComponent;
 
@@ -27,6 +24,17 @@ const components: { [key: string]: Component } = {
     repl: { type: "react", value: Repl },
     code: { type: "react", value: Code },
 };
+
+interface AppProps {
+    client: Client;
+}
+function App(props: React.PropsWithChildren<AppProps>): JSX.Element {
+    return (
+        <ClientContext.Provider value={props.client}>
+            {props.children}
+        </ClientContext.Provider>
+    );
+}
 
 export function component(turbo: Turbo, name: string): void {
     const sessionId = getCurrentSessionId(turbo);
@@ -44,7 +52,11 @@ export function component(turbo: Turbo, name: string): void {
 
     client.on("ready", () => {
         if (Component.type === "react") {
-            render(<Component.value client={client} />);
+            render(
+                <App client={client}>
+                    <Component.value />
+                </App>,
+            );
         } else {
             Component.value(client);
         }

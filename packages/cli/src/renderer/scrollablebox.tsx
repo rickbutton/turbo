@@ -51,7 +51,7 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
             );
             setContentHeight(height);
         }
-    }, [props.children, contentRef.current, viewport.width]);
+    });
 
     React.useEffect(() => {
         updateViewportOffset(viewportOffset, false);

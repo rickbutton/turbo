@@ -6,6 +6,8 @@ import {
     RemoteObject,
     RemoteException,
     LogLevel,
+    ObjectId,
+    RemoteObjectProperty,
 } from "@turbo/core";
 
 declare const __RequestIdSymbol: unique symbol;
@@ -34,6 +36,9 @@ interface ErrorEvalResponse {
     value: RemoteException | string;
 }
 export type EvalResponse = SuccessEvalResponse | ErrorEvalResponse;
+export type GetPropertiesResponse =
+    | { error: false; value: RemoteObjectProperty[] }
+    | { error: true; value: RemoteException | string };
 
 interface RequestResponse<Req, Res> {
     req: Req;
@@ -43,6 +48,7 @@ interface RequestResponseSchema {
     ping: RequestResponse<string, string>;
 
     eval: RequestResponse<EvalRequest, EvalResponse>;
+    getProperties: RequestResponse<ObjectId, GetPropertiesResponse>;
     pause: RequestResponse<void, void>;
     resume: RequestResponse<void, void>;
     stepInto: RequestResponse<void, void>;

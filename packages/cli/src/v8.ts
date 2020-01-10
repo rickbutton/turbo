@@ -9,9 +9,11 @@ import {
     CallFrameId,
     ScriptId,
     RemoteObject,
+    RemoteObjectProperty,
     ObjectId,
     RemoteException,
     EvalResponse,
+    GetPropertiesResponse,
 } from "@turbo/core";
 
 const CDP = (ChromeRemoteInterface as unknown) as Factory;
@@ -71,6 +73,22 @@ function toRemoteObject(obj: Protocol.Runtime.RemoteObject): RemoteObject {
     } else {
         throw new Error("unknown v8 type: " + obj.type);
     }
+}
+
+function toRemoteObjectProperty(
+    obj: Protocol.Runtime.PropertyDescriptor,
+): RemoteObjectProperty {
+    return {
+        name: obj.name,
+        value: obj.value ? toRemoteObject(obj.value) : { type: "undefined" },
+        writable: obj.writable || false,
+        get: obj.get ? toRemoteObject(obj.get) : undefined,
+        set: obj.set ? toRemoteObject(obj.set) : undefined,
+        configurable: obj.configurable,
+        enumerable: obj.enumerable,
+        isOwn: obj.isOwn || false,
+        symbol: obj.symbol ? toRemoteObject(obj.symbol) : undefined,
+    };
 }
 
 function toRemoteException(
@@ -212,6 +230,27 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
             scriptId,
         });
         return scriptSource;
+    }
+
+    async getProperties(objectId: ObjectId): Promise<GetPropertiesResponse> {
+        const {
+            result,
+            exceptionDetails,
+        } = await this.client.Runtime.getProperties({
+            objectId,
+            ownProperties: true,
+        });
+        if (!exceptionDetails) {
+            return {
+                error: false,
+                value: result.map(toRemoteObjectProperty),
+            };
+        } else {
+            return {
+                error: true,
+                value: toRemoteException(exceptionDetails),
+            };
+        }
     }
 
     public async close(): Promise<void> {

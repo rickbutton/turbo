@@ -73,6 +73,18 @@ export type RemoteObject =
     | FunctionRemoteObject
     | ObjectRemoteObject;
 
+export interface RemoteObjectProperty {
+    name: string;
+    value: RemoteObject;
+    writable?: boolean;
+    get?: RemoteObject;
+    set?: RemoteObject;
+    configurable: boolean;
+    enumerable: boolean;
+    isOwn: boolean;
+    symbol?: RemoteObject;
+}
+
 export interface RemoteException {
     text: string;
     line: number;
@@ -98,10 +110,15 @@ export type EvalResponse =
     | { error: false; value: RemoteObject }
     | { error: true; value: RemoteException | string };
 
+export type GetPropertiesResponse =
+    | { error: false; value: RemoteObjectProperty[] }
+    | { error: true; value: RemoteException | string };
+
 export interface TargetConnection extends Emitter<TargetConnectionEvents> {
     enable(): Promise<void>;
     close(): Promise<void>;
     eval(script: string, id: CallFrameId): Promise<EvalResponse>;
+    getProperties(objectId: ObjectId): Promise<GetPropertiesResponse>;
     pause(): Promise<void>;
     resume(): Promise<void>;
     stepInto(): Promise<void>;

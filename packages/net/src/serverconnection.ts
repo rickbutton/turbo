@@ -17,6 +17,7 @@ export type RequestHandler<T extends RequestType> = (
 ) => Promise<ResponsePayload<T>>;
 export interface ServerRequestHandler {
     eval: RequestHandler<"eval">;
+    getProperties: RequestHandler<"getProperties">;
     pause: RequestHandler<"pause">;
     resume: RequestHandler<"resume">;
     stepInto: RequestHandler<"stepInto">;
@@ -75,6 +76,8 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
     ): Promise<Response<RequestType>["payload"] | undefined> {
         if (isRequestType("eval", req)) {
             return this.handler.eval(req);
+        } else if (isRequestType("getProperties", req)) {
+            return this.handler.getProperties(req);
         } else if (isRequestType("pause", req)) {
             return this.handler.pause(req);
         } else if (isRequestType("resume", req)) {
