@@ -16,6 +16,7 @@ interface ServerEvents {
     ready: void;
     log: MessagePayload<"log">;
     action: Action;
+    quit: void;
     connected: ServerConnection;
     disconnected: ServerConnection;
 }
@@ -57,9 +58,15 @@ export class Server extends EmitterBase<ServerEvents> {
         this.server.close();
     }
 
-    public broadcast(state: State): void {
+    public broadcastState(state: State): void {
         for (const c of this.connections) {
-            c.broadcast(state);
+            c.sendState(state);
+        }
+    }
+
+    public broadcastQuit(): void {
+        for (const c of this.connections) {
+            c.sendQuit();
         }
     }
 
@@ -116,6 +123,9 @@ export class Server extends EmitterBase<ServerEvents> {
         });
         client.on("log", log => {
             this.fire("log", log);
+        });
+        client.on("quit", () => {
+            this.fire("quit", undefined);
         });
 
         this.connections.add(client);

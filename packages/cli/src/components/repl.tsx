@@ -11,6 +11,9 @@ function js(str: string): string {
     return str;
 }
 
+interface QuitCommand {
+    type: "quit";
+}
 interface StartCommand {
     type: "start";
 }
@@ -47,6 +50,7 @@ interface ErrorCommand {
     value: string;
 }
 type Command =
+    | QuitCommand
     | StopCommand
     | StartCommand
     | RestartCommand
@@ -66,7 +70,9 @@ function matchesCommand(input: string, options: string[]): boolean {
 function parse(input: string): Command {
     const trimmed = input.trim();
 
-    if (matchesCommand(trimmed, ["start", "run"])) {
+    if (matchesCommand(trimmed, ["quit", "q"])) {
+        return { type: "quit" };
+    } else if (matchesCommand(trimmed, ["start", "run"])) {
         return { type: "start" };
     } else if (matchesCommand(trimmed, ["stop"])) {
         return { type: "stop" };
@@ -108,6 +114,8 @@ async function handle(
 
     if (cmd.type === "error") {
         return <span>${cmd.value}</span>;
+    } else if (cmd.type == "quit") {
+        return client.quit().then(() => null);
     } else if (cmd.type == "start") {
         return client.start().then(() => null);
     } else if (cmd.type == "stop") {

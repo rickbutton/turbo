@@ -223,9 +223,13 @@ export async function daemon(turbo: Turbo): Promise<void> {
         process.stdout.write(msg);
         turboLogServer.log(msg);
     });
+    server.on("quit", () => {
+        server.broadcastQuit();
+        process.exit(0);
+    });
 
     server.on("connected", (conn: ServerConnection) => {
-        conn.broadcast(reducer.state);
+        conn.sendState(reducer.state);
 
         let counter = 0;
         conn.on("close", () => {
@@ -249,7 +253,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
     });
 
     reducer.on("update", (state: State) => {
-        server.broadcast(state);
+        server.broadcastState(state);
     });
 
     target.start();

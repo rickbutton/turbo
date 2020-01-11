@@ -91,6 +91,7 @@ interface MessageSchema {
     log: LogData;
     sync: SyncData;
     action: Action;
+    quit: undefined;
     req: AnyRequest;
     res: AnyResponse;
 }

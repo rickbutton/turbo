@@ -61,6 +61,9 @@ export function component(turbo: Turbo, name: string): void {
             Component.value(client);
         }
     });
+    client.on("quit", () => {
+        process.exit(0);
+    });
 
     client.connectAfterDelay();
 }

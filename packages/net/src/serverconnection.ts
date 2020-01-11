@@ -31,6 +31,7 @@ export interface ServerRequestHandler {
 interface ConnectionEvents extends BaseClientEvents {
     action: Action;
     log: LogEvent;
+    quit: undefined;
 }
 export class ServerConnection extends BaseClient<ConnectionEvents> {
     public readonly id: ClientId;
@@ -53,7 +54,7 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
         this.handler = handler;
     }
 
-    public broadcast(state: State): void {
+    public sendState(state: State): void {
         this.sendMessage({
             type: "sync",
             payload: {
@@ -62,11 +63,20 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
         });
     }
 
+    public sendQuit(): void {
+        this.sendMessage({
+            type: "quit",
+            payload: undefined,
+        });
+    }
+
     protected handleUnhandledMessage(msg: AnyMessage): void {
         if (isMessageType("action", msg)) {
             this.fire("action", msg.payload);
         } else if (isMessageType("log", msg)) {
             this.fire("log", msg.payload);
+        } else if (isMessageType("quit", msg)) {
+            this.fire("quit", undefined);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }

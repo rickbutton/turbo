@@ -18,6 +18,15 @@ module.exports = {
                 ],
             },
             {
+                name: "repl",
+                panes: [
+                    {
+                        type: "component",
+                        component: "repl",
+                    },
+                ],
+            },
+            {
                 name: "logs",
                 panes: [
                     {

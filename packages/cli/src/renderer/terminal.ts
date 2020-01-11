@@ -174,6 +174,7 @@ export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
                 }
             });
 
+            terminal.alternateScreenBuffer();
             terminal.grabInput({ mouse: "button" });
 
             terminal.on("resize", (width: number, height: number) => {

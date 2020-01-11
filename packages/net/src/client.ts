@@ -20,6 +20,7 @@ import { BaseClient, BaseClientEvents, ClientOptions } from "./baseclient";
 
 interface ClientEvents extends BaseClientEvents {
     sync: State;
+    quit: undefined;
 }
 
 export class Client extends BaseClient<ClientEvents> {
@@ -49,6 +50,13 @@ export class Client extends BaseClient<ClientEvents> {
         this.sendMessage({
             type: "action",
             payload: action,
+        });
+    }
+
+    public async quit(): Promise<void> {
+        this.sendMessage({
+            type: "quit",
+            payload: undefined,
         });
     }
 
@@ -154,6 +162,8 @@ export class Client extends BaseClient<ClientEvents> {
         if (isMessageType("sync", msg)) {
             this.lastState = msg.payload.state;
             this.fire("sync", msg.payload.state);
+        } else if (isMessageType("quit", msg)) {
+            this.fire("quit", undefined);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }
