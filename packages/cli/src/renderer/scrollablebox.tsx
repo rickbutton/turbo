@@ -146,15 +146,12 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
             </Box>
             <Box
                 width={1}
-                textDirection="vertical"
                 direction="column"
                 marginTop={Math.ceil(
                     viewportPercent * (viewport.height - barHeight),
                 )}
             >
-                {Array(barHeight)
-                    .fill("┃")
-                    .join("")}
+                {Array(barHeight).fill("┃")}
             </Box>
         </Box>
     );

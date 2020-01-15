@@ -5,6 +5,7 @@ import {
     MouseButton,
     MouseEvent,
     BufferTargetMode,
+    DrawAttribute,
 } from "./buffertarget";
 import { terminal, ScreenBuffer } from "terminal-kit";
 import { EmitterBase } from "@turbo/core";
@@ -174,7 +175,6 @@ export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
                 }
             });
 
-            terminal.alternateScreenBuffer();
             terminal.grabInput({ mouse: "button" });
 
             terminal.on("resize", (width: number, height: number) => {
@@ -255,13 +255,11 @@ export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
         xmax: number,
         ymin: number,
         ymax: number,
-        color: string | number | undefined,
-        bg: string | number | undefined,
-        vertical: boolean,
+        attr: DrawAttribute,
         str: string,
     ): void {
-        const dx = vertical ? 0 : 1;
-        const dy = vertical ? 1 : 0;
+        const dx = 1;
+        const dy = 0;
 
         let targetX = x;
         let targetY = y;
@@ -278,10 +276,7 @@ export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
                         dy: 0,
                         x: targetX,
                         y: targetY,
-                        attr: {
-                            color: color as any,
-                            bgColor: bg as any,
-                        },
+                        attr: attr as any,
                         wrap: false,
                     },
                     c,

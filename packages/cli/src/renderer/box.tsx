@@ -2,12 +2,12 @@ import React from "react";
 import { NodeStyle } from "./style";
 import { MouseEvent } from "./buffertarget";
 
+type Direction = "row" | "column" | "row-reverse" | "column-reverse";
 export interface BoxProps {
-    textDirection?: "horizontal" | "vertical";
     grow?: number;
     shrink?: number;
     basis?: number | string;
-    direction?: "row" | "column" | "row-reverse" | "column-reverse";
+    direction?: Direction;
     alignItems?: "stretch" | "flex-start" | "flex-end" | "center" | "baseline";
     justify?:
         | "flex-start"
@@ -50,18 +50,29 @@ export const Box = React.forwardRef(function InternalBox(
     props: BoxProps,
     ref: React.Ref<any>,
 ): JSX.Element {
+    let minHeight: string | number | undefined;
+    let minWidth: string | number | undefined;
+
+    const flexDirection: Direction = props.direction || "row";
+    if (flexDirection === "row" || flexDirection === "row-reverse") {
+        minHeight =
+            typeof props.minHeight !== "undefined" ? props.minHeight : 1;
+    } else {
+        minWidth = typeof props.minWidth !== "undefined" ? props.minWidth : 1;
+    }
+
     const style: NodeStyle = {
         flexGrow: props.grow,
         flexShrink: props.shrink !== undefined ? props.shrink : 1,
         flexBasis: props.basis,
-        flexDirection: props.direction || "row",
+        flexDirection: flexDirection,
         alignItems: props.alignItems,
         justifyContent: props.justify,
         height: props.height,
         width: props.width,
-        minHeight: props.minHeight,
+        minHeight: minHeight,
         maxHeight: props.maxHeight,
-        minWidth: props.minWidth,
+        minWidth: minWidth,
         maxWidth: props.maxWidth,
         marginTop: props.marginTop,
         marginBottom: props.marginBottom,
@@ -73,7 +84,6 @@ export const Box = React.forwardRef(function InternalBox(
         paddingRight: props.paddingRight,
     };
     const contentProps = {
-        textDirection: props.textDirection,
         wrap: props.wrap,
         drawOffsetTop: props.drawOffsetTop,
         drawOffsetLeft: props.drawOffsetLeft,
@@ -85,8 +95,7 @@ export const Box = React.forwardRef(function InternalBox(
         style,
         ref,
     };
-    const content = props.children;
-    const element = React.createElement("div", contentProps, content);
+    const element = React.createElement("div", contentProps, props.children);
 
     return element;
 });

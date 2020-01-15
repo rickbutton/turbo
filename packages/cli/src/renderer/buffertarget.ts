@@ -89,6 +89,21 @@ export interface BufferTargetEvents {
     input: InputEvent;
 }
 export type BufferTargetMode = "fullscreen" | "stdout";
+
+export interface DrawAttribute {
+    color?: string | number;
+    defaultColor: boolean;
+    bgColor?: string | number;
+    bgDefaultColor: boolean;
+    bold: boolean;
+    dim: boolean;
+    italic: boolean;
+    underline: boolean;
+    blink: boolean;
+    inverse: boolean;
+    strike: boolean;
+}
+
 export interface BufferTarget extends Emitter<BufferTargetEvents> {
     readonly width: number;
     readonly height: number | undefined;
@@ -108,9 +123,7 @@ export interface BufferTarget extends Emitter<BufferTargetEvents> {
         xmax: number,
         ymin: number,
         ymax: number,
-        color: string | number | undefined,
-        bg: string | number | undefined,
-        vertical: boolean,
+        attr: DrawAttribute,
         str: string,
     ): void;
     setCursor(x: number, y: number): void;

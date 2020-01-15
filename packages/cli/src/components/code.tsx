@@ -2,13 +2,18 @@ import { SourceLocation } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
 import { useClientState, useScriptSource } from "./helpers";
+import { highlight } from "cli-highlight";
 
-function numbers(height: number): JSX.Element[] {
+function highlightJs(str: string): string {
+    return highlight(str, { language: "javascript" });
+}
+
+function numbers(height: number): string[] {
     const width = String(height).length;
-    const elements: JSX.Element[] = [];
+    const elements: string[] = [];
 
     for (let i = 0; i < height; i++) {
-        elements.push(<Box key={i}>{String(i + 1).padStart(width, " ")}</Box>);
+        elements.push(String(i + 1).padStart(width, " "));
     }
     return elements;
 }
@@ -18,12 +23,16 @@ function gutter(height: number, loc: SourceLocation): JSX.Element[] {
     for (let i = 0; i < height; i++) {
         if (i === loc.line) {
             elements.push(
-                <Box key={i} color="red">
-                    &gt;{" "}
+                <Box key={i} height={1} width={2} color="red">
+                    {" >"}
                 </Box>,
             );
         } else {
-            elements.push(<Box key={i} height={1} width={2}></Box>);
+            elements.push(
+                <Box key={i} height={1} width={2}>
+                    {"  "}
+                </Box>,
+            );
         }
     }
     return elements;
@@ -32,13 +41,14 @@ function gutter(height: number, loc: SourceLocation): JSX.Element[] {
 export function Code(): JSX.Element {
     const state = useClientState();
     const script = useScriptSource();
+    const highlighted = React.useMemo(() => highlightJs(script), [script]);
 
     if (!state) {
         return <span>no state</span>;
     } else if (state.target.runtime.paused) {
         const topCallFrame = state.target.runtime.callFrames[0];
 
-        const lines = script.split("\n");
+        const lines = highlighted.split("\n");
         const height = lines.length;
         const loc = topCallFrame.location;
         return (
@@ -46,9 +56,7 @@ export function Code(): JSX.Element {
                 <Box direction="column">{numbers(height)}</Box>
                 <Box direction="column">{gutter(height, loc)}</Box>
                 <Box direction="column" grow={1}>
-                    {lines.map((line, i) => (
-                        <Box key={i}>{line}</Box>
-                    ))}
+                    {lines}
                 </Box>
             </ScrollableBox>
         );

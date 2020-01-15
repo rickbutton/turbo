@@ -7,6 +7,8 @@ import {
     resolveProperty,
 } from "./dom";
 import * as yoga from "yoga-layout-prebuilt";
+import { Span } from "./ansi";
+import { DrawAttribute } from "./buffertarget";
 
 interface AbsoluteLayout {
     top: number;
@@ -28,6 +30,29 @@ function getAbsoluteLayout(node: Node): AbsoluteLayout {
     const width = node.yoga.getComputedWidth();
     const height = node.yoga.getComputedHeight();
     return { top, left, width, height };
+}
+
+function normalizeSpanColor(
+    color: string | number | undefined,
+    bgColor: string | number | undefined,
+    span: Span,
+): DrawAttribute {
+    const normalColor = typeof color !== "undefined" ? color : span.color;
+    const normalBgColor =
+        typeof bgColor !== "undefined" ? bgColor : span.bgColor;
+    return {
+        color: normalColor,
+        defaultColor: typeof normalColor === "undefined",
+        bgColor: normalBgColor,
+        bgDefaultColor: typeof normalBgColor === "undefined",
+        bold: span.bold,
+        dim: span.dim,
+        italic: span.italic,
+        underline: span.underline,
+        blink: span.blink,
+        inverse: span.inverse,
+        strike: span.strike,
+    };
 }
 
 function drawNode(
@@ -84,13 +109,8 @@ function drawNode(
         const bg = resolveProperty(node, n => n.bg);
 
         for (const part of node.parts) {
-            const vertical = part.direction === "vertical";
             const partX = x + part.yoga.getComputedLeft();
             const partY = y + part.yoga.getComputedTop();
-            const partWidth = vertical
-                ? part.yoga.getComputedHeight()
-                : part.yoga.getComputedWidth();
-
             target.draw(
                 partX + drawOffsetLeft,
                 partY + drawOffsetTop,
@@ -98,10 +118,8 @@ function drawNode(
                 xmax,
                 ymin,
                 ymax,
-                color,
-                bg,
-                vertical,
-                part.value.substring(0, partWidth),
+                normalizeSpanColor(color, bg, part.span),
+                part.span.value,
             );
         }
     } else if (node.type !== "text") {

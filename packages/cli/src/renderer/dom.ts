@@ -2,6 +2,7 @@ import * as yoga from "yoga-layout-prebuilt";
 import { applyStyle, NodeStyle } from "./style";
 import stringWidth from "string-width";
 import { BufferTarget, MouseEvent } from "./buffertarget";
+import { Span, parseAnsi } from "./ansi";
 
 export interface Container {
     drawing: boolean;
@@ -9,9 +10,6 @@ export interface Container {
     node: ComplexNode;
     forceRedraw: boolean;
 }
-
-type TextDirection = "horizontal" | "vertical";
-const DEFAULT_TEXT_DIRECTION: TextDirection = "horizontal";
 
 type Attributes = { [key: string]: any };
 export interface ComplexNode {
@@ -24,7 +22,6 @@ export interface ComplexNode {
 
     color?: string | number;
     bg?: string | number;
-    textDirection: TextDirection;
     drawOffsetTop?: number;
     drawOffsetLeft?: number;
     drawOverflow: boolean;
@@ -40,9 +37,8 @@ interface TextSize {
 }
 
 export interface TextNodePart {
-    direction: TextDirection;
+    span: Span;
     yoga: yoga.YogaNode;
-    value: string;
 }
 export interface TextNode {
     type: "text";
@@ -156,7 +152,6 @@ export function createNode(name: string): ComplexNode {
         children: [],
         parent: null,
         attributes: {},
-        textDirection: DEFAULT_TEXT_DIRECTION,
         wrap: false,
         drawOverflow: true,
     };
@@ -170,42 +165,6 @@ export function createContainer(target: BufferTarget): Container {
         target,
         forceRedraw: false,
     };
-}
-
-function splitOnWordStart(str: string): string[] {
-    const parts: string[] = [];
-
-    let part = "";
-    let inWhitespace = false;
-
-    for (const c of str) {
-        if (c === "\r") continue;
-        if (c === "\n") continue;
-
-        if (inWhitespace) {
-            if (/\s/.test(c)) {
-                part += c;
-            } else {
-                parts.push(part);
-                part = c;
-                inWhitespace = false;
-            }
-        } else {
-            if (/\s/.test(c)) {
-                inWhitespace = true;
-            }
-            part += c;
-        }
-    }
-
-    if (part) {
-        parts.push(part);
-    }
-    return parts;
-}
-
-function noSplit(str: string): string[] {
-    return [str];
 }
 
 export function calculateTextHeight(node: Node, width: number): number {
@@ -240,40 +199,29 @@ export function updateTextNodeLayout(node: TextNode): void {
     }
     node.parts = [];
 
-    const textDirection = node.parent.textDirection;
     const wrap = node.parent.wrap;
 
     node.yoga.setFlexDirection(yoga.FLEX_DIRECTION_ROW);
     node.yoga.setFlexWrap(wrap ? yoga.WRAP_WRAP : yoga.WRAP_NO_WRAP);
 
-    const words = wrap ? splitOnWordStart(node.value) : noSplit(node.value);
-    for (const word of words) {
-        const part = createTextNodePart(word, textDirection);
+    const spans = parseAnsi(node.value, wrap);
+    for (const span of spans) {
+        const part = createTextNodePart(span);
         node.parts.push(part);
         node.yoga.insertChild(part.yoga, node.yoga.getChildCount());
     }
 }
 
-function createTextNodePart(
-    value: string,
-    direction: TextDirection,
-): TextNodePart {
+function createTextNodePart(span: Span): TextNodePart {
     const part = {
-        value,
-        direction,
+        span,
         yoga: yoga.Node.create(),
     };
 
-    const width = stringWidth(value);
-    if (direction === "horizontal") {
-        part.yoga.setWidth(width);
-        part.yoga.setHeight(1);
-    } else if (direction === "vertical") {
-        part.yoga.setWidth(1);
-        part.yoga.setHeight(width);
-    } else {
-        throw new Error(`unknown direction ${direction}`);
-    }
+    const width = stringWidth(span.value);
+    part.yoga.setWidth(width);
+    part.yoga.setHeight(1);
+    part.yoga.setMinHeight(1);
 
     return part;
 }
@@ -366,8 +314,6 @@ export function applyAttributes(
     node.wrap = Boolean(node.attributes.wrap);
     node.onClick = node.attributes.onClick;
     node.onMouse = node.attributes.onMouse;
-    node.textDirection =
-        node.attributes.textDirection || DEFAULT_TEXT_DIRECTION;
 }
 
 export function getNodesContainingPosition(
