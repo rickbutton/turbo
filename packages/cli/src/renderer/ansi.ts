@@ -28,7 +28,7 @@ function createSpan(last?: Span): Span {
     };
 }
 
-function isWhiteSpace(c: string) {
+function isWhiteSpace(c: string): boolean {
     if (c === "\r") return false;
     if (c === "\n") return false;
     return /^\s$/.test(c);

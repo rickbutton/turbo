@@ -52,7 +52,7 @@ export function Code(): JSX.Element {
         const height = lines.length;
         const loc = topCallFrame.location;
         return (
-            <ScrollableBox grow={1} direction="row">
+            <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
                 <Box direction="column">{numbers(height)}</Box>
                 <Box direction="column">{gutter(height, loc)}</Box>
                 <Box direction="column" grow={1}>
