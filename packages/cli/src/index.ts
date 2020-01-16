@@ -12,7 +12,7 @@ import { component } from "./commands/component";
 import { evaluate } from "./commands/eval";
 import { daemon } from "./commands/daemon";
 import { ls } from "./commands/ls";
-import { TurboOptions, Turbo } from "@turbo/core";
+import { LOGO, TurboOptions, Turbo } from "@turbo/core";
 import { getTurbo } from "./turbo";
 
 function getOptions(argv: any): TurboOptions {
@@ -24,13 +24,6 @@ function getOptions(argv: any): TurboOptions {
 function makeTurbo(argv: any): Turbo {
     return getTurbo(getOptions(argv));
 }
-
-const LOGO =
-    "   __             __        \n" +
-    "  / /___  _______/ /_  ____ \n" +
-    " / __/ / / / ___/ __ \\/ __ \\\n" +
-    "/ /_/ /_/ / /  / /_/ / /_/ /\n" +
-    "\\__/\\__,_/_/  /_.___/\\____/\n ";
 
 yargs
     .usage(LOGO)

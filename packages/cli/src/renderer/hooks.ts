@@ -1,5 +1,10 @@
 import React from "react";
-import { InputEvent, BufferTarget, BufferTargetContext } from "./buffertarget";
+import {
+    InputEvent,
+    BufferTarget,
+    BufferTargetContext,
+    MouseEvent,
+} from "./buffertarget";
 // eslint-disable-next-line @typescript-eslint/camelcase
 import { unstable_batchedUpdates } from "./renderer";
 
@@ -36,6 +41,19 @@ export function useInput(cb: (event: InputEvent) => void): void {
         };
         target.on("input", handler);
         return (): void => target.off("input", handler);
+    });
+}
+export function useMouse(cb: (event: MouseEvent) => void): void {
+    const target = useBufferTarget();
+
+    React.useEffect(() => {
+        const handler = (event: MouseEvent): void => {
+            unstable_batchedUpdates(() => {
+                cb(event);
+            });
+        };
+        target.on("mouse", handler);
+        return (): void => target.off("mouse", handler);
     });
 }
 

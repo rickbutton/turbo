@@ -1,9 +1,6 @@
 tests for cli, logger, connector-node, net, core/reducer, core/v8
 
 layout strings (at least a good default)
-better "press enter to restart message"
-
-context + hooks for mouse focus and hover (for hovering values in code)
 
 tooltip widget - React portal?
 

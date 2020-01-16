@@ -1,6 +1,13 @@
 import uuidv4 from "uuid/v4";
 import { Emitter } from "./emitter";
 
+export const LOGO =
+    "   __             __        \n" +
+    "  / /___  _______/ /_  ____ \n" +
+    " / __/ / / / ___/ __ \\/ __ \\\n" +
+    "/ /_/ /_/ / /  / /_/ / /_/ /\n" +
+    "\\__/\\__,_/_/  /_.___/\\____/\n ";
+
 declare const __sessionIdTag: unique symbol;
 export type SessionId = string & { readonly __tag: typeof __sessionIdTag };
 

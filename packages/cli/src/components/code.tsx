@@ -1,4 +1,4 @@
-import { SourceLocation } from "@turbo/core";
+import { LOGO, SourceLocation } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
 import { useClientState, useScriptSource, highlightJs } from "./helpers";
@@ -56,6 +56,15 @@ export function Code(): JSX.Element {
             </ScrollableBox>
         );
     } else {
-        return <span>not paused</span>;
+        return (
+            <Box direction="column">
+                <Box direction="column">{LOGO.split("\n")}</Box>
+                <Box wrap={true}>The target is not running.</Box>
+                <Box wrap={true} marginTop={1} color={"gray"}>
+                    Hint: You can restart the target with the
+                    &quot;restart&quot; command in the repl.
+                </Box>
+            </Box>
+        );
     }
 }
