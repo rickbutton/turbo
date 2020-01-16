@@ -11,6 +11,7 @@ import { start } from "./commands/start";
 import { component } from "./commands/component";
 import { evaluate } from "./commands/eval";
 import { daemon } from "./commands/daemon";
+import { ls } from "./commands/ls";
 import { TurboOptions, Turbo } from "@turbo/core";
 import { getTurbo } from "./turbo";
 
@@ -59,6 +60,10 @@ yargs
 
         const expr = argv.expr as string;
         return evaluate(turbo, expr);
+    })
+    .command(["ls"], "list all running sessions", {}, argv => {
+        const turbo = makeTurbo(argv);
+        return ls(turbo);
     })
     .command("daemon", "start a turbo daemon", {}, argv => {
         const turbo = makeTurbo(argv);

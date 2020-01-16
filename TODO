@@ -1,23 +1,19 @@
-switch auto-identify session to putting .turbo files where the daemon ran,
-and then searching upward?
-or putting them in a known directory and iterating over them? - impl ls
-
 tests for cli, logger, connector-node, net, core/reducer, core/v8
 
 layout strings (at least a good default)
-
-better logger
 better "press enter to restart message"
-
-ls command
 
 context + hooks for mouse focus and hover (for hovering values in code)
 
 tooltip widget - React portal?
 
-use session # in tmux window names
-add support for launching inside existing tmux
-
 add wrap options
  - word
  - newline
+
+ breakpoints
+ 
+components:
+    stack trace - add "focus" to state
+    break points
+    watchers?
