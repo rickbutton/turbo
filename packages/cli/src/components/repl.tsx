@@ -101,13 +101,14 @@ function escapeRegExp(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
 function getCommandArgs(command: string, input: string): string {
-    return input.replace(RegExp(`^${escapeRegExp(command)}(\\s+)?`), "");
+    return input.replace(RegExp(`^${escapeRegExp(command)}`), "").trim();
 }
 function findCommandMatch(
     input: string,
     options: string[],
 ): string | undefined {
-    return options.find(o => RegExp(`^${escapeRegExp(o)}(\\s+)?`).test(input));
+    const e = escapeRegExp;
+    return options.find(o => RegExp(`^${e(o)}\\s+`).test(input) || o === input);
 }
 
 function parse(input: string): Command {
