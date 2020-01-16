@@ -2,7 +2,13 @@ import process from "process";
 import path from "path";
 import fs from "fs";
 import child from "child_process";
-import { TurboOptions, Turbo, Environment, Config } from "@turbo/core";
+import {
+    TurboOptions,
+    Turbo,
+    Environment,
+    Config,
+    SessionId,
+} from "@turbo/core";
 
 function getVar(name: string): string | undefined {
     return process.env ? process.env[name] : undefined;
@@ -26,6 +32,11 @@ function getTmpFile(context: string, name: string): string {
     const folder = getTmpFolder(context);
     return path.join(folder, name);
 }
+function getAllSessionIds(): SessionId[] {
+    const folder = getTmpFolder("sessions");
+    const files = fs.readdirSync(folder);
+    return files.map(f => path.basename(f) as SessionId);
+}
 
 function getEnvironment(): Environment {
     const nodePath = process.argv[0];
@@ -37,6 +48,7 @@ function getEnvironment(): Environment {
         execSync,
         getTmpFolder,
         getTmpFile,
+        getAllSessionIds,
     };
 }
 

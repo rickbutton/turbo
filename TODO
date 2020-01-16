@@ -15,8 +15,6 @@ context + hooks for mouse focus and hover (for hovering values in code)
 
 tooltip widget - React portal?
 
-make socket files pid files in one folder
-make session ids increasing numbers, find next one
 use session # in tmux window names
 add support for launching inside existing tmux
 

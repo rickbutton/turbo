@@ -1,4 +1,10 @@
-import { Config, TargetFactory, Environment, Turbo } from "@turbo/core";
+import {
+    Config,
+    TargetFactory,
+    Environment,
+    Turbo,
+    SessionId,
+} from "@turbo/core";
 
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
@@ -16,6 +22,9 @@ const TEST_ENV: Environment = {
         throw new Error(`${context}, ${name}`);
     },
     execSync: jest.fn().mockReturnValueOnce("sessionid"),
+    getAllSessionIds(): SessionId[] {
+        return ["id"] as SessionId[];
+    },
     nodePath: "/tmp/node",
     scriptPath: "/tmp/turbo.js",
 };

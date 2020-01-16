@@ -8,30 +8,41 @@ import {
     TargetFactory,
 } from "@turbo/core";
 
-const TEST_ENV: Environment = {
-    getVar: (name: string) => {
-        if (name === "SHELL") return "conch";
-        if (name === "TMUX") return "foobarbaz";
-        else return undefined;
-    },
-    getTmpFolder() {
-        return "";
-    },
-    getTmpFile() {
-        return "";
-    },
-    execSync: jest.fn().mockReturnValueOnce("sessionid"),
-    nodePath: "/tmp/node",
-    scriptPath: "/tmp/turbo.js",
-};
-const TEST_CONFIG: Config = {
-    target: {} as TargetFactory,
-};
-const TEST_TURBO: Turbo = {
-    env: TEST_ENV,
-    config: TEST_CONFIG,
-    options: {},
-};
+function createConfig(): Config {
+    return {
+        target: {} as TargetFactory,
+    };
+}
+
+function createEnv(inTmux = false): Environment {
+    return {
+        getVar: (name: string): string | undefined => {
+            if (name === "SHELL") return "conch";
+            if (name === "TMUX" && inTmux) return "session";
+            else return undefined;
+        },
+        getTmpFolder(): string {
+            return "";
+        },
+        getTmpFile(): string {
+            return "";
+        },
+        getAllSessionIds(): SessionId[] {
+            if (inTmux) {
+                return ["session"] as SessionId[];
+            } else {
+                return [] as SessionId[];
+            }
+        },
+        execSync: jest.fn().mockReturnValueOnce("sessionid"),
+        nodePath: "/tmp/node",
+        scriptPath: "/tmp/turbo.js",
+    };
+}
+
+function createTurbo(env: Environment, config: Config): Turbo {
+    return { env, config, options: {} };
+}
 
 const POST_CMDS = [";", "select-window", "-t:0", ";", "attach"];
 
@@ -46,13 +57,14 @@ test("generateTmuxStartCommand creates a command for a single pane", () => {
         ],
     };
 
-    expect(generateTmuxStartCommand(id, layout, TEST_TURBO)).toEqual({
+    const turbo = createTurbo(createEnv(), createConfig());
+    expect(generateTmuxStartCommand(id, layout, turbo)).toEqual({
         command: "tmux",
         args: [
             "new-session",
             "-d",
             "-n",
-            "test",
+            "id:test",
             "-s",
             id,
             "command",
@@ -76,19 +88,20 @@ test("generateTmuxStartCommand creates a command for multiple panes", () => {
         ],
     };
 
-    expect(generateTmuxStartCommand(id, layout, TEST_TURBO)).toEqual({
+    const turbo = createTurbo(createEnv(), createConfig());
+    expect(generateTmuxStartCommand(id, layout, turbo)).toEqual({
         command: "tmux",
         args: [
             "new-session",
             "-d",
             "-n",
-            "test2",
+            "id:test2",
             "-s",
             id,
             "command",
             ";",
             "split-window",
-            "/tmp/node /tmp/turbo.js component foobar",
+            "/tmp/node /tmp/turbo.js --session id component foobar",
             ";",
             "split-window",
             "conch",
@@ -119,26 +132,27 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
         ],
     };
 
-    expect(generateTmuxStartCommand(id, layout, TEST_TURBO)).toEqual({
+    const turbo = createTurbo(createEnv(), createConfig());
+    expect(generateTmuxStartCommand(id, layout, turbo)).toEqual({
         command: "tmux",
         args: [
             "new-session",
             "-d",
             "-n",
-            "test3",
+            "id:test3",
             "-s",
             id,
             "command",
             ";",
             "split-window",
-            "/tmp/node /tmp/turbo.js component foobar",
+            "/tmp/node /tmp/turbo.js --session id component foobar",
             ";",
             "split-window",
             "conch",
             ";",
             "new-window",
             "-n",
-            "test4",
+            "id:test4",
             "echo 'foo'",
             ";",
             "split-window",
@@ -149,5 +163,6 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
 });
 
 test("getCurrentSessionId returns the correct id", () => {
-    expect(getCurrentSessionId(TEST_TURBO)).toBe("sessionid");
+    const turbo = createTurbo(createEnv(true), createConfig());
+    expect(getCurrentSessionId(turbo)).toBe("session");
 });

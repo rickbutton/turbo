@@ -231,13 +231,10 @@ export async function daemon(turbo: Turbo): Promise<void> {
     server.on("connected", (conn: ServerConnection) => {
         conn.sendState(reducer.state);
 
-        let counter = 0;
         conn.on("close", () => {
-            counter++;
-            const savedCounter = counter;
             setTimeout(() => {
                 // TODO: wait for log servers as well
-                if (counter === savedCounter && server.numConnections === 0) {
+                if (server.numConnections === 0) {
                     // TODO: log this message somewhere
                     // TODO: only exit if in config
                     logger.error(

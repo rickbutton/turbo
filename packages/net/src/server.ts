@@ -45,8 +45,13 @@ export class Server extends EmitterBase<ServerEvents> {
         this.sessionId = sessionId;
         this.handler = handler;
 
+        process.on("exit", () => {
+            this.server.close();
+            fs.unlinkSync(this.socketPath);
+        });
         process.on("SIGHUP", () => {
             this.server.close();
+            fs.unlinkSync(this.socketPath);
         });
     }
 

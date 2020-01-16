@@ -12,6 +12,7 @@ export interface Environment {
     readonly execSync: (command: string) => string;
     readonly getTmpFolder: (context: string) => string;
     readonly getTmpFile: (context: string, name: string) => string;
+    readonly getAllSessionIds: () => SessionId[];
 }
 
 export interface Layout {

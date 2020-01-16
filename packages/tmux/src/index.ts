@@ -1,9 +1,24 @@
-import { SessionId, Environment, Turbo, Pane, Layout } from "@turbo/core";
+import {
+    SessionId,
+    Environment,
+    Turbo,
+    Pane,
+    Window,
+    Layout,
+} from "@turbo/core";
 
-export function generateSessionId(): SessionId {
-    return `turbo-${[...Array(4)]
-        .map(() => (~~(Math.random() * 36)).toString(36))
-        .join("")}` as SessionId;
+export const DEFAULT_SESSION_ID = "turbo" as SessionId;
+export function generateSessionId(turbo: Turbo): SessionId {
+    const sessionIds = turbo.env.getAllSessionIds();
+
+    const standardIds = sessionIds.filter(id => /^turbo(-.+)?$/.test(id));
+
+    if (!standardIds.includes(DEFAULT_SESSION_ID)) {
+        return DEFAULT_SESSION_ID;
+    } else {
+        const id = standardIds.length + 1;
+        return `${DEFAULT_SESSION_ID}-${id}` as SessionId;
+    }
 }
 
 function getNodeCommand(
@@ -16,9 +31,20 @@ function getNodeCommand(
     } ${args.join(" ")}`;
 }
 
-function generatePaneCommand(pane: Pane, env: Environment): string[] {
+function generatePaneCommand(
+    id: SessionId,
+    pane: Pane,
+    env: Environment,
+): string[] {
     if (pane.type === "component") {
-        return [`${getNodeCommand(env, ["component", pane.component])}`];
+        return [
+            `${getNodeCommand(env, [
+                "--session",
+                id,
+                "component",
+                pane.component,
+            ])}`,
+        ];
     } else if (pane.type === "exec") {
         return [pane.command];
     } else if (pane.type === "shell") {
@@ -29,14 +55,57 @@ function generatePaneCommand(pane: Pane, env: Environment): string[] {
     }
 }
 
-function generatePaneCommands(panes: Pane[], env: Environment): string[][] {
+function generatePaneCommands(
+    id: SessionId,
+    panes: Pane[],
+    env: Environment,
+): string[][] {
     const commands: string[][] = [];
     for (const pane of panes) {
-        const command = generatePaneCommand(pane, env);
+        const command = generatePaneCommand(id, pane, env);
         const paneCommand = [";", "split-window", ...command];
         commands.push(paneCommand);
     }
     return commands;
+}
+
+function generateWindowCommands(
+    id: SessionId,
+    window: Window,
+    env: Environment,
+    first: boolean,
+    tmux: boolean,
+): string[] {
+    let commands: string[] = [];
+
+    const firstPane = window.panes[0];
+    const firstCommand = generatePaneCommand(id, firstPane, env);
+    const paneCommands = generatePaneCommands(id, window.panes.slice(1), env);
+    if (first && !tmux) {
+        commands = [
+            "new-session",
+            "-d",
+            "-n",
+            makeWindowName(id, window.name),
+            "-s",
+            id,
+            ...firstCommand,
+        ].concat(paneCommands.flat());
+    } else {
+        commands = [
+            ...(first ? [] : [";"]),
+            "new-window",
+            "-n",
+            makeWindowName(id, window.name),
+            ...firstCommand,
+        ].concat(paneCommands.flat());
+    }
+
+    return commands;
+}
+
+function makeWindowName(id: SessionId, name: string): string {
+    return `${id}:${name}`;
 }
 
 function generateSessionArgs(
@@ -44,48 +113,14 @@ function generateSessionArgs(
     layout: Layout,
     turbo: Turbo,
 ): string[] {
-    const firstWindow = layout.windows[0];
-    const firstPane = firstWindow.panes[0];
-    const firstCommand = generatePaneCommand(firstPane, turbo.env);
+    const tmux = inTmux(turbo);
 
-    let commands: string[][] = [
-        [
-            "new-session",
-            "-d",
-            "-n",
-            firstWindow.name,
-            "-s",
-            id,
-            ...firstCommand,
-        ],
-    ];
-    const paneCommands = generatePaneCommands(
-        firstWindow.panes.slice(1),
-        turbo.env,
-    );
-    commands = commands.concat(paneCommands);
+    const footer = tmux ? [] : [";", "select-window", "-t:0", ";", "attach"];
 
-    for (const window of layout.windows.slice(1)) {
-        const firstPane = window.panes[0];
-        const firstCommand = generatePaneCommand(firstPane, turbo.env);
-        const windowCommand = [
-            ";",
-            "new-window",
-            "-n",
-            window.name,
-            ...firstCommand,
-        ];
-        commands.push(windowCommand);
-
-        const paneCommands = generatePaneCommands(
-            window.panes.slice(1),
-            turbo.env,
-        );
-        commands = commands.concat(paneCommands);
-    }
-    commands.push([";", "select-window", "-t:0", ";", "attach"]);
-
-    return commands.flat();
+    return layout.windows
+        .map((w, i) => generateWindowCommands(id, w, turbo.env, i === 0, tmux))
+        .flat()
+        .concat(footer);
 }
 
 interface TmuxStartCommand {
@@ -103,19 +138,30 @@ export function generateTmuxStartCommand(
     };
 }
 
+function inTmux(turbo: Turbo): boolean {
+    return Boolean(turbo.env.getVar("TMUX"));
+}
+
 export function getCurrentSessionId(turbo: Turbo): SessionId | undefined {
     if (turbo.options.sessionId) {
         return turbo.options.sessionId;
     }
 
-    const inTmux = Boolean(turbo.env.getVar("TMUX"));
-
-    if (inTmux) {
-        return turbo.env
+    const ids = turbo.env.getAllSessionIds();
+    if (inTmux(turbo)) {
+        const tmuxId = turbo.env
             .execSync("tmux display-message -p '#S'")
             .toString()
             .split("\n")[0] as SessionId;
-    } else {
-        return undefined;
+
+        if (ids.includes(tmuxId)) {
+            return tmuxId;
+        }
     }
+
+    if (ids.length === 1) {
+        return ids[0];
+    }
+
+    return undefined;
 }

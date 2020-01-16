@@ -1,5 +1,6 @@
 import { generateTmuxStartCommand, generateSessionId } from "@turbo/tmux";
 import { Turbo, Layout, SessionId } from "@turbo/core";
+import { Client } from "@turbo/net";
 import * as ffi from "ffi";
 import * as ref from "ref";
 import ArrayType from "ref-array";
@@ -79,7 +80,7 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
 }
 
 export function start(turbo: Turbo): void {
-    const id = generateSessionId();
+    const id = generateSessionId(turbo);
     console.log(`starting a turbo session with id ${id}`);
 
     const layout = turbo.config.layout || defaultLayout;
@@ -89,6 +90,15 @@ export function start(turbo: Turbo): void {
     // spawn daemon in background
     spawnDaemon(turbo, id);
 
-    // replace current process with spawned tmux
-    execvp(command, args);
+    console.log(args);
+    const client = new Client(turbo, {
+        type: "managed",
+        sessionId: id,
+    });
+    client.connect();
+
+    client.on("ready", () => {
+        // replace current process with spawned tmux
+        execvp(command, args);
+    });
 }
