@@ -33,6 +33,18 @@ export interface TerminalMouseEvent {
     shift: boolean;
 }
 
+function showAlternateScreen(): void {
+    process.stdout.write(
+        Buffer.from([0x1b, 0x5b, 0x3f, 0x31, 0x30, 0x34, 0x39, 0x68]),
+    );
+}
+
+function hideAlternateScreen(): void {
+    process.stdout.write(
+        Buffer.from([0x1b, 0x5b, 0x3f, 0x31, 0x30, 0x34, 0x39, 0x6c]),
+    );
+}
+
 function normalizeMouseEvent(
     type: TerminalMouseEventType,
     event: TerminalMouseEvent,
@@ -174,6 +186,11 @@ export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
                     process.exit(0);
                 }
             });
+
+            process.on("exit", () => {
+                hideAlternateScreen();
+            });
+            showAlternateScreen();
 
             terminal.grabInput({ mouse: "button" });
 
