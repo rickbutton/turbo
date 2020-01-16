@@ -5,10 +5,10 @@ import {
     RemoteException,
 } from "@turbo/core";
 import { Box } from "../renderer";
-import { useObjectProperties } from "./helpers";
+import { useObjectProperties, highlightJs } from "./helpers";
 
 function js(str: string): JSX.Element {
-    return <Box>{str}</Box>;
+    return <Box>{highlightJs(str)}</Box>;
 }
 
 function formatString(str: string): JSX.Element {
@@ -154,6 +154,20 @@ function ComplexObject(props: ComplexObjectProps): JSX.Element {
     }
 }
 
+interface FunctionObjectProps {
+    value: RemoteObject;
+}
+function FunctionObject(props: FunctionObjectProps): JSX.Element {
+    const { value } = props;
+    if (value.type !== "function") {
+        return <Box>unknown type ${value["type"]}</Box>;
+    }
+    const text = value.description;
+    const highlighted = React.useMemo(() => highlightJs(text), [text]);
+
+    return <Box direction="column">{highlighted.split("\n")}</Box>;
+}
+
 interface ObjectViewProps {
     simpleExceptions?: boolean;
     value: RemoteObject;
@@ -167,7 +181,7 @@ export function ObjectView(props: ObjectViewProps): JSX.Element {
     if (value.type === "symbol") return js(value.description);
     if (value.type === "bigint") return js(value.description);
     if (value.type === "undefined") return js("undefined");
-    if (value.type === "function") return js("function"); // TODO: expand
+    if (value.type === "function") return <FunctionObject value={value} />;
     if (value.type === "object")
         return (
             <ComplexObject

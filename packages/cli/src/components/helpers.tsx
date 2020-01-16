@@ -6,6 +6,7 @@ import {
     RemoteException,
 } from "@turbo/core";
 import React from "react";
+import { highlight } from "cli-highlight";
 
 export const ClientContext = React.createContext<Client>(
     (null as unknown) as Client,
@@ -77,4 +78,8 @@ export function useObjectProperties(
     }, [objectId]);
 
     return [loaded, props, error];
+}
+
+export function highlightJs(str: string): string {
+    return highlight(str, { language: "javascript" });
 }

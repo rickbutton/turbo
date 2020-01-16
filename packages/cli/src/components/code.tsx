@@ -1,12 +1,7 @@
 import { SourceLocation } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
-import { useClientState, useScriptSource } from "./helpers";
-import { highlight } from "cli-highlight";
-
-function highlightJs(str: string): string {
-    return highlight(str, { language: "javascript" });
-}
+import { useClientState, useScriptSource, highlightJs } from "./helpers";
 
 function numbers(height: number): string[] {
     const width = String(height).length;

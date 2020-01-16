@@ -6,6 +6,11 @@ const LOGO =
     "/ /_/ /_/ / /  / /_/ / /_/ /\n" +
     "\\__/\\__,_/_/  /_.___/\\____/\n\n ";
 
+function foo() {
+    console.log("bar");
+}
+const bar = foo;
+
 const short = { a: 1, b: 2 };
 debugger;
 const max = { a: 1, b: 2, c: 3, d: 4, e: 5 };
