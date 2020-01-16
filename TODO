@@ -9,6 +9,8 @@ add wrap options
  - newline
 
  breakpoints
+
+ use yargs for repl help
  
 components:
     stack trace - add "focus" to state

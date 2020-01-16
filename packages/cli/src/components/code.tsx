@@ -61,8 +61,8 @@ export function Code(): JSX.Element {
                 <Box direction="column">{LOGO.split("\n")}</Box>
                 <Box wrap={true}>The target is not running.</Box>
                 <Box wrap={true} marginTop={1} color={"gray"}>
-                    Hint: You can restart the target with the
-                    &quot;restart&quot; command in the repl.
+                    Hint: You can restart the target with the &quot;start&quot;
+                    or &quot;restart&quot; commands in the repl.
                 </Box>
             </Box>
         );

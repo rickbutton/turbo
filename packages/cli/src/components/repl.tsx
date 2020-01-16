@@ -11,45 +11,60 @@ function js(str: string): string {
     return str;
 }
 
+interface HelpCommand {
+    type: "help";
+    args: string;
+}
 interface QuitCommand {
     type: "quit";
+    args: string;
 }
 interface StartCommand {
     type: "start";
+    args: string;
 }
 interface StopCommand {
     type: "stop";
+    args: string;
 }
 interface RestartCommand {
     type: "restart";
+    args: string;
 }
 interface PauseCommand {
     type: "pause";
+    args: string;
 }
 interface ResumeCommand {
     type: "resume";
+    args: string;
 }
 interface StepIntoCommand {
     type: "stepInto";
+    args: string;
 }
 interface StepOutCommand {
     type: "stepOut";
+    args: string;
 }
 interface StepOverCommand {
     type: "stepOver";
+    args: string;
 }
 interface BackTraceCommand {
     type: "backtrace";
+    args: string;
 }
 interface EvalComamnd {
     type: "eval";
-    value: string;
+    args: string;
 }
 interface ErrorCommand {
     type: "error";
-    value: string;
+    args: string;
 }
 type Command =
+    | HelpCommand
     | QuitCommand
     | StopCommand
     | StartCommand
@@ -63,38 +78,64 @@ type Command =
     | ErrorCommand
     | EvalComamnd;
 
-function matchesCommand(input: string, options: string[]): boolean {
-    return options.some(o => input === o || input.startsWith(o + " "));
+interface CommandObject {
+    type: Command["type"];
+    alts?: string[];
+}
+const COMMANDS: CommandObject[] = [
+    { type: "help", alts: ["h", "?"] },
+    { type: "quit", alts: ["q"] },
+    { type: "start", alts: ["run"] },
+    { type: "stop" },
+    { type: "restart" },
+    { type: "pause", alts: ["p"] },
+    { type: "resume", alts: ["r", "c"] },
+    { type: "stepInto", alts: ["i", "stepi"] },
+    { type: "stepOver", alts: ["n", "step", "stepOver"] },
+    { type: "stepOut", alts: ["finish", "f"] },
+    { type: "backtrace", alts: ["bt"] },
+    { type: "eval", alts: ["e"] },
+];
+
+function escapeRegExp(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+}
+function getCommandArgs(command: string, input: string): string {
+    return input.replace(RegExp(`^${escapeRegExp(command)}(\\s+)?`), "");
+}
+function findCommandMatch(
+    input: string,
+    options: string[],
+): string | undefined {
+    return options.find(o => RegExp(`^${escapeRegExp(o)}(\\s+)?`).test(input));
 }
 
 function parse(input: string): Command {
-    const trimmed = input.trim();
+    for (const command of COMMANDS) {
+        const options = [command.type, ...(command.alts || [])];
+        const match = findCommandMatch(input, options);
 
-    if (matchesCommand(trimmed, ["quit", "q"])) {
-        return { type: "quit" };
-    } else if (matchesCommand(trimmed, ["start", "run"])) {
-        return { type: "start" };
-    } else if (matchesCommand(trimmed, ["stop"])) {
-        return { type: "stop" };
-    } else if (matchesCommand(trimmed, ["restart"])) {
-        return { type: "restart" };
-    } else if (matchesCommand(trimmed, ["p", "pause"])) {
-        return { type: "pause" };
-    } else if (matchesCommand(trimmed, ["r", "c", "resume"])) {
-        return { type: "resume" };
-    } else if (matchesCommand(trimmed, ["s", "stepi", "stepInto"])) {
-        return { type: "stepInto" };
-    } else if (matchesCommand(trimmed, ["n", "step", "stepOver"])) {
-        return { type: "stepOver" };
-    } else if (matchesCommand(trimmed, ["f", "finish", "stepOut"])) {
-        return { type: "stepOut" };
-    } else if (matchesCommand(trimmed, ["bt", "backtrace"])) {
-        return { type: "backtrace" };
-    } else if (matchesCommand(trimmed, ["e", "eval"])) {
-        return { type: "eval", value: input.replace(/^(e|eval) /, "") };
-    } else {
-        return { type: "eval", value: input };
+        if (match) {
+            const args = getCommandArgs(match, input);
+            return { type: command.type, args: args };
+        }
     }
+    return { type: "eval", args: input };
+}
+
+function Help(): JSX.Element {
+    return (
+        <Box direction="column">
+            <Box>turbo help:</Box>
+            <Box />
+            {COMMANDS.map((c, i) => (
+                <Box key={i}>
+                    {c.type}
+                    {c.alts ? ` - ${c.alts.join(",")}` : ""}
+                </Box>
+            ))}
+        </Box>
+    );
 }
 
 async function handle(
@@ -109,11 +150,14 @@ async function handle(
         return null;
     }
     const runtime = state.target.runtime;
+    const trimmed = input.trim();
 
-    const cmd = parse(input);
+    const cmd = parse(trimmed);
 
-    if (cmd.type === "error") {
-        return <span>${cmd.value}</span>;
+    if (cmd.type == "help") {
+        return <Help />;
+    } else if (cmd.type === "error") {
+        return <Box color="red">unable to parse command ${input}</Box>;
     } else if (cmd.type == "quit") {
         return client.quit().then(() => null);
     } else if (cmd.type == "start") {
@@ -140,7 +184,7 @@ async function handle(
         const topCallFrame = runtime.callFrames[0];
 
         return client
-            .eval(cmd.value, topCallFrame.id)
+            .eval(cmd.args, topCallFrame.id)
             .then(result => <Eval result={result} />)
             .catch(error => {
                 return <span>`eval error: ${error}`</span>;
