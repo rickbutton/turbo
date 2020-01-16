@@ -33,13 +33,28 @@ function gutter(height: number, loc: SourceLocation): JSX.Element[] {
     return elements;
 }
 
+function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
+    return (
+        <Box direction="column">
+            <Box direction="column">{LOGO.split("\n")}</Box>
+            {props.children}
+        </Box>
+    );
+}
+
 export function Code(): JSX.Element {
     const state = useClientState();
     const script = useScriptSource();
     const highlighted = React.useMemo(() => highlightJs(script), [script]);
 
     if (!state) {
-        return <span>no state</span>;
+        return (
+            <LogoText>
+                <Box wrap={true}>
+                    The component has not synced with the daemon.
+                </Box>
+            </LogoText>
+        );
     } else if (state.target.runtime.paused) {
         const topCallFrame = state.target.runtime.callFrames[0];
 
@@ -57,14 +72,13 @@ export function Code(): JSX.Element {
         );
     } else {
         return (
-            <Box direction="column">
-                <Box direction="column">{LOGO.split("\n")}</Box>
+            <LogoText>
                 <Box wrap={true}>The target is not running.</Box>
                 <Box wrap={true} marginTop={1} color={"gray"}>
                     Hint: You can restart the target with the &quot;start&quot;
                     or &quot;restart&quot; commands in the repl.
                 </Box>
-            </Box>
+            </LogoText>
         );
     }
 }

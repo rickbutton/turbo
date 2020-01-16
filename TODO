@@ -10,7 +10,9 @@ add wrap options
 
  breakpoints
 
- use yargs for repl help
+use yargs for repl help
+
+desired focus - on first launch
  
 components:
     stack trace - add "focus" to state
