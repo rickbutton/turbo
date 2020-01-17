@@ -95,6 +95,7 @@ function generateWindowCommands(
         commands = [
             ...(first ? [] : [";"]),
             "new-window",
+            "-a",
             "-n",
             makeWindowName(id, window.name),
             ...firstCommand,
@@ -115,7 +116,11 @@ function generateSessionArgs(
 ): string[] {
     const tmux = inTmux(turbo);
 
-    const footer = tmux ? [] : [";", "select-window", "-t:0", ";", "attach"];
+    const footer = tmux
+        ? Array(layout.windows.length - 1)
+              .fill([";", "previous-window"])
+              .flat()
+        : [";", "select-window", "-t:0", ";", "attach"];
 
     return layout.windows
         .map((w, i) => generateWindowCommands(id, w, turbo.env, i === 0, tmux))
