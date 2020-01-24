@@ -1,6 +1,10 @@
 {
   "name": "@turbo/tmux",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": "Rick Button <rick@button.dev>",
+  "homepage": "https://github.com/rickbutton/turbo",
+  "description": "tmux support for the turbo debugger",
   "main": "lib/index",
   "types": "lib/index",
   "files": [

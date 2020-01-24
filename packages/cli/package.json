@@ -1,6 +1,10 @@
 {
   "name": "@turbo/cli",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": "Rick Button <rick@button.dev>",
+  "homepage": "https://github.com/rickbutton/turbo",
+  "description": "the turbo command line application",
   "main": "lib/index",
   "types": "lib/index",
   "files": [

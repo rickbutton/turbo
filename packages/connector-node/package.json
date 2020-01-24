@@ -1,6 +1,10 @@
 {
   "name": "@turbo/connector-node",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": "Rick Button <rick@button.dev>",
+  "homepage": "https://github.com/rickbutton/turbo",
+  "description": "a turbo \"connector plugin\" for node targets",
   "main": "lib/index",
   "types": "lib/index",
   "files": [
