@@ -1,6 +1,6 @@
 {
   "name": "@turbo/connector-node",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "lib/index",
   "types": "lib/index",
   "files": [
