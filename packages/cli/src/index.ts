@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 process.on("uncaughtException", e => {
     console.error(e.message);
     console.error(e.stack);

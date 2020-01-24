@@ -4,10 +4,11 @@
   "main": "lib/index",
   "types": "lib/index",
   "files": [
-    "lib"
+    "lib",
+    "index.js"
   ],
   "bin": {
-    "turbo": "./lib/index.js"
+    "turbo": "./index.js"
   },
   "scripts": {
     "build": "npm run clean && npm run compile",

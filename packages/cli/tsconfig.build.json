@@ -3,6 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "declaration": true,
+    "allowJs": true,
     "outDir": "./lib",
     "rootDir": "./src"
   },
