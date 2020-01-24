@@ -48,5 +48,8 @@
     "terminal-kit": "^1.32.2",
     "yargs": "^14.2.0",
     "yoga-layout-prebuilt": "^1.9.3"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
