@@ -1,190 +1,20 @@
-import {
-    Server,
-    ServerConnection,
-    Request,
-    ResponsePayload,
-    ServerRequestHandler,
-    LogServer,
-} from "@turbo/net";
-import {
-    Turbo,
-    logger,
-    State,
-    Action,
-    StateReducer,
-    TargetConnection,
-    Target,
-    StartedEvent,
-    PausedEvent,
-    format,
-} from "@turbo/core";
+import { Turbo, logger, makeStore, format, LogEvent } from "@turbo/core";
 import { getCurrentSessionId } from "@turbo/tmux";
-import { connect } from "../v8";
+import { SocketLogServer, SocketServer } from "@turbo/net";
 
-function setupTarget(turbo: Turbo): Target {
-    const targetFactory = turbo.config.target;
-    const target = targetFactory(turbo.env);
-    return target;
-}
-
-class Daemon implements ServerRequestHandler {
-    private conn: TargetConnection | null = null;
-    private target: Target;
-    private reducer: StateReducer;
-
-    constructor(target: Target, reducer: StateReducer) {
-        this.reducer = reducer;
-        this.target = target;
-
-        this.connectTarget = this.connectTarget.bind(this);
-        this.disconnectTarget = this.disconnectTarget.bind(this);
-        this.onPaused = this.onPaused.bind(this);
-        this.onResumed = this.onResumed.bind(this);
-
-        target.on("started", this.connectTarget);
-        target.on("stopped", this.disconnectTarget);
-    }
-
-    async eval(req: Request<"eval">): Promise<ResponsePayload<"eval">> {
-        if (this.conn) {
-            return await this.conn.eval(req.payload.value, req.payload.id);
-        } else {
-            return {
-                error: true,
-                value: `unable to evaluate because the target is not this.connected`,
-            };
-        }
-    }
-    async getProperties(
-        req: Request<"getProperties">,
-    ): Promise<ResponsePayload<"getProperties">> {
-        if (this.conn) {
-            return await this.conn.getProperties(req.payload);
-        } else {
-            return {
-                error: true,
-                value: `unable to get properties because the target is not this.connected`,
-            };
-        }
-    }
-    async pause(): Promise<ResponsePayload<"pause">> {
-        logger.debug("received pause command");
-        if (this.conn) {
-            this.conn.pause();
-        }
-        return undefined;
-    }
-    async resume(): Promise<ResponsePayload<"resume">> {
-        logger.debug("received resume command");
-        if (this.conn) {
-            this.conn.resume();
-        }
-        return undefined;
-    }
-    async stepInto(): Promise<ResponsePayload<"stepInto">> {
-        logger.debug("received stepInto command");
-        if (this.conn) {
-            this.conn.stepInto();
-        }
-        return undefined;
-    }
-    async stepOut(): Promise<ResponsePayload<"stepOut">> {
-        logger.debug("received stepOut command");
-        if (this.conn) {
-            this.conn.stepOut();
-        }
-        return undefined;
-    }
-    async stepOver(): Promise<ResponsePayload<"stepOver">> {
-        logger.debug("received stepOver command");
-        if (this.conn) {
-            this.conn.stepOver();
-        }
-        return undefined;
-    }
-    async start(): Promise<ResponsePayload<"start">> {
-        logger.debug("received start command");
-        this.target.start();
-        return undefined;
-    }
-    async stop(): Promise<ResponsePayload<"start">> {
-        logger.debug("received start command");
-        this.target.stop();
-        return undefined;
-    }
-    async restart(): Promise<ResponsePayload<"start">> {
-        logger.debug("received start command");
-        if (this.target.isRunning) {
-            this.target.stop();
-            this.target.once("stopped", () => this.target.start());
-        } else {
-            this.target.start();
-        }
-        return undefined;
-    }
-    async getScriptSource(
-        req: Request<"getScriptSource">,
-    ): Promise<ResponsePayload<"getScriptSource">> {
-        logger.debug("received getScriptSource command");
-        if (this.conn) {
-            return {
-                script: await this.conn.getScriptSource(req.payload.scriptId),
-            };
-        } else {
-            return {
-                // TODO: better error message
-                script: "target is not connected",
-            };
-        }
-    }
-
-    private async connectTarget(event: StartedEvent): Promise<void> {
-        if (!this.conn) {
-            const iface = event.interface;
-            logger.info(`target updated host:${iface.host} port:${iface.port}`);
-            try {
-                const target = await connect(iface.host, iface.port);
-
-                this.conn = target;
-                this.conn.on("paused", this.onPaused);
-                this.conn.on("resumed", this.onResumed);
-
-                this.reducer.action({ type: "target-connect" });
-
-                logger.info("target connnected");
-                await this.conn.enable();
-                logger.info("target enabled");
-            } catch (error) {
-                logger.info(`target failed to connect: ${error.toString()}`);
-                this.conn = null;
-            }
-        }
-    }
-
-    private async disconnectTarget(): Promise<void> {
-        if (this.conn) {
-            logger.info("target disconnected");
-            await this.conn.close();
-
-            this.conn.off("paused", this.onPaused);
-            this.conn.off("resumed", this.onResumed);
-            this.conn = null;
-
-            this.reducer.action({ type: "target-disconnect" });
-        }
-    }
-
-    private onPaused(event: PausedEvent): void {
-        this.reducer.action({
-            type: "paused",
-            callFrames: event.callFrames,
-        });
-    }
-    private onResumed(): void {
-        this.reducer.action({
-            type: "resumed",
-        });
-    }
+function debounce<T extends (...args: any[]) => void>(
+    func: T,
+    wait: number,
+): T {
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    return function(...args: any[]): void {
+        const later = (): void => {
+            timeout = undefined;
+            func(...args);
+        };
+        if (timeout) clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    } as any;
 }
 
 export async function daemon(turbo: Turbo): Promise<void> {
@@ -194,77 +24,62 @@ export async function daemon(turbo: Turbo): Promise<void> {
         return;
     }
 
-    const turboLogServer = await LogServer.create(turbo);
-    const targetLogServer = await LogServer.create(turbo);
+    // set up log servers for turbo logs and the target
+    const turboLog = await SocketLogServer.create(turbo);
+    const targetLog = await SocketLogServer.create(turbo);
 
-    const reducer = new StateReducer({
-        target: {
-            connected: false,
-            runtime: { paused: false },
-        },
-        logStream: {
-            turboSocket: turboLogServer.socketPath,
-            targetSocket: targetLogServer.socketPath,
-        },
-    });
-    const target = setupTarget(turbo);
-    const daemon = new Daemon(target, reducer);
-    const server = new Server(turbo, sessionId, daemon);
-
-    target.on("stdout", str => targetLogServer.log(str));
-    target.on("stderr", str => targetLogServer.log(str));
+    // connect the turbo logger to the turbo log server
+    // and pipe to stdout (for running daemon directly)
     logger.on("log", log => {
         const msg = format(log);
         process.stdout.write(msg);
-        turboLogServer.log(msg);
+        turboLog.log(msg);
     });
-    server.on("log", log => {
+
+    const targetFactory = turbo.config.target;
+    const target = targetFactory(turbo.env);
+    target.on("stdout", log => targetLog.log(log));
+    target.on("stderr", log => targetLog.log(log));
+    process.on("exit", () => target.stop());
+
+    // set up the daemon server, started by the server saga
+    const server = new SocketServer(turbo, sessionId);
+    server.on("log", (log: LogEvent) => {
         const msg = format(log);
         process.stdout.write(msg);
-        turboLogServer.log(msg);
-    });
-    server.on("quit", () => {
-        server.broadcastQuit();
-        process.exit(0);
+        turboLog.log(msg);
     });
 
-    server.on("connected", (conn: ServerConnection) => {
-        conn.sendState(reducer.state);
-
-        conn.on("close", () => {
-            setTimeout(() => {
-                // TODO: wait for log servers as well
-                if (server.numConnections === 0) {
-                    // TODO: log this message somewhere
-                    // TODO: only exit if in config
-                    logger.error(
-                        "closing daemon because all clients disconnected",
-                    );
-                    process.exit(0);
-                }
-            }, 5000); // TODO: don't hardcode
-        });
-    });
-    server.on("action", (action: Action) => {
-        reducer.action(action);
+    // make the redux store
+    const store = makeStore(server, target, {
+        target: {
+            connected: false,
+            paused: false,
+            callFrames: undefined,
+            scripts: [],
+            breakpoints: [],
+            breakpointsEnabled: false,
+        },
+        logStream: {
+            turboSocket: turboLog.socketPath,
+            targetSocket: targetLog.socketPath,
+        },
     });
 
-    reducer.on("update", (state: State) => {
-        server.broadcastState(state);
-    });
+    // broadcast state updates to all clients
+    // TODO: how to refactor this into redux?
+    let lastState = store.getState();
+    store.subscribe(
+        debounce(() => {
+            const state = store.getState();
+            if (lastState !== state) {
+                lastState = state;
+                server.broadcastState(state);
+            }
+        }, 10),
+    );
 
-    target.start();
-    server.start();
-
-    process.on("SIGHUP", () => {
-        process.exit(0);
-    });
-    process.on("SIGINT", () => {
-        process.exit(0);
-    });
-
-    process.on("exit", () => {
-        target.stop();
-        server.stop();
-    });
+    // listen for signals to force exit on
+    process.on("SIGHUP", () => process.exit(0));
+    process.on("SIGINT", () => process.exit(0));
 }

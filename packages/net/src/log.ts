@@ -1,24 +1,29 @@
 import net from "net";
 import fs from "fs";
-import { uuid, EmitterBase, Turbo } from "@turbo/core";
+import { uuid, EmitterBase, Turbo, Logger } from "@turbo/core";
 
 const MAX_BUFFER_LENGTH = 4096;
 
 interface LogServerEvents {
     ready: void;
+    error: Error;
 }
-export class LogServer extends EmitterBase<LogServerEvents> {
+export class SocketLogServer extends EmitterBase<LogServerEvents>
+    implements Logger {
     private server: net.Server;
     private connections = new Set<net.Socket>();
     private buffer: string[] = [];
 
     public readonly socketPath: string;
 
-    public static create(turbo: Turbo): Promise<LogServer> {
-        return new Promise<LogServer>(resolve => {
-            const server = new LogServer(turbo);
-            server.on("ready", () => {
+    public static create(turbo: Turbo): Promise<SocketLogServer> {
+        return new Promise<SocketLogServer>((resolve, reject) => {
+            const server = new SocketLogServer(turbo);
+            server.once("ready", () => {
                 resolve(server);
+            });
+            server.once("error", () => {
+                reject(server);
             });
             server.start();
         });
@@ -43,6 +48,9 @@ export class LogServer extends EmitterBase<LogServerEvents> {
             for (const line of this.buffer) {
                 socket.write(line);
             }
+        });
+        this.server.on("error", error => {
+            this.fire("error", error);
         });
 
         this.server.on("listening", () => {

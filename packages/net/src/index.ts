@@ -1,5 +1,4 @@
 export { Client } from "./client";
-export { Server } from "./server";
-export { LogServer, LogClient } from "./log";
-export { ServerConnection, ServerRequestHandler } from "./serverconnection";
-export { Request, ResponsePayload } from "./shared";
+export { SocketServer } from "./server";
+export { SocketLogServer, LogClient } from "./log";
+export { SocketServerConnection } from "./serverconnection";

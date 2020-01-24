@@ -1,5 +1,6 @@
 import { Client } from "@turbo/net";
 import {
+    logger,
     State,
     RemoteObjectProperty,
     ObjectId,
@@ -20,7 +21,9 @@ export function useClientState(): State | null {
     const [state, setState] = React.useState<State | null>(null);
 
     React.useEffect(() => {
-        const cb = (state: State): void => setState(state);
+        const cb = (state: State): void => {
+            setState(state);
+        };
         client.on("sync", cb);
 
         return (): void => client.off("sync", cb);
@@ -37,12 +40,12 @@ export function useScriptSource(): string {
     React.useEffect(() => {
         if (!state) {
             setScript("");
-        } else if (state.target.runtime.paused) {
-            const topCallFrame = state.target.runtime.callFrames[0];
+        } else if (state.target.paused) {
+            const topCallFrame = state.target.callFrames[0];
             client
                 .getScriptSource(topCallFrame.location.scriptId)
-                .then(({ script }) => {
-                    setScript(script);
+                .then(({ value }) => {
+                    setScript(value);
                 });
         } else {
             setScript("");

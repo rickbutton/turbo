@@ -84,22 +84,42 @@ export function uuid(): string {
 }
 
 export { Emitter, EmitterBase } from "./emitter";
-export { logger, format, LogEvent, LogLevel } from "./logger";
+export {
+    Logger,
+    LevelLogger,
+    logger,
+    format,
+    LogEvent,
+    LogLevel,
+} from "./logger";
 export {
     State,
     TargetConnection,
     TargetConnectionEvents,
-    PausedEvent,
     CallFrame,
     SourceLocation,
-    CallFrameId,
-    ScriptId,
+    Script,
     RemoteObject,
     RemoteObjectProperty,
     RemoteException,
+    Breakpoint,
+    UnverifiedBreakpoint,
+    VerifiedBreakpoint,
+    BreakLocation,
+    PausedEvent,
+    ScriptParsedEvent,
+    BreakpointResolvedEvent,
+    BreakpointsEnabledUpdatedEvent,
+    CallFrameId,
+    ScriptId,
     ObjectId,
-    Action,
+    BreakpointId,
+    UnverifiedBreakpointId,
     EvalResponse,
     GetPropertiesResponse,
+    Action,
+    ActionType,
 } from "./state";
-export { StateReducer } from "./reducer";
+export { canonicalizeUrl } from "./normalize";
+export { makeStore, Store } from "./reducer";
+export * from "./net";

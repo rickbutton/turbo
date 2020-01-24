@@ -1,4 +1,4 @@
-import { LOGO, SourceLocation } from "@turbo/core";
+import { logger, LOGO, SourceLocation } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
 import { useClientState, useScriptSource, highlightJs } from "./helpers";
@@ -55,8 +55,8 @@ export function Code(): JSX.Element {
                 </Box>
             </LogoText>
         );
-    } else if (state.target.runtime.paused) {
-        const topCallFrame = state.target.runtime.callFrames[0];
+    } else if (state.target.paused) {
+        const topCallFrame = state.target.callFrames[0];
 
         const lines = highlighted.split("\n");
         const height = lines.length;
@@ -69,6 +69,16 @@ export function Code(): JSX.Element {
                     {lines}
                 </Box>
             </ScrollableBox>
+        );
+    } else if (state.target.connected) {
+        return (
+            <LogoText>
+                <Box wrap={true}>The target is not paused.</Box>
+                <Box wrap={true} marginTop={1} color={"gray"}>
+                    Hint: You can pause the target with the &quot;pause&quot; or
+                    &quot;p&quot; commands in the repl.
+                </Box>
+            </LogoText>
         );
     } else {
         return (

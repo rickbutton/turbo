@@ -1,13 +1,13 @@
 import { BaseClient } from "./baseclient";
 import { mockSocket } from "./mocksocket";
 import {
+    SessionId,
     ResponsePayload,
     RequestId,
     AnyMessage,
     AnyRequest,
     RequestType,
-} from "./shared";
-import { SessionId } from "@turbo/core";
+} from "@turbo/core";
 import * as core from "@turbo/core";
 import { TEST_TURBO } from "./mocks";
 

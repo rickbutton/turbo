@@ -3,12 +3,15 @@ import {
     Action,
     CallFrameId,
     ScriptId,
-    RemoteObject,
     RemoteException,
     LogLevel,
     ObjectId,
     RemoteObjectProperty,
-} from "@turbo/core";
+    BreakLocation,
+    LogEvent,
+    Emitter,
+    RemoteObject,
+} from ".";
 
 declare const __RequestIdSymbol: unique symbol;
 export type RequestId = string & { readonly __tag: typeof __RequestIdSymbol };
@@ -26,19 +29,20 @@ interface EvalRequest {
     value: string;
     id: CallFrameId;
 }
-
-interface SuccessEvalResponse {
-    error: false;
-    value: RemoteObject;
-}
-interface ErrorEvalResponse {
-    error: true;
-    value: RemoteException | string;
-}
-export type EvalResponse = SuccessEvalResponse | ErrorEvalResponse;
-export type GetPropertiesResponse =
+type EvalResponse =
+    | { error: false; value: RemoteObject }
+    | { error: true; value: RemoteException | string };
+type GetPropertiesResponse =
     | { error: false; value: RemoteObjectProperty[] }
     | { error: true; value: RemoteException | string };
+type GetScriptSourceRequest = { scriptId: ScriptId };
+type GetScriptSourceResponse = { error: boolean; value: string };
+interface GetPossibleBreakpointLocationsRequest {
+    id: ScriptId;
+}
+interface GetPossibleBreakpointLocationsResponse {
+    locations: BreakLocation[];
+}
 
 interface RequestResponse<Req, Res> {
     req: Req;
@@ -55,14 +59,18 @@ interface RequestResponseSchema {
     stepOut: RequestResponse<void, void>;
     stepOver: RequestResponse<void, void>;
 
+    getPossibleBreakpointLocations: RequestResponse<
+        GetPossibleBreakpointLocationsRequest,
+        GetPossibleBreakpointLocationsResponse
+    >;
+    getScriptSource: RequestResponse<
+        GetScriptSourceRequest,
+        GetScriptSourceResponse
+    >;
+
     start: RequestResponse<void, void>;
     restart: RequestResponse<void, void>;
     stop: RequestResponse<void, void>;
-
-    getScriptSource: RequestResponse<
-        { scriptId: ScriptId },
-        { script: string }
-    >;
 }
 export type RequestType = keyof RequestResponseSchema;
 export interface Request<T extends RequestType> {
@@ -91,7 +99,6 @@ interface MessageSchema {
     log: LogData;
     sync: SyncData;
     action: Action;
-    quit: undefined;
     req: AnyRequest;
     res: AnyResponse;
 }
@@ -120,4 +127,58 @@ export function isRequestType<T extends RequestType>(
     req: AnyRequest,
 ): req is Request<T> {
     return req.type === type;
+}
+
+export interface ClientEvents {
+    close: void;
+    ready: void;
+    sync: State;
+    quit: undefined;
+}
+
+export interface RequestEvent<T extends RequestType> {
+    request: Request<T>;
+    respond(payload: ResponsePayload<T> | Promise<ResponsePayload<T>>): void;
+}
+
+export const SERVER_REQUEST_TYPES: ServerRequestType[] = [
+    "eval",
+    "getProperties",
+    "getPossibleBreakpointLocations",
+    "getScriptSource",
+];
+export type ServerRequestType =
+    | "eval"
+    | "getProperties"
+    | "getPossibleBreakpointLocations"
+    | "getScriptSource";
+export function isServerRequestType<T extends ServerRequestType>(
+    req: AnyRequest,
+): req is Request<T> {
+    return SERVER_REQUEST_TYPES.includes(req.type as any);
+}
+
+export interface ServerConnectionEvents extends ClientEvents {
+    action: Action;
+    log: LogEvent;
+    request: RequestEvent<ServerRequestType>;
+}
+export interface ServerConnection extends Emitter<ServerConnectionEvents> {
+    id: ClientId;
+    sendState(state: State): void;
+}
+
+export interface ServerEvents {
+    ready: void;
+    log: MessagePayload<"log">;
+    action: Action;
+    connected: ServerConnection;
+    disconnected: ServerConnection;
+    request: RequestEvent<ServerRequestType>;
+}
+export interface Server extends Emitter<ServerEvents> {
+    start(): void;
+    stop(): void;
+    broadcastState(state: State): void;
+    numConnections: number;
 }

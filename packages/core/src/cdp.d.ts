@@ -1,8 +1,16 @@
 declare module "chrome-remote-interface" {
-    import { Emitter } from "@turbo/core";
     export { Protocol } from "devtools-protocol";
     import { Protocol } from "devtools-protocol";
     import { ProtocolProxyApi } from "devtools-protocol/types/protocol-proxy-api";
+
+    type EmitterCallback<T> = (event: T) => void;
+    interface Emitter<T> {
+        on<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
+        once<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
+        off<N extends keyof T>(name: N, func: EmitterCallback<T[N]>): void;
+        clear<N extends keyof T>(name: N): void;
+        fire<N extends keyof T>(name: N, event: T[N]): void;
+    }
 
     interface Options {
         host: string;
@@ -14,6 +22,10 @@ declare module "chrome-remote-interface" {
     interface Debugger {
         paused(cb: Cb<Protocol.Debugger.PausedEvent>): void;
         resumed(cb: Cb<undefined>): void;
+        scriptParsed(cb: Cb<Protocol.Debugger.ScriptParsedEvent>): void;
+        breakpointResolved(
+            cb: Cb<Protocol.Debugger.BreakpointResolvedEvent>,
+        ): void;
     }
     interface Runtime {
         executionContextCreated(

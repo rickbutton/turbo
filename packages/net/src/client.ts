@@ -7,21 +7,15 @@ import {
     LogEvent,
     Turbo,
     ObjectId,
-} from "@turbo/core";
-import {
     ResponsePayload,
     AnyMessage,
     isMessageType,
     AnyRequest,
     Response,
     RequestType,
-} from "./shared";
-import { BaseClient, BaseClientEvents, ClientOptions } from "./baseclient";
-
-interface ClientEvents extends BaseClientEvents {
-    sync: State;
-    quit: undefined;
-}
+    ClientEvents,
+} from "@turbo/core";
+import { BaseClient, ClientOptions } from "./baseclient";
 
 export class Client extends BaseClient<ClientEvents> {
     private lastState: State | null = null;
@@ -46,17 +40,10 @@ export class Client extends BaseClient<ClientEvents> {
         return this.lastState;
     }
 
-    public action(action: Action): void {
+    public dispatch(action: Action): void {
         this.sendMessage({
             type: "action",
             payload: action,
-        });
-    }
-
-    public async quit(): Promise<void> {
-        this.sendMessage({
-            type: "quit",
-            payload: undefined,
         });
     }
 
@@ -84,70 +71,6 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
-    public pause(): Promise<ResponsePayload<"pause">> {
-        return this.sendRequest({
-            type: "pause",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public resume(): Promise<ResponsePayload<"resume">> {
-        return this.sendRequest({
-            type: "resume",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public stepInto(): Promise<ResponsePayload<"stepInto">> {
-        return this.sendRequest({
-            type: "stepInto",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public stepOut(): Promise<ResponsePayload<"stepOut">> {
-        return this.sendRequest({
-            type: "stepOut",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public stepOver(): Promise<ResponsePayload<"stepOver">> {
-        return this.sendRequest({
-            type: "stepOver",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public start(): Promise<ResponsePayload<"start">> {
-        return this.sendRequest({
-            type: "start",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public stop(): Promise<ResponsePayload<"stop">> {
-        return this.sendRequest({
-            type: "stop",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
-    public restart(): Promise<ResponsePayload<"restart">> {
-        return this.sendRequest({
-            type: "restart",
-            id: this.generateRequestId(),
-            payload: undefined,
-        });
-    }
-
     public getScriptSource(
         scriptId: ScriptId,
     ): Promise<ResponsePayload<"getScriptSource">> {
@@ -162,8 +85,6 @@ export class Client extends BaseClient<ClientEvents> {
         if (isMessageType("sync", msg)) {
             this.lastState = msg.payload.state;
             this.fire("sync", msg.payload.state);
-        } else if (isMessageType("quit", msg)) {
-            this.fire("quit", undefined);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }

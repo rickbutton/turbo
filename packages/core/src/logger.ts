@@ -10,7 +10,20 @@ export interface LogEvent {
 interface LoggerEvents {
     log: LogEvent;
 }
-class Logger extends EmitterBase<LoggerEvents> {
+
+export interface Logger {
+    log(msg: string): void;
+}
+
+export interface LevelLogger {
+    error(msg: string): void;
+    warn(msg: string): void;
+    info(msg: string): void;
+    verbose(msg: string): void;
+    debug(msg: string): void;
+}
+
+class LoggerImpl extends EmitterBase<LoggerEvents> implements LevelLogger {
     public context = "";
 
     public error(msg: string): void {
@@ -30,7 +43,7 @@ class Logger extends EmitterBase<LoggerEvents> {
     }
 }
 
-export const logger = new Logger();
+export const logger = new LoggerImpl();
 
 export function format(log: LogEvent): string {
     switch (log.level) {

@@ -16,8 +16,6 @@ use yargs for repl help
 
 desired focus - on first launch
 
-move window focus to first turbo window when opening inside existing tmux
-
 show prompt for picking session when more than one is running
  
 components:

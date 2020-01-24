@@ -1,66 +1,168 @@
-import { EmitterBase } from "./emitter";
-import { logger } from "./logger";
-import { State, Action } from "./state";
+import { State, Action, Breakpoint } from "./state";
+import { createStore, applyMiddleware } from "redux";
+import createSagaMiddleware from "redux-saga";
+import { rootSaga } from "./sagas";
+import { logger, uuid, Server, Target } from ".";
 
-interface StateReducerEvents {
-    update: State;
+function pushed<T>(arr: T[], v: T): T[] {
+    return [...arr, v];
 }
-export class StateReducer extends EmitterBase<StateReducerEvents> {
-    public state: State;
-    constructor(state: State) {
-        super();
-        this.state = state;
-    }
 
-    public action(action: Action): void {
-        const state = this.reduce(action);
-        this.state = state;
+function isSameBreakLocation(a: Breakpoint, b: Breakpoint): boolean {
+    const aLine = a.verified ? a.location.line : a.line;
+    const aCol = a.verified ? a.location.column : a.column;
 
-        this.fire("update", state);
-    }
+    const bLine = b.verified ? b.location.line : b.line;
+    const bCol = b.verified ? b.location.column : b.column;
 
-    private reduce(action: Action): State {
-        const state = this.state;
+    return (
+        a.normalizedUrl === b.normalizedUrl && aLine === bLine && aCol === bCol
+    );
+}
 
-        if (action.type === "target-connect") {
+function unvalidateBreakpoints(breakpoints: Breakpoint[]): Breakpoint[] {
+    return breakpoints.filter(b =>
+        b.verified
+            ? {
+                  verified: false,
+                  url: b.url,
+                  normalizedUrl: b.url,
+                  condition: b.url,
+                  id: uuid(),
+                  line: b.location.line,
+                  column: b.location.column,
+              }
+            : b,
+    );
+}
+
+function reduce(
+    initialState: State,
+    state: State | undefined,
+    action: Action,
+): State {
+    if (!state) return initialState;
+
+    switch (action.type) {
+        case "connect":
             return {
                 ...state,
                 target: {
+                    ...state.target,
                     connected: true,
-                    runtime: { paused: false },
+                    paused: false,
+                    breakpointsEnabled: true,
+                    breakpoints: unvalidateBreakpoints(
+                        state.target.breakpoints,
+                    ),
+                    callFrames: undefined,
+                    scripts: [],
                 },
             };
-        } else if (action.type === "target-disconnect") {
+        case "disconnect":
             return {
                 ...state,
                 target: {
+                    ...state.target,
                     connected: false,
-                    runtime: { paused: false },
+                    paused: false,
+                    breakpoints: unvalidateBreakpoints(
+                        state.target.breakpoints,
+                    ),
+                    callFrames: undefined,
+                    scripts: [],
                 },
             };
-        } else if (action.type === "paused") {
+        case "paused":
             return {
                 ...state,
                 target: {
                     ...state.target,
-                    runtime: {
-                        paused: true,
-                        callFrames: action.callFrames,
-                    },
+                    paused: true,
+                    callFrames: action.callFrames,
                 },
             };
-        } else if (action.type === "resumed") {
+        case "resumed":
             return {
                 ...state,
                 target: {
                     ...state.target,
-                    runtime: {
-                        paused: false,
-                    },
+                    paused: false,
+                    callFrames: undefined,
                 },
             };
-        } else {
+        case "add-script":
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    scripts: pushed(state.target.scripts, action.script),
+                },
+            };
+        case "set-breakpoint":
+            const breakpoints = state.target.breakpoints;
+            const breakpoint = action.breakpoint;
+            const breakpointExists = breakpoints.some(b =>
+                isSameBreakLocation(breakpoint, b),
+            );
+
+            if (breakpointExists) return state;
+
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    breakpoints: pushed(state.target.breakpoints, breakpoint),
+                },
+            };
+        case "removed-unvb":
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    breakpoints: state.target.breakpoints.filter(
+                        b => b.verified === true || b.id !== action.id,
+                    ),
+                },
+            };
+        case "removed-vb":
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    breakpoints: state.target.breakpoints.filter(
+                        b => b.verified === false || b.id !== action.id,
+                    ),
+                },
+            };
+        case "set-b-enable":
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    breakpointsEnabled: action.enabled,
+                },
+            };
+        default:
             return state;
-        }
     }
+}
+
+export interface Store {
+    dispatch(action: Action): void;
+    subscribe(cb: () => void): () => void;
+    getState(): State;
+}
+
+export function makeStore(server: Server, target: Target, state: State): Store {
+    const sagaMiddleware = createSagaMiddleware();
+
+    const store = createStore(
+        reduce.bind(null, state),
+        applyMiddleware(sagaMiddleware),
+    );
+    sagaMiddleware.run(rootSaga, server, target);
+
+    // TODO: fix this cast?
+    return (store as unknown) as Store;
 }

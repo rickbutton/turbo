@@ -151,6 +151,7 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
             "conch",
             ";",
             "new-window",
+            "-a",
             "-n",
             "id:test4",
             "echo 'foo'",

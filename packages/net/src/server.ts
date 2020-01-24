@@ -7,43 +7,30 @@ import {
     Action,
     logger,
     Turbo,
+    ClientId,
+    Server,
+    ServerEvents,
 } from "@turbo/core";
-import { ClientId, MessagePayload } from "./shared";
 import { JsonSocket } from "./jsonsocket";
-import { ServerConnection, ServerRequestHandler } from "./serverconnection";
+import { SocketServerConnection } from "./serverconnection";
 
-interface ServerEvents {
-    ready: void;
-    log: MessagePayload<"log">;
-    action: Action;
-    quit: void;
-    connected: ServerConnection;
-    disconnected: ServerConnection;
-}
-
-export class Server extends EmitterBase<ServerEvents> {
+export class SocketServer extends EmitterBase<ServerEvents> implements Server {
     private turbo: Turbo;
     private lastClientId: ClientId = 0 as ClientId;
     private socketPath: string;
     private sessionId: SessionId;
     private server: net.Server = this.createServer();
-    private connections: Set<ServerConnection> = new Set();
-    private handler: ServerRequestHandler;
+    private connections: Set<SocketServerConnection> = new Set();
 
     get numConnections(): number {
         return this.connections.size;
     }
 
-    constructor(
-        turbo: Turbo,
-        sessionId: SessionId,
-        handler: ServerRequestHandler,
-    ) {
+    constructor(turbo: Turbo, sessionId: SessionId) {
         super();
         this.turbo = turbo;
         this.socketPath = turbo.env.getTmpFile("sessions", sessionId);
         this.sessionId = sessionId;
-        this.handler = handler;
 
         process.on("exit", () => {
             this.server.close();
@@ -66,12 +53,6 @@ export class Server extends EmitterBase<ServerEvents> {
     public broadcastState(state: State): void {
         for (const c of this.connections) {
             c.sendState(state);
-        }
-    }
-
-    public broadcastQuit(): void {
-        for (const c of this.connections) {
-            c.sendQuit();
         }
     }
 
@@ -109,12 +90,11 @@ export class Server extends EmitterBase<ServerEvents> {
 
         this.lastClientId = (this.lastClientId + 1) as ClientId;
 
-        const client = new ServerConnection(
+        const client = new SocketServerConnection(
             this.turbo,
             this.lastClientId,
             this.sessionId,
             socket,
-            this.handler,
         );
         logger.info(`client:${client.id} connected`);
 
@@ -129,9 +109,7 @@ export class Server extends EmitterBase<ServerEvents> {
         client.on("log", log => {
             this.fire("log", log);
         });
-        client.on("quit", () => {
-            this.fire("quit", undefined);
-        });
+        client.on("request", event => this.fire("request", event));
 
         this.connections.add(client);
         this.fire("connected", client);

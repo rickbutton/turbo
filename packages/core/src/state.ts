@@ -12,7 +12,50 @@ declare const __ObjectIdSymbol: unique symbol;
 export type ObjectId = string & {
     readonly __tag: typeof __ObjectIdSymbol;
 };
+declare const __BreakpointIdSymbol: unique symbol;
+export type BreakpointId = string & {
+    readonly __tag: typeof __BreakpointIdSymbol;
+};
+declare const __UnverifiedBreakpointIdSymbol: unique symbol;
+export type UnverifiedBreakpointId = string & {
+    readonly __tag: typeof __UnverifiedBreakpointIdSymbol;
+};
 
+export interface VerifiedBreakpoint {
+    verified: true;
+    url: string;
+    normalizedUrl: string;
+    condition?: string;
+
+    id: BreakpointId;
+    location: SourceLocation;
+}
+export interface UnverifiedBreakpoint {
+    verified: false;
+    url: string;
+    normalizedUrl: string;
+    condition?: string;
+
+    id: UnverifiedBreakpointId;
+    line: number;
+    column?: number;
+}
+export type Breakpoint = VerifiedBreakpoint | UnverifiedBreakpoint;
+
+export interface Script {
+    id: ScriptId;
+    url: string;
+    startLine: number;
+    startColumn: number;
+    endLine: number;
+    endColumn: number;
+    hash: string;
+    isLiveEdit?: boolean;
+    sourceMapUrl?: string;
+    hasSourceUrl?: boolean;
+    isModule?: boolean;
+    length?: number;
+}
 export interface SourceLocation {
     scriptId: ScriptId;
     line: number;
@@ -22,6 +65,12 @@ export interface CallFrame {
     id: CallFrameId;
     functionName: string;
     location: SourceLocation;
+}
+export interface BreakLocation {
+    scriptId: ScriptId;
+    line: number;
+    column?: number;
+    type?: "debuggerStatement" | "call" | "return";
 }
 
 interface StringRemoteObject {
@@ -99,46 +148,71 @@ export interface PausedEvent {
     callFrames: CallFrame[];
 }
 
+export interface ScriptParsedEvent {
+    script: Script;
+}
+
+export interface BreakpointResolvedEvent {
+    breakpoint: VerifiedBreakpoint;
+}
+
+export interface BreakpointsEnabledUpdatedEvent {
+    enabled: boolean;
+}
+
 export interface TargetConnectionEvents {
     close: void;
 
     paused: PausedEvent;
     resumed: void;
+    scriptParsed: ScriptParsedEvent;
+    breakpointResolved: BreakpointResolvedEvent;
 }
 
 export type EvalResponse =
     | { error: false; value: RemoteObject }
     | { error: true; value: RemoteException | string };
-
 export type GetPropertiesResponse =
     | { error: false; value: RemoteObjectProperty[] }
     | { error: true; value: RemoteException | string };
 
 export interface TargetConnection extends Emitter<TargetConnectionEvents> {
+    readonly breakpointsEnabled: boolean;
+
     enable(): Promise<void>;
     close(): Promise<void>;
     eval(script: string, id: CallFrameId): Promise<EvalResponse>;
     getProperties(objectId: ObjectId): Promise<GetPropertiesResponse>;
+
     pause(): Promise<void>;
     resume(): Promise<void>;
     stepInto(): Promise<void>;
     stepOut(): Promise<void>;
     stepOver(): Promise<void>;
-    getScriptSource(scriptId: ScriptId): Promise<string>;
+    setBreakpoint(location: SourceLocation, condition?: string): Promise<void>;
+    removeBreakpoint(id: BreakpointId): Promise<void>;
+    enableBreakpoints(): Promise<void>;
+    disableBreakpoints(): Promise<void>;
+
+    getPossibleBreakpointLocations(id: ScriptId): Promise<BreakLocation[]>;
+    getScriptSource(id: ScriptId): Promise<string>;
 }
 
-interface TargetRuntimePaused {
+interface BaseTargetDescriptor {
+    connected: boolean;
+    breakpoints: Breakpoint[];
+    breakpointsEnabled: boolean;
+    scripts: Script[];
+}
+interface PausedTargetDescriptor {
     paused: true;
     callFrames: CallFrame[];
 }
-interface TargetRuntimeRunning {
+interface RunningTargetDescriptor {
     paused: false;
+    callFrames: undefined;
 }
-type TargetRuntime = TargetRuntimePaused | TargetRuntimeRunning;
-interface TargetDescriptor {
-    connected: boolean;
-    runtime: TargetRuntime;
-}
+type TargetDescriptor = PausedTargetDescriptor | RunningTargetDescriptor;
 
 interface LogStreamState {
     turboSocket: string;
@@ -146,27 +220,97 @@ interface LogStreamState {
 }
 
 export interface State {
-    target: TargetDescriptor;
+    target: TargetDescriptor & BaseTargetDescriptor;
     logStream: LogStreamState;
 }
 
+export interface EmptyAction<T extends string> {
+    type: T;
+}
+
+type EmptyRequestAction<R extends string, F extends string> =
+    | EmptyAction<R>
+    | EmptyAction<F>;
+
 export interface TargetConnectedAction {
-    type: "target-connect";
+    type: "connect";
 }
 export interface TargetDisconnectedAction {
-    type: "target-disconnect";
+    type: "disconnect";
 }
-export interface TargetPausedAction {
+
+export type PausedRequestedAction = EmptyAction<"pause">;
+export interface PausedAction {
     type: "paused";
     callFrames: CallFrame[];
 }
-export interface TargetResumedAction {
-    type: "resumed";
+export type StartAction = EmptyRequestAction<"start", "started">;
+export type RestartAction = EmptyAction<"restart">;
+export type StopAction = EmptyRequestAction<"stop", "stopped">;
+export type ResumeAction = EmptyRequestAction<"resume", "resumed">;
+export type StepIntoAction = EmptyAction<"stepInto">;
+export type StepOutAction = EmptyAction<"stepOut">;
+export type StepOverAction = EmptyAction<"stepOver">;
+
+export interface AddScriptAction {
+    type: "add-script";
+    script: Script;
+}
+export interface SetBreakpointAction {
+    type: "set-breakpoint";
+    breakpoint: UnverifiedBreakpoint;
+}
+export interface VerifyBreakpointAction {
+    type: "verify-breakpoint";
+    breakpoint: VerifiedBreakpoint;
+}
+export interface RemoveVerifiedBreakpointRequestAction {
+    type: "remove-vb-request";
+    id: BreakpointId;
+}
+export interface RemovedVerifiedBreakpointAction {
+    type: "removed-vb";
+    id: BreakpointId;
+}
+export interface RemoveUnverifiedBreakpointRequestAction {
+    type: "remove-unvb-request";
+    id: UnverifiedBreakpointId;
+}
+export interface RemovedUnverifiedBreakpointAction {
+    type: "removed-unvb";
+    id: UnverifiedBreakpointId;
+}
+
+export interface SetBreakpointsEnabledRequestAction {
+    type: "set-b-enable-request";
+    enabled: boolean;
+}
+export interface SetBreakpointsEnabledAction {
+    type: "set-b-enable";
+    enabled: boolean;
 }
 
 export type Action =
     | TargetConnectedAction
     | TargetDisconnectedAction
-    | TargetPausedAction
-    | TargetResumedAction;
+    | PausedRequestedAction
+    | StartAction
+    | StopAction
+    | RestartAction
+    | PausedAction
+    | ResumeAction
+    | StepIntoAction
+    | StepOutAction
+    | StepOverAction
+    | AddScriptAction
+    | SetBreakpointAction
+    | VerifyBreakpointAction
+    | RemoveVerifiedBreakpointRequestAction
+    | RemovedVerifiedBreakpointAction
+    | RemoveUnverifiedBreakpointRequestAction
+    | RemovedUnverifiedBreakpointAction
+    | SetBreakpointsEnabledRequestAction
+    | SetBreakpointsEnabledAction;
+
 export type ActionType = Action["type"];
+export type ActionByType<T extends ActionType> = Action & { type: T };

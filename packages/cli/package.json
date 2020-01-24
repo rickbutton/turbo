@@ -34,7 +34,6 @@
     "@types/yoga-layout": "^1.9.1",
     "chrome-remote-interface": "^0.28.1",
     "cli-highlight": "^2.1.4",
-    "devtools-protocol": "^0.0.724935",
     "ffi": "github:lxe/node-ffi#node-12",
     "react": "^16.12.0",
     "react-reconciler": "^0.24.0",

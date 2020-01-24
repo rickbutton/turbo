@@ -2,6 +2,7 @@ import ChromeRemoteInterface from "chrome-remote-interface";
 import { Client, Protocol, Factory } from "chrome-remote-interface";
 import {
     logger,
+    canonicalizeUrl,
     TargetConnection,
     TargetConnectionEvents,
     EmitterBase,
@@ -14,19 +15,59 @@ import {
     RemoteException,
     EvalResponse,
     GetPropertiesResponse,
-} from "@turbo/core";
+    SourceLocation,
+    BreakpointId,
+    BreakLocation,
+    Script,
+    Breakpoint,
+    UnverifiedBreakpoint,
+} from "./index";
 
 const CDP = (ChromeRemoteInterface as unknown) as Factory;
+
+function toSourceLocation(
+    location: Protocol.Debugger.Location,
+): SourceLocation {
+    return {
+        scriptId: location.scriptId as ScriptId,
+        line: location.lineNumber,
+        column: location.columnNumber,
+    };
+}
+
+function toBreakLocation(
+    location: Protocol.Debugger.BreakLocation,
+): BreakLocation {
+    return {
+        scriptId: location.scriptId as ScriptId,
+        line: location.lineNumber,
+        column: location.columnNumber,
+        type: location.type,
+    };
+}
+
+function toScript(script: Protocol.Debugger.ScriptParsedEvent): Script {
+    return {
+        id: script.scriptId as ScriptId,
+        url: canonicalizeUrl(script.url),
+        startLine: script.startLine,
+        startColumn: script.startColumn,
+        endLine: script.endLine,
+        endColumn: script.endColumn,
+        hash: script.hash,
+        isLiveEdit: script.isLiveEdit,
+        sourceMapUrl: script.sourceMapURL,
+        hasSourceUrl: script.hasSourceURL,
+        isModule: script.isModule,
+        length: script.length,
+    };
+}
 
 function toCallFrame(callFrame: Protocol.Debugger.CallFrame): CallFrame {
     return {
         id: callFrame.callFrameId as CallFrameId,
         functionName: callFrame.functionName,
-        location: {
-            scriptId: callFrame.location.scriptId as ScriptId,
-            line: callFrame.location.lineNumber,
-            column: callFrame.location.columnNumber,
-        },
+        location: toSourceLocation(callFrame.location),
     };
 }
 
@@ -104,17 +145,26 @@ function toRemoteException(
     };
 }
 
-class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
+class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
+    implements TargetConnection {
     private client: Client;
+    private initialBreaks: UnverifiedBreakpoint[];
 
     private callFrames: Protocol.Debugger.CallFrame[] | null = null;
+    private lastConditions: Map<BreakpointId, string | undefined> = new Map();
 
     private enabled = false;
     private needsResume = false;
+    private _breakpointsEnabled = false;
 
-    constructor(client: Client) {
+    public get breakpointsEnabled(): boolean {
+        return this._breakpointsEnabled;
+    }
+
+    constructor(client: Client, initialBreaks: UnverifiedBreakpoint[] = []) {
         super();
         this.client = client;
+        this.initialBreaks = initialBreaks;
     }
 
     public async setup(): Promise<void> {
@@ -151,11 +201,33 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
         });
         this.client.Debugger.resumed(() => {
             this.callFrames = null;
+            this.fire("resumed", undefined);
         });
+        this.client.Debugger.scriptParsed(event => {
+            const script = toScript(event);
+            this.fire("scriptParsed", { script });
+        });
+        this.client.Debugger.breakpointResolved(event => {
+            const id = event.breakpointId as BreakpointId;
+            const breakpoint: Breakpoint = {
+                verified: true,
+                location: toSourceLocation(event.location),
+                id,
+                condition: this.lastConditions.get(id),
+                url: "",
+                normalizedUrl: "",
+            };
+
+            this.fire("breakpointResolved", { breakpoint });
+        });
+
+        // TODO: set breakpoints
     }
 
     public async enable(): Promise<void> {
         await this.client.Debugger.enable({});
+        await this.client.Debugger.setBreakpointsActive({ active: true });
+        this._breakpointsEnabled = false;
         await this.client.Runtime.runIfWaitingForDebugger();
         this.enabled = true;
         if (this.needsResume) {
@@ -194,6 +266,46 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents> {
         if (this.callFrames) {
             await this.client.Debugger.stepOver();
         }
+    }
+    async setBreakpoint(
+        location: SourceLocation,
+        condition?: string,
+    ): Promise<void> {
+        logger.debug("v8 setBreakpoint");
+        const { breakpointId } = await this.client.Debugger.setBreakpoint({
+            location: {
+                scriptId: location.scriptId,
+                lineNumber: location.line,
+                columnNumber: location.column,
+            },
+            condition,
+        });
+        this.lastConditions.set(breakpointId as BreakpointId, condition);
+    }
+    async removeBreakpoint(id: BreakpointId): Promise<void> {
+        await this.client.Debugger.removeBreakpoint({ breakpointId: id });
+    }
+    async enableBreakpoints(): Promise<void> {
+        await this.client.Debugger.setBreakpointsActive({ active: true });
+        this._breakpointsEnabled = true;
+    }
+    async disableBreakpoints(): Promise<void> {
+        await this.client.Debugger.setBreakpointsActive({ active: false });
+        this._breakpointsEnabled = false;
+    }
+    async getPossibleBreakpointLocations(
+        id: ScriptId,
+    ): Promise<BreakLocation[]> {
+        const { locations } = await this.client.Debugger.getPossibleBreakpoints(
+            {
+                start: {
+                    scriptId: id,
+                    lineNumber: 0,
+                },
+            },
+        );
+
+        return locations.map(l => toBreakLocation(l));
     }
 
     async eval(script: string, id: CallFrameId): Promise<EvalResponse> {
@@ -270,8 +382,12 @@ export async function connect(
     host: string,
     port: number,
 ): Promise<TargetConnection> {
+    logger.verbose("connecting cdp");
     const client = await CDP({ host, port });
+    logger.verbose("connected to cdp");
     const conn = new V8TargetConnection(client);
+    logger.verbose("waiting for cdp setup");
     await conn.setup();
+    logger.verbose("cdp is setup");
     return conn;
 }

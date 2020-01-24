@@ -97,6 +97,23 @@ const COMMANDS: CommandObject[] = [
     { type: "eval", alts: ["e"] },
 ];
 
+const SIMPLE_RUNTIME_COMMANDS = [
+    "start",
+    "stop",
+    "restart",
+    "pause",
+    "resume",
+    "stepInto",
+    "stepOver",
+    "stepOut",
+] as const;
+type SimpleRuntimeCommand = typeof SIMPLE_RUNTIME_COMMANDS[number];
+function isSimpleRuntimeCommand(
+    type: Command["type"],
+): type is SimpleRuntimeCommand {
+    return SIMPLE_RUNTIME_COMMANDS.includes(type as any);
+}
+
 function escapeRegExp(str: string): string {
     return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
 }
@@ -150,7 +167,7 @@ async function handle(
     if (!state) {
         return null;
     }
-    const runtime = state.target.runtime;
+    const target = state.target;
     const trimmed = input.trim();
 
     const cmd = parse(trimmed);
@@ -160,29 +177,21 @@ async function handle(
     } else if (cmd.type === "error") {
         return <Box color="red">unable to parse command ${input}</Box>;
     } else if (cmd.type == "quit") {
-        return client.quit().then(() => null);
-    } else if (cmd.type == "start") {
-        return client.start().then(() => null);
-    } else if (cmd.type == "stop") {
-        return client.stop().then(() => null);
-    } else if (cmd.type == "restart") {
-        return client.restart().then(() => null);
-    } else if (cmd.type == "pause") {
-        return client.pause().then(() => null);
-    } else if (cmd.type === "resume") {
-        return client.resume().then(() => null);
-    } else if (cmd.type === "stepInto") {
-        return client.stepInto().then(() => null);
-    } else if (cmd.type === "stepOver") {
-        return client.stepOver().then(() => null);
-    } else if (cmd.type === "stepOut") {
-        return client.stepOut().then(() => null);
+        return (
+            <Box color="red" wrap={true}>
+                I removed the quit option during a refactor and haven&apos;t put
+                it back yet!
+            </Box>
+        );
+    } else if (isSimpleRuntimeCommand(cmd.type)) {
+        client.dispatch({ type: cmd.type });
     } else if (cmd.type === "backtrace") {
+        // TODO
         return null;
-    } else if (!runtime.paused) {
+    } else if (!target.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
-        const topCallFrame = runtime.callFrames[0];
+        const topCallFrame = target.callFrames[0];
 
         return client
             .eval(cmd.args, topCallFrame.id)
@@ -191,6 +200,8 @@ async function handle(
                 return <span>`eval error: ${error}`</span>;
             });
     }
+
+    return null;
 }
 
 export function Repl(): JSX.Element {

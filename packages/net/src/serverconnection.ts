@@ -1,47 +1,28 @@
-import { Action, SessionId, State, logger, LogEvent, Turbo } from "@turbo/core";
 import {
+    SessionId,
+    State,
+    logger,
+    Turbo,
     ClientId,
     AnyMessage,
     isMessageType,
     AnyRequest,
     Response,
-    RequestType,
-    isRequestType,
-    Request,
-    ResponsePayload,
-} from "./shared";
-import { BaseClient, BaseClientEvents, ClientSocket } from "./baseclient";
+    isServerRequestType,
+    ServerConnectionEvents,
+    ServerConnection,
+    ServerRequestType,
+} from "@turbo/core";
+import { BaseClient, ClientSocket } from "./baseclient";
 
-export type RequestHandler<T extends RequestType> = (
-    req: Request<T>,
-) => Promise<ResponsePayload<T>>;
-export interface ServerRequestHandler {
-    eval: RequestHandler<"eval">;
-    getProperties: RequestHandler<"getProperties">;
-    pause: RequestHandler<"pause">;
-    resume: RequestHandler<"resume">;
-    stepInto: RequestHandler<"stepInto">;
-    stepOut: RequestHandler<"stepOut">;
-    stepOver: RequestHandler<"stepOver">;
-    start: RequestHandler<"start">;
-    stop: RequestHandler<"stop">;
-    restart: RequestHandler<"restart">;
-    getScriptSource: RequestHandler<"getScriptSource">;
-}
-interface ConnectionEvents extends BaseClientEvents {
-    action: Action;
-    log: LogEvent;
-    quit: undefined;
-}
-export class ServerConnection extends BaseClient<ConnectionEvents> {
+export class SocketServerConnection extends BaseClient<ServerConnectionEvents>
+    implements ServerConnection {
     public readonly id: ClientId;
-    private handler: ServerRequestHandler;
     constructor(
         turbo: Turbo,
         id: ClientId,
         sessionId: SessionId,
         socket: ClientSocket,
-        handler: ServerRequestHandler,
     ) {
         super(turbo, {
             type: "unmanaged",
@@ -51,7 +32,6 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
             reconnect: false,
         });
         this.id = id;
-        this.handler = handler;
     }
 
     public sendState(state: State): void {
@@ -63,51 +43,24 @@ export class ServerConnection extends BaseClient<ConnectionEvents> {
         });
     }
 
-    public sendQuit(): void {
-        this.sendMessage({
-            type: "quit",
-            payload: undefined,
-        });
-    }
-
     protected handleUnhandledMessage(msg: AnyMessage): void {
         if (isMessageType("action", msg)) {
             this.fire("action", msg.payload);
         } else if (isMessageType("log", msg)) {
             this.fire("log", msg.payload);
-        } else if (isMessageType("quit", msg)) {
-            this.fire("quit", undefined);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }
     }
     protected handleUnhandledRequest(
-        req: AnyRequest,
-    ): Promise<Response<RequestType>["payload"] | undefined> {
-        if (isRequestType("eval", req)) {
-            return this.handler.eval(req);
-        } else if (isRequestType("getProperties", req)) {
-            return this.handler.getProperties(req);
-        } else if (isRequestType("pause", req)) {
-            return this.handler.pause(req);
-        } else if (isRequestType("resume", req)) {
-            return this.handler.resume(req);
-        } else if (isRequestType("stepInto", req)) {
-            return this.handler.stepInto(req);
-        } else if (isRequestType("stepOut", req)) {
-            return this.handler.stepOut(req);
-        } else if (isRequestType("stepOver", req)) {
-            return this.handler.stepOver(req);
-        } else if (isRequestType("getScriptSource", req)) {
-            return this.handler.getScriptSource(req);
-        } else if (isRequestType("start", req)) {
-            return this.handler.start(req);
-        } else if (isRequestType("stop", req)) {
-            return this.handler.stop(req);
-        } else if (isRequestType("restart", req)) {
-            return this.handler.restart(req);
+        request: AnyRequest,
+    ): Promise<Response<ServerRequestType>["payload"] | undefined> {
+        if (isServerRequestType(request)) {
+            return new Promise(resolve =>
+                this.fire("request", { request, respond: resolve }),
+            );
         } else {
-            logger.error(`unhandled request with type ${req.type}`);
+            logger.error(`unhandled request with type ${request.type}`);
             return Promise.resolve(undefined);
         }
     }

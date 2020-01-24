@@ -1,6 +1,10 @@
 import net from "net";
-import { logger, SessionId, EmitterBase, uuid, Turbo } from "@turbo/core";
 import {
+    logger,
+    SessionId,
+    EmitterBase,
+    uuid,
+    Turbo,
     RequestId,
     RequestHandle,
     Response,
@@ -13,7 +17,8 @@ import {
     isRequest,
     isResponse,
     isRequestType,
-} from "./shared";
+    ClientEvents,
+} from "@turbo/core";
 import { JsonSocket } from "./jsonsocket";
 
 const RESPONSE_TIMEOUT = 5000;
@@ -35,11 +40,6 @@ export interface ClientSocket {
     ): void;
 }
 
-export interface BaseClientEvents {
-    close: void;
-    ready: void;
-}
-
 interface UnmanagedClientOptions {
     type: "unmanaged";
     sessionId: SessionId;
@@ -57,7 +57,7 @@ export type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
 const MAX_RETRIES = 5;
 
 export abstract class BaseClient<
-    T extends BaseClientEvents = BaseClientEvents
+    T extends ClientEvents = ClientEvents
 > extends EmitterBase<T> {
     private socketPath: string;
     private sessionId: SessionId;

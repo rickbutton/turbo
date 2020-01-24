@@ -1,7 +1,6 @@
 import { Client } from "./client";
 import { mockSocket } from "./mocksocket";
-import { Message } from "./shared";
-import { SessionId } from "@turbo/core";
+import { SessionId, Message } from "@turbo/core";
 import { TEST_TURBO } from "./mocks";
 
 function exampleSyncMessage(): Message<"sync"> {
@@ -9,7 +8,14 @@ function exampleSyncMessage(): Message<"sync"> {
         type: "sync",
         payload: {
             state: {
-                target: { connected: false, runtime: { paused: false } },
+                target: {
+                    connected: false,
+                    paused: false,
+                    callFrames: undefined,
+                    scripts: [],
+                    breakpoints: [],
+                    breakpointsEnabled: false,
+                },
                 logStream: {
                     turboSocket: "",
                     targetSocket: "",
