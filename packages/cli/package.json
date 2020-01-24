@@ -17,13 +17,12 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "@types/node": "^12.12.5",
-    "typescript": "^3.6.4"
+    "@types/node": "^12.12.5"
   },
   "dependencies": {
-    "@turbo/core": "^1.0.0",
-    "@turbo/net": "^1.0.0",
-    "@turbo/tmux": "^1.0.0",
+    "@turbo/core": "^0.0.1",
+    "@turbo/net": "^0.0.1",
+    "@turbo/tmux": "^0.0.1",
     "@types/ffi": "^0.2.2",
     "@types/react": "^16.9.16",
     "@types/react-reconciler": "^0.18.0",

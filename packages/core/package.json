@@ -13,9 +13,6 @@
     "compile-watch": "tsc -w -b tsconfig.build.json",
     "prepublishOnly": "npm run build"
   },
-  "devDependencies": {
-    "typescript": "^3.6.4"
-  },
   "dependencies": {
     "@types/redux": "^3.6.0",
     "@types/redux-saga": "^0.10.5",
