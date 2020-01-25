@@ -17,9 +17,17 @@ use yargs for repl help
 desired focus - on first launch
 
 show prompt for picking session when more than one is running
+
+dturbo - run dev version of turbo
+    - another npm package
+    - dturbo link
+        - points a config file at cwd (the turbo dev folder)
+    - dturbo -- the rest
  
 components:
     layout components? - tabs/draggable splitters?
     stack trace - add "focus" to state
     break points
     watchers?
+
+vim plugin

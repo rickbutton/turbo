@@ -47,6 +47,10 @@ export class Client extends BaseClient<ClientEvents> {
         });
     }
 
+    public quit(): void {
+        this.sendMessage({ type: "quit", payload: undefined });
+    }
+
     public eval(
         value: string,
         id: CallFrameId,

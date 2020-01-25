@@ -37,6 +37,7 @@ function createEnv(inTmux = false): Environment {
         execSync: jest.fn().mockReturnValueOnce("sessionid"),
         nodePath: "/tmp/node",
         scriptPath: "/tmp/turbo.js",
+        exit: jest.fn(),
     };
 }
 

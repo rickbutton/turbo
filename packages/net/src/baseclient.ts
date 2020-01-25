@@ -151,6 +151,8 @@ export abstract class BaseClient<
             }); // TODO: return error response
         } else if (isResponse(msg)) {
             this.handleInboundResponse(msg.payload);
+        } else if (msg.type === "quit") {
+            this.fire("quit", undefined);
         } else {
             this.handleUnhandledMessage(msg);
         }

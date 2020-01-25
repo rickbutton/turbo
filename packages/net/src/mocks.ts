@@ -27,6 +27,7 @@ const TEST_ENV: Environment = {
     },
     nodePath: "/tmp/node",
     scriptPath: "/tmp/turbo.js",
+    exit: jest.fn(),
 };
 const TEST_CONFIG: Config = {
     target: {} as TargetFactory,

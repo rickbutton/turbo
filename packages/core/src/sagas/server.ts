@@ -58,7 +58,7 @@ function setupServer(
                         logger.error(
                             "closing daemon because all clients disconnected",
                         );
-                        emit(END);
+                        onQuit();
                     }
                 }, 5000); // TODO: don't hardcode
             });
@@ -66,17 +66,25 @@ function setupServer(
         function onRequest(req: RequestEvent<ServerRequestType>): void {
             requestChannel.put(req);
         }
+        function onQuit(): void {
+            server.broadcastQuit();
+            emit(END);
+        }
+
         server.on("action", onAction);
         server.on("connected", onConnection);
         server.on("request", onRequest);
+        server.on("quit", onQuit);
 
         server.start();
         return () => {
             server.off("action", onAction);
             server.off("connected", onConnection);
             server.off("request", onRequest);
+            server.off("quit", onQuit);
 
             connectionChannel.put(END);
+            requestChannel.put(END);
             logger.verbose("server is being destroyed");
             server.stop();
         };

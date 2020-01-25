@@ -177,12 +177,7 @@ async function handle(
     } else if (cmd.type === "error") {
         return <Box color="red">unable to parse command ${input}</Box>;
     } else if (cmd.type == "quit") {
-        return (
-            <Box color="red" wrap={true}>
-                I removed the quit option during a refactor and haven&apos;t put
-                it back yet!
-            </Box>
-        );
+        client.quit();
     } else if (isSimpleRuntimeCommand(cmd.type)) {
         client.dispatch({ type: cmd.type });
     } else if (cmd.type === "backtrace") {

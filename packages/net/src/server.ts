@@ -56,6 +56,12 @@ export class SocketServer extends EmitterBase<ServerEvents> implements Server {
         }
     }
 
+    public broadcastQuit(): void {
+        for (const c of this.connections) {
+            c.sendQuit();
+        }
+    }
+
     private createServer(): net.Server {
         const server = net.createServer();
 
@@ -109,6 +115,7 @@ export class SocketServer extends EmitterBase<ServerEvents> implements Server {
         client.on("log", log => {
             this.fire("log", log);
         });
+        client.on("quit", () => this.fire("quit", undefined));
         client.on("request", event => this.fire("request", event));
 
         this.connections.add(client);

@@ -101,6 +101,7 @@ interface MessageSchema {
     action: Action;
     req: AnyRequest;
     res: AnyResponse;
+    quit: void;
 }
 type MessageType = keyof MessageSchema;
 export interface Message<T extends MessageType> {
@@ -133,7 +134,7 @@ export interface ClientEvents {
     close: void;
     ready: void;
     sync: State;
-    quit: undefined;
+    quit: void;
 }
 
 export interface RequestEvent<T extends RequestType> {
@@ -166,6 +167,7 @@ export interface ServerConnectionEvents extends ClientEvents {
 export interface ServerConnection extends Emitter<ServerConnectionEvents> {
     id: ClientId;
     sendState(state: State): void;
+    sendQuit(): void;
 }
 
 export interface ServerEvents {
@@ -175,10 +177,12 @@ export interface ServerEvents {
     connected: ServerConnection;
     disconnected: ServerConnection;
     request: RequestEvent<ServerRequestType>;
+    quit: void;
 }
 export interface Server extends Emitter<ServerEvents> {
     start(): void;
     stop(): void;
     broadcastState(state: State): void;
+    broadcastQuit(): void;
     numConnections: number;
 }

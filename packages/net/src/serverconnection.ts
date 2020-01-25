@@ -43,11 +43,20 @@ export class SocketServerConnection extends BaseClient<ServerConnectionEvents>
         });
     }
 
+    public sendQuit(): void {
+        this.sendMessage({
+            type: "quit",
+            payload: undefined,
+        });
+    }
+
     protected handleUnhandledMessage(msg: AnyMessage): void {
         if (isMessageType("action", msg)) {
             this.fire("action", msg.payload);
         } else if (isMessageType("log", msg)) {
             this.fire("log", msg.payload);
+        } else if (isMessageType("quit", msg)) {
+            this.fire("quit", undefined);
         } else {
             logger.error(`unhandled message with type ${msg.type}`);
         }

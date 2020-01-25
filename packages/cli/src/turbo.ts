@@ -38,6 +38,10 @@ function getAllSessionIds(): SessionId[] {
     return files.map(f => path.basename(f) as SessionId);
 }
 
+function exit(): void {
+    process.exit(0);
+}
+
 function getEnvironment(): Environment {
     const nodePath = process.argv[0];
     const scriptPath = process.argv[1];
@@ -49,6 +53,7 @@ function getEnvironment(): Environment {
         getTmpFolder,
         getTmpFile,
         getAllSessionIds,
+        exit,
     };
 }
 

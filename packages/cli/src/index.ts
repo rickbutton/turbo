@@ -10,6 +10,7 @@ import { component } from "./commands/component";
 import { evaluate } from "./commands/eval";
 import { daemon } from "./commands/daemon";
 import { ls } from "./commands/ls";
+import { kill } from "./commands/kill";
 import { LOGO, TurboOptions, Turbo } from "@turbo/core";
 import { getTurbo } from "./turbo";
 
@@ -55,6 +56,10 @@ yargs
     .command(["ls"], "list all running sessions", {}, argv => {
         const turbo = makeTurbo(argv);
         return ls(turbo);
+    })
+    .command(["kill"], "kill a turbo session", {}, argv => {
+        const turbo = makeTurbo(argv);
+        return kill(turbo);
     })
     .command("daemon", "start a turbo daemon", {}, argv => {
         const turbo = makeTurbo(argv);

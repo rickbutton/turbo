@@ -20,6 +20,7 @@ export interface Environment {
     readonly getTmpFolder: (context: string) => string;
     readonly getTmpFile: (context: string, name: string) => string;
     readonly getAllSessionIds: () => SessionId[];
+    readonly exit: () => void;
 }
 
 export interface Layout {
