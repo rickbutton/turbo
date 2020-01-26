@@ -29,32 +29,36 @@ const COMMANDS = [
     { type: "stepInto", alts: ["i", "stepi"] },
     { type: "stepOver", alts: ["n", "step", "stepOver"] },
     { type: "stepOut", alts: ["finish", "f"] },
-    { type: "backtrace", alts: ["bt"] },
+    { type: "stack", alts: ["backtrace", "bt"] },
     { type: "break", alts: ["b"] },
     { type: "unbreak", alts: ["ub"] },
     { type: "breaks", alts: ["bs"] },
     { type: "eval", alts: ["e"] },
+    { type: "up", alts: [] },
+    { type: "down", alts: [] },
 ] as const;
 interface Command {
     type: typeof COMMANDS[number]["type"];
     args: string;
 }
 
-const SIMPLE_RUNTIME_COMMANDS = [
-    "start",
-    "stop",
-    "restart",
-    "pause",
-    "resume",
-    "stepInto",
-    "stepOver",
-    "stepOut",
-] as const;
-type SimpleRuntimeCommand = typeof SIMPLE_RUNTIME_COMMANDS[number];
+const SIMPLE_RUNTIME_COMMANDS = {
+    start: "start",
+    stop: "stop",
+    restart: "restart",
+    pause: "pause",
+    resume: "resume",
+    stepInto: "stepInto",
+    stepOver: "stepOver",
+    stepOut: "stepOut",
+    up: "focus-up",
+    down: "focus-down",
+} as const;
+type SimpleRuntimeCommand = keyof typeof SIMPLE_RUNTIME_COMMANDS;
 function isSimpleRuntimeCommand(
     type: Command["type"],
 ): type is SimpleRuntimeCommand {
-    return SIMPLE_RUNTIME_COMMANDS.includes(type as any);
+    return Object.keys(SIMPLE_RUNTIME_COMMANDS).includes(type as any);
 }
 
 function escapeRegExp(str: string): string {
@@ -131,13 +135,41 @@ async function handle(
     } else if (cmd.type == "quit") {
         client.quit();
     } else if (isSimpleRuntimeCommand(cmd.type)) {
-        client.dispatch({ type: cmd.type });
-    } else if (cmd.type === "backtrace") {
-        // TODO
-        return null;
+        client.dispatch({ type: SIMPLE_RUNTIME_COMMANDS[cmd.type] });
+    } else if (cmd.type === "stack") {
+        if (state.target.paused) {
+            return (
+                <Box direction="column">
+                    {state.target.callFrames.map((f, i) => {
+                        const script = getScript(state, f.location.scriptId);
+                        if (script) {
+                            return (
+                                <Box key={i}>
+                                    <Box color="red">
+                                        {i === state.target.focusedCallFrame
+                                            ? "> "
+                                            : "  "}
+                                    </Box>
+                                    {f.functionName || "<anonymous>"} (
+                                    {script.url}:{f.location.line + 1}
+                                    {f.location.column !== undefined
+                                        ? `:${f.location.column + 1}`
+                                        : ""}
+                                    )
+                                </Box>
+                            );
+                        } else {
+                        }
+                    })}
+                </Box>
+            );
+        } else {
+            return <Box color="red">not paused</Box>;
+        }
     } else if (cmd.type === "break" || cmd.type === "unbreak") {
         const scriptId = state.target.paused
-            ? state.target.callFrames[0].location.scriptId
+            ? state.target.callFrames[state.target.focusedCallFrame].location
+                  .scriptId
             : undefined;
 
         const script = getScript(state, scriptId);
@@ -198,10 +230,10 @@ async function handle(
     } else if (!target.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
-        const topCallFrame = target.callFrames[0];
+        const callFrame = target.callFrames[target.focusedCallFrame];
 
         return client
-            .eval(cmd.args, topCallFrame.id)
+            .eval(cmd.args, callFrame.id)
             .then(result => <Eval result={result} />)
             .catch(error => {
                 return <span>`eval error: ${error}`</span>;

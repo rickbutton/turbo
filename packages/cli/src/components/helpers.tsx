@@ -6,6 +6,7 @@ import {
     ObjectId,
     RemoteException,
     ScriptId,
+    CallFrame,
 } from "@turbo/core";
 import React from "react";
 import { highlight } from "cli-highlight";
@@ -53,6 +54,15 @@ export function useScriptSource(id: ScriptId | undefined): string {
     }, [state]);
 
     return script;
+}
+
+export function useFocusedCallFrame(): CallFrame | undefined {
+    const state = useClientState();
+    if (state && state.target.paused) {
+        return state.target.callFrames[state.target.focusedCallFrame];
+    } else {
+        return undefined;
+    }
 }
 
 export function useObjectProperties(

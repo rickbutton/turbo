@@ -15,6 +15,7 @@ function exampleSyncMessage(): Message<"sync"> {
                     scripts: [],
                     breakpoints: [],
                     breakpointsEnabled: false,
+                    focusedCallFrame: 0,
                 },
                 logStream: {
                     turboSocket: "",

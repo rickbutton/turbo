@@ -1,7 +1,12 @@
 import { logger, LOGO, SourceLocation, Breakpoint } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
-import { useClientState, useScriptSource, highlightJs } from "./helpers";
+import {
+    useClientState,
+    highlightJs,
+    useFocusedCallFrame,
+    useScriptSource,
+} from "./helpers";
 
 function numbers(height: number): string[] {
     const width = String(height).length;
@@ -59,10 +64,9 @@ function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
 
 export function Code(): JSX.Element {
     const state = useClientState();
+    const callFrame = useFocusedCallFrame();
     const script = useScriptSource(
-        state && state.target.paused
-            ? state.target.callFrames[0].location.scriptId
-            : undefined,
+        callFrame ? callFrame.location.scriptId : undefined,
     );
     const highlighted = React.useMemo(() => highlightJs(script), [script]);
 
@@ -74,12 +78,10 @@ export function Code(): JSX.Element {
                 </Box>
             </LogoText>
         );
-    } else if (state.target.paused) {
-        const topCallFrame = state.target.callFrames[0];
-
+    } else if (state.target.paused && callFrame) {
         const lines = highlighted.split("\n");
         const height = lines.length;
-        const loc = topCallFrame.location;
+        const loc = callFrame.location;
         return (
             <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
                 <Box direction="column">{numbers(height)}</Box>

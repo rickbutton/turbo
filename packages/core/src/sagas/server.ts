@@ -9,6 +9,7 @@ import {
     RequestEvent,
     TargetConnection,
     isRequestType,
+    Turbo,
 } from "..";
 import { eventChannel, channel, END, Channel, EventChannel } from "redux-saga";
 import { select, put, take, fork, takeLatest } from "redux-saga/effects";
@@ -33,6 +34,7 @@ type ServerRequestType =
     | "getScriptSource";
 
 function setupServer(
+    turbo: Turbo,
     server: Server,
 ): [
     EventChannel<Action>,
@@ -69,6 +71,9 @@ function setupServer(
         function onQuit(): void {
             server.broadcastQuit();
             emit(END);
+            setTimeout(() => {
+                turbo.env.exit();
+            }, 1000);
         }
 
         server.on("action", onAction);
@@ -168,10 +173,12 @@ function* watchForServerRequests(
 }
 
 export function* serverFlow(
+    turbo: Turbo,
     server: Server,
     targetConnectionChannel: Channel<TargetConnection | -1>,
 ) {
     const [serverChannel, connectionChannel, requestChannel] = setupServer(
+        turbo,
         server,
     );
 

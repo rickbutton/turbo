@@ -2,7 +2,7 @@ import { State, Action, Breakpoint, Script, ScriptId } from "./state";
 import { createStore, applyMiddleware } from "redux";
 import createSagaMiddleware from "redux-saga";
 import { rootSaga } from "./sagas";
-import { logger, Server, Target } from ".";
+import { logger, Server, Target, Turbo } from ".";
 
 function pushed<T>(arr: T[], v: T): T[] {
     return [...arr, v];
@@ -44,6 +44,7 @@ function reduce(
                     ),
                     callFrames: undefined,
                     scripts: [],
+                    focusedCallFrame: 0,
                 },
             };
         case "disconnected":
@@ -58,6 +59,7 @@ function reduce(
                     ),
                     callFrames: undefined,
                     scripts: [],
+                    focusedCallFrame: 0,
                 },
             };
         case "paused":
@@ -67,6 +69,7 @@ function reduce(
                     ...state.target,
                     paused: true,
                     callFrames: action.callFrames,
+                    focusedCallFrame: 0,
                 },
             };
         case "resumed":
@@ -76,6 +79,7 @@ function reduce(
                     ...state.target,
                     paused: false,
                     callFrames: undefined,
+                    focusedCallFrame: 0,
                 },
             };
         case "add-script":
@@ -148,6 +152,29 @@ function reduce(
                     breakpointsEnabled: action.enabled,
                 },
             };
+        case "focus-up":
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    focusedCallFrame: state.target.paused
+                        ? Math.min(
+                              state.target.focusedCallFrame + 1,
+                              state.target.callFrames.length - 1,
+                          )
+                        : state.target.focusedCallFrame,
+                },
+            };
+        case "focus-down":
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    focusedCallFrame: state.target.paused
+                        ? Math.max(state.target.focusedCallFrame - 1, 0)
+                        : state.target.focusedCallFrame,
+                },
+            };
         default:
             return state;
     }
@@ -159,14 +186,19 @@ export interface Store {
     getState(): State;
 }
 
-export function makeStore(server: Server, target: Target, state: State): Store {
+export function makeStore(
+    turbo: Turbo,
+    server: Server,
+    target: Target,
+    state: State,
+): Store {
     const sagaMiddleware = createSagaMiddleware();
 
     const store = createStore(
         reduce.bind(null, state),
         applyMiddleware(sagaMiddleware),
     );
-    sagaMiddleware.run(rootSaga, server, target);
+    sagaMiddleware.run(rootSaga, turbo, server, target);
 
     // TODO: fix this cast?
     return (store as unknown) as Store;

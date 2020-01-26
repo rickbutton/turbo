@@ -203,6 +203,7 @@ interface BaseTargetDescriptor {
     breakpoints: Breakpoint[];
     breakpointsEnabled: boolean;
     scripts: Script[];
+    focusedCallFrame: number;
 }
 interface PausedTargetDescriptor {
     paused: true;
@@ -252,6 +253,9 @@ export type StepIntoAction = EmptyAction<"stepInto">;
 export type StepOutAction = EmptyAction<"stepOut">;
 export type StepOverAction = EmptyAction<"stepOver">;
 
+export type FocusUpCallFrameAction = EmptyAction<"focus-up">;
+export type FocusDownCallFrameAction = EmptyAction<"focus-down">;
+
 export interface AddScriptAction {
     type: "add-script";
     script: Script;
@@ -294,6 +298,8 @@ export type Action =
     | StepIntoAction
     | StepOutAction
     | StepOverAction
+    | FocusUpCallFrameAction
+    | FocusDownCallFrameAction
     | AddScriptAction
     | SetBreakpointAction
     | VerifyBreakpointAction

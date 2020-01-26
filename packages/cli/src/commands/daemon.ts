@@ -51,7 +51,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
     });
 
     // make the redux store
-    const store = makeStore(server, target, {
+    const store = makeStore(turbo, server, target, {
         target: {
             connected: false,
             paused: false,
@@ -59,6 +59,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
             scripts: [],
             breakpoints: [],
             breakpointsEnabled: false,
+            focusedCallFrame: 0,
         },
         logStream: {
             turboSocket: turboLog.socketPath,

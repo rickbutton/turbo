@@ -3,12 +3,12 @@
 import { fork } from "redux-saga/effects";
 import { targetFlow } from "./target";
 import { serverFlow } from "./server";
-import { Server, Target, logger, TargetConnection } from "..";
+import { Server, Target, logger, TargetConnection, Turbo } from "..";
 import { channel, Channel } from "redux-saga";
 
 export type LogFunc = (str: string) => void;
 
-export function* rootSaga(server: Server, target: Target) {
+export function* rootSaga(turbo: Turbo, server: Server, target: Target) {
     const connectionChannel: Channel<TargetConnection | -1> = channel<
         TargetConnection | -1
     >();
@@ -17,6 +17,6 @@ export function* rootSaga(server: Server, target: Target) {
     yield fork(targetFlow, target, connectionChannel);
     logger.verbose("finish target flow");
 
-    yield fork(serverFlow, server, connectionChannel);
+    yield fork(serverFlow, turbo, server, connectionChannel);
     logger.verbose("finish server flow");
 }
