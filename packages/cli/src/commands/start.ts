@@ -93,6 +93,7 @@ export function start(turbo: Turbo): void {
     const client = new Client(turbo, {
         type: "managed",
         sessionId: id,
+        maxRetries: 20,
     });
     client.connect();
 

@@ -44,6 +44,7 @@ interface UnmanagedClientOptions {
     type: "unmanaged";
     sessionId: SessionId;
     reconnect?: boolean;
+    maxRetries?: number;
     socket: ClientSocket;
     connected: boolean;
 }
@@ -51,10 +52,9 @@ interface ManagedClientOptions {
     type: "managed";
     sessionId: SessionId;
     reconnect?: boolean;
+    maxRetries?: number;
 }
 export type ClientOptions = UnmanagedClientOptions | ManagedClientOptions;
-
-const MAX_RETRIES = 5;
 
 export abstract class BaseClient<
     T extends ClientEvents = ClientEvents
@@ -65,6 +65,7 @@ export abstract class BaseClient<
 
     private connected: boolean;
     private reconnect: boolean;
+    private maxRetries = 5;
     private numRetries = 0;
 
     private inflightRequests: Map<RequestId, RequestHandle> = new Map();
@@ -83,6 +84,9 @@ export abstract class BaseClient<
             this.client = new JsonSocket(new net.Socket());
             this.connected = false;
         }
+        if (options.maxRetries) {
+            this.maxRetries = options.maxRetries;
+        }
 
         this.setup();
     }
@@ -92,7 +96,7 @@ export abstract class BaseClient<
     }
 
     public connect(): void {
-        if (this.numRetries > MAX_RETRIES) {
+        if (this.numRetries > this.maxRetries) {
             throw new Error("exceeded max retries for connection");
         }
 
