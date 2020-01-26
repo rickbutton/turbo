@@ -8,11 +8,9 @@ add wrap options
  - word
  - newline
 
-breakpoints
-
 colors for eval command - buffer drawChars with ansi escapes
 
-use yargs for repl help
+use yargs for entire repl?
 
 desired focus - on first launch
 

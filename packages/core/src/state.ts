@@ -16,35 +16,35 @@ declare const __BreakpointIdSymbol: unique symbol;
 export type BreakpointId = string & {
     readonly __tag: typeof __BreakpointIdSymbol;
 };
-declare const __UnverifiedBreakpointIdSymbol: unique symbol;
-export type UnverifiedBreakpointId = string & {
-    readonly __tag: typeof __UnverifiedBreakpointIdSymbol;
+declare const __RawBreakpointIdSymbol: unique symbol;
+export type RawBreakpointId = string & {
+    readonly __tag: typeof __RawBreakpointIdSymbol;
 };
 
-export interface VerifiedBreakpoint {
-    verified: true;
-    url: string;
-    normalizedUrl: string;
-    condition?: string;
-
-    id: BreakpointId;
+export interface RawBreakpointMetadata {
+    id: RawBreakpointId;
     location: SourceLocation;
 }
-export interface UnverifiedBreakpoint {
-    verified: false;
+interface BaseBreakpoint {
+    id: BreakpointId;
     url: string;
-    normalizedUrl: string;
+    rawUrl: string;
     condition?: string;
-
-    id: UnverifiedBreakpointId;
     line: number;
     column?: number;
 }
-export type Breakpoint = VerifiedBreakpoint | UnverifiedBreakpoint;
+export interface LocalBreakpoint extends BaseBreakpoint {
+    raw: undefined;
+}
+export interface ResolvedBreakpoint extends BaseBreakpoint {
+    raw: RawBreakpointMetadata;
+}
+export type Breakpoint = LocalBreakpoint | ResolvedBreakpoint;
 
 export interface Script {
     id: ScriptId;
     url: string;
+    rawUrl: string;
     startLine: number;
     startColumn: number;
     endLine: number;
@@ -153,7 +153,7 @@ export interface ScriptParsedEvent {
 }
 
 export interface BreakpointResolvedEvent {
-    breakpoint: VerifiedBreakpoint;
+    breakpoint: ResolvedBreakpoint;
 }
 
 export interface BreakpointsEnabledUpdatedEvent {
@@ -189,7 +189,7 @@ export interface TargetConnection extends Emitter<TargetConnectionEvents> {
     stepInto(): Promise<void>;
     stepOut(): Promise<void>;
     stepOver(): Promise<void>;
-    setBreakpoint(location: SourceLocation, condition?: string): Promise<void>;
+    setBreakpoint(breakpoint: Breakpoint): Promise<void>;
     removeBreakpoint(id: BreakpointId): Promise<void>;
     enableBreakpoints(): Promise<void>;
     disableBreakpoints(): Promise<void>;
@@ -233,10 +233,10 @@ type EmptyRequestAction<R extends string, F extends string> =
     | EmptyAction<F>;
 
 export interface TargetConnectedAction {
-    type: "connect";
+    type: "connected";
 }
 export interface TargetDisconnectedAction {
-    type: "disconnect";
+    type: "disconnected";
 }
 
 export type PausedRequestedAction = EmptyAction<"pause">;
@@ -258,27 +258,19 @@ export interface AddScriptAction {
 }
 export interface SetBreakpointAction {
     type: "set-breakpoint";
-    breakpoint: UnverifiedBreakpoint;
+    breakpoint: LocalBreakpoint;
 }
 export interface VerifyBreakpointAction {
     type: "verify-breakpoint";
-    breakpoint: VerifiedBreakpoint;
+    breakpoint: ResolvedBreakpoint;
 }
-export interface RemoveVerifiedBreakpointRequestAction {
-    type: "remove-vb-request";
+export interface RemoveBreakpointRequestAction {
+    type: "remove-b-request";
     id: BreakpointId;
 }
-export interface RemovedVerifiedBreakpointAction {
-    type: "removed-vb";
+export interface RemovedBreakpointAction {
+    type: "removed-b";
     id: BreakpointId;
-}
-export interface RemoveUnverifiedBreakpointRequestAction {
-    type: "remove-unvb-request";
-    id: UnverifiedBreakpointId;
-}
-export interface RemovedUnverifiedBreakpointAction {
-    type: "removed-unvb";
-    id: UnverifiedBreakpointId;
 }
 
 export interface SetBreakpointsEnabledRequestAction {
@@ -305,10 +297,8 @@ export type Action =
     | AddScriptAction
     | SetBreakpointAction
     | VerifyBreakpointAction
-    | RemoveVerifiedBreakpointRequestAction
-    | RemovedVerifiedBreakpointAction
-    | RemoveUnverifiedBreakpointRequestAction
-    | RemovedUnverifiedBreakpointAction
+    | RemoveBreakpointRequestAction
+    | RemovedBreakpointAction
     | SetBreakpointsEnabledRequestAction
     | SetBreakpointsEnabledAction;
 

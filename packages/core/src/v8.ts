@@ -20,8 +20,8 @@ import {
     BreakLocation,
     Script,
     Breakpoint,
-    UnverifiedBreakpoint,
 } from "./index";
+import { RawBreakpointId, ResolvedBreakpoint } from "./state";
 
 const CDP = (ChromeRemoteInterface as unknown) as Factory;
 
@@ -50,6 +50,7 @@ function toScript(script: Protocol.Debugger.ScriptParsedEvent): Script {
     return {
         id: script.scriptId as ScriptId,
         url: canonicalizeUrl(script.url),
+        rawUrl: script.url,
         startLine: script.startLine,
         startColumn: script.startColumn,
         endLine: script.endLine,
@@ -148,10 +149,10 @@ function toRemoteException(
 class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
     implements TargetConnection {
     private client: Client;
-    private initialBreaks: UnverifiedBreakpoint[];
+    private scripts: Map<ScriptId, Script> = new Map();
+    private breakpoints: Map<BreakpointId, Breakpoint> = new Map();
 
     private callFrames: Protocol.Debugger.CallFrame[] | null = null;
-    private lastConditions: Map<BreakpointId, string | undefined> = new Map();
 
     private enabled = false;
     private needsResume = false;
@@ -161,10 +162,16 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
         return this._breakpointsEnabled;
     }
 
-    constructor(client: Client, initialBreaks: UnverifiedBreakpoint[] = []) {
+    constructor(client: Client, breakpoints: Breakpoint[]) {
         super();
         this.client = client;
-        this.initialBreaks = initialBreaks;
+
+        for (const breakpoint of breakpoints) {
+            this.breakpoints.set(breakpoint.id, {
+                ...breakpoint,
+                raw: undefined,
+            });
+        }
     }
 
     public async setup(): Promise<void> {
@@ -205,29 +212,61 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
         });
         this.client.Debugger.scriptParsed(event => {
             const script = toScript(event);
+            logger.verbose(`v8 script parsed ${script.id} ${script.rawUrl}`);
+
+            this.scripts.set(script.id, script);
             this.fire("scriptParsed", { script });
         });
-        this.client.Debugger.breakpointResolved(event => {
-            const id = event.breakpointId as BreakpointId;
-            const breakpoint: Breakpoint = {
-                verified: true,
-                location: toSourceLocation(event.location),
-                id,
-                condition: this.lastConditions.get(id),
-                url: "",
-                normalizedUrl: "",
-            };
+        this.client.Debugger.breakpointResolved(e => {
+            logger.verbose(`v8 breakpoint resolved ${e.breakpointId}`);
+            const location = toSourceLocation(e.location);
 
-            this.fire("breakpointResolved", { breakpoint });
+            const script = this.scripts.get(location.scriptId);
+            if (script) {
+                const matches = Array.from(this.breakpoints.values()).filter(
+                    b =>
+                        b.rawUrl === script.rawUrl &&
+                        b.line === location.line &&
+                        (!b.column || b.column === location.column),
+                );
+
+                if (matches.length === 1) {
+                    const match = matches[0];
+                    logger.verbose(`found breakpoint match: ${match.id}`);
+
+                    const breakpoint = {
+                        ...match,
+                        raw: {
+                            id: e.breakpointId as RawBreakpointId,
+                            location,
+                        },
+                        line: location.line,
+                        column: location.column,
+                    };
+                    this.breakpoints.set(breakpoint.id, breakpoint);
+                    this.fire("breakpointResolved", { breakpoint });
+                } else {
+                    logger.error(
+                        `unexpected number of breakpoint matches during resolve: ${matches.length}`,
+                    );
+                }
+            } else {
+                logger.error(
+                    `couldn't get script during breakpoint resolve ${location.scriptId}`,
+                );
+            }
         });
-
-        // TODO: set breakpoints
     }
 
     public async enable(): Promise<void> {
         await this.client.Debugger.enable({});
+
         await this.client.Debugger.setBreakpointsActive({ active: true });
         this._breakpointsEnabled = false;
+        for (const breakpoint of this.breakpoints.values()) {
+            await this.setBreakpoint(breakpoint);
+        }
+
         await this.client.Runtime.runIfWaitingForDebugger();
         this.enabled = true;
         if (this.needsResume) {
@@ -267,23 +306,55 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
             await this.client.Debugger.stepOver();
         }
     }
-    async setBreakpoint(
-        location: SourceLocation,
-        condition?: string,
-    ): Promise<void> {
-        logger.debug("v8 setBreakpoint");
-        const { breakpointId } = await this.client.Debugger.setBreakpoint({
-            location: {
-                scriptId: location.scriptId,
-                lineNumber: location.line,
-                columnNumber: location.column,
-            },
-            condition,
+    async setBreakpoint(breakpoint: Breakpoint): Promise<void> {
+        logger.debug(
+            `v8 setBreakpoint ${breakpoint.rawUrl} ${breakpoint.line}:${breakpoint.column}`,
+        );
+        const {
+            breakpointId,
+            locations,
+        } = await this.client.Debugger.setBreakpointByUrl({
+            url: breakpoint.rawUrl,
+            lineNumber: breakpoint.line,
+            columnNumber: breakpoint.column,
+            condition: breakpoint.condition,
         });
-        this.lastConditions.set(breakpointId as BreakpointId, condition);
+
+        logger.debug(`new breakpoint id: ${breakpointId}`);
+        logger.debug(JSON.stringify(locations, null, 4));
+
+        if (locations.length > 0) {
+            const location = toSourceLocation(locations[0]);
+            const newBreakpoint: ResolvedBreakpoint = {
+                ...breakpoint,
+                raw: {
+                    id: breakpointId as RawBreakpointId,
+                    location,
+                },
+                line: location.line,
+                column: location.column,
+            };
+
+            this.fire("breakpointResolved", { breakpoint: newBreakpoint });
+
+            this.breakpoints.set(newBreakpoint.id, newBreakpoint);
+        }
     }
     async removeBreakpoint(id: BreakpointId): Promise<void> {
-        await this.client.Debugger.removeBreakpoint({ breakpointId: id });
+        const breakpoint = this.breakpoints.get(id);
+        this.breakpoints.delete(id);
+
+        if (breakpoint && breakpoint.raw) {
+            await this.client.Debugger.removeBreakpoint({
+                breakpointId: breakpoint.raw.id,
+            });
+        } else if (breakpoint) {
+            logger.error(
+                `failed to remove breakpoint ${breakpoint.id}, not resolved`,
+            );
+        } else {
+            logger.error(`failed to remove breakpoint ${id}, unknown id`);
+        }
     }
     async enableBreakpoints(): Promise<void> {
         await this.client.Debugger.setBreakpointsActive({ active: true });
@@ -381,11 +452,12 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
 export async function connect(
     host: string,
     port: number,
+    breakpoints: Breakpoint[],
 ): Promise<TargetConnection> {
     logger.verbose("connecting cdp");
     const client = await CDP({ host, port });
     logger.verbose("connected to cdp");
-    const conn = new V8TargetConnection(client);
+    const conn = new V8TargetConnection(client, breakpoints);
     logger.verbose("waiting for cdp setup");
     await conn.setup();
     logger.verbose("cdp is setup");

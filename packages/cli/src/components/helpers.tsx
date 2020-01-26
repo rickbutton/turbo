@@ -5,6 +5,7 @@ import {
     RemoteObjectProperty,
     ObjectId,
     RemoteException,
+    ScriptId,
 } from "@turbo/core";
 import React from "react";
 import { highlight } from "cli-highlight";
@@ -32,21 +33,20 @@ export function useClientState(): State | null {
     return state;
 }
 
-export function useScriptSource(): string {
+export function useScriptSource(id: ScriptId | undefined): string {
     const client = useClient();
     const state = useClientState();
     const [script, setScript] = React.useState("");
 
     React.useEffect(() => {
-        if (!state) {
+        if (!id) {
+            setScript("");
+        } else if (!state) {
             setScript("");
         } else if (state.target.paused) {
-            const topCallFrame = state.target.callFrames[0];
-            client
-                .getScriptSource(topCallFrame.location.scriptId)
-                .then(({ value }) => {
-                    setScript(value);
-                });
+            client.getScriptSource(id).then(({ value }) => {
+                setScript(value);
+            });
         } else {
             setScript("");
         }

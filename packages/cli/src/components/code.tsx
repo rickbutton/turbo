@@ -1,4 +1,4 @@
-import { logger, LOGO, SourceLocation } from "@turbo/core";
+import { logger, LOGO, SourceLocation, Breakpoint } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
 import { useClientState, useScriptSource, highlightJs } from "./helpers";
@@ -13,13 +13,28 @@ function numbers(height: number): string[] {
     return elements;
 }
 
-function gutter(height: number, loc: SourceLocation): JSX.Element[] {
+function gutter(
+    height: number,
+    loc: SourceLocation,
+    breakpoints: Breakpoint[],
+): JSX.Element[] {
+    const breakpointsByLine = breakpoints.reduce((map, breakpoint) => {
+        map[breakpoint.line] = breakpoint;
+        return map;
+    }, {} as { [key: number]: Breakpoint });
+
     const elements: JSX.Element[] = [];
     for (let i = 0; i < height; i++) {
         if (i === loc.line) {
             elements.push(
                 <Box key={i} height={1} width={2} color="red">
                     {" >"}
+                </Box>,
+            );
+        } else if (breakpointsByLine[i]) {
+            elements.push(
+                <Box key={i} height={1} width={2} color="red">
+                    {" 0"}
                 </Box>,
             );
         } else {
@@ -44,7 +59,11 @@ function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
 
 export function Code(): JSX.Element {
     const state = useClientState();
-    const script = useScriptSource();
+    const script = useScriptSource(
+        state && state.target.paused
+            ? state.target.callFrames[0].location.scriptId
+            : undefined,
+    );
     const highlighted = React.useMemo(() => highlightJs(script), [script]);
 
     if (!state) {
@@ -64,7 +83,9 @@ export function Code(): JSX.Element {
         return (
             <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
                 <Box direction="column">{numbers(height)}</Box>
-                <Box direction="column">{gutter(height, loc)}</Box>
+                <Box direction="column">
+                    {gutter(height, loc, state.target.breakpoints)}
+                </Box>
                 <Box direction="column" grow={1}>
                     {lines}
                 </Box>

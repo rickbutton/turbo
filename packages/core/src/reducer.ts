@@ -1,39 +1,26 @@
-import { State, Action, Breakpoint } from "./state";
+import { State, Action, Breakpoint, Script, ScriptId } from "./state";
 import { createStore, applyMiddleware } from "redux";
 import createSagaMiddleware from "redux-saga";
 import { rootSaga } from "./sagas";
-import { logger, uuid, Server, Target } from ".";
+import { logger, Server, Target } from ".";
 
 function pushed<T>(arr: T[], v: T): T[] {
     return [...arr, v];
 }
 
 function isSameBreakLocation(a: Breakpoint, b: Breakpoint): boolean {
-    const aLine = a.verified ? a.location.line : a.line;
-    const aCol = a.verified ? a.location.column : a.column;
-
-    const bLine = b.verified ? b.location.line : b.line;
-    const bCol = b.verified ? b.location.column : b.column;
-
-    return (
-        a.normalizedUrl === b.normalizedUrl && aLine === bLine && aCol === bCol
-    );
+    return a.url === b.url && a.line === b.line && a.column === b.column;
 }
 
 function unvalidateBreakpoints(breakpoints: Breakpoint[]): Breakpoint[] {
-    return breakpoints.filter(b =>
-        b.verified
-            ? {
-                  verified: false,
-                  url: b.url,
-                  normalizedUrl: b.url,
-                  condition: b.url,
-                  id: uuid(),
-                  line: b.location.line,
-                  column: b.location.column,
-              }
-            : b,
-    );
+    return breakpoints.filter(b => ({
+        ...b,
+        raw: undefined,
+    }));
+}
+
+function getScriptById(scripts: Script[], id: ScriptId): Script | undefined {
+    return scripts.find(s => s.id === id);
 }
 
 function reduce(
@@ -44,7 +31,7 @@ function reduce(
     if (!state) return initialState;
 
     switch (action.type) {
-        case "connect":
+        case "connected":
             return {
                 ...state,
                 target: {
@@ -59,7 +46,7 @@ function reduce(
                     scripts: [],
                 },
             };
-        case "disconnect":
+        case "disconnected":
             return {
                 ...state,
                 target: {
@@ -100,9 +87,8 @@ function reduce(
                 },
             };
         case "set-breakpoint":
-            const breakpoints = state.target.breakpoints;
             const breakpoint = action.breakpoint;
-            const breakpointExists = breakpoints.some(b =>
+            const breakpointExists = state.target.breakpoints.some(b =>
                 isSameBreakLocation(breakpoint, b),
             );
 
@@ -115,23 +101,42 @@ function reduce(
                     breakpoints: pushed(state.target.breakpoints, breakpoint),
                 },
             };
-        case "removed-unvb":
+        case "verify-breakpoint":
+            const verifiedBreakpoint = action.breakpoint;
+            if (!verifiedBreakpoint.raw) return state;
+
+            const location = verifiedBreakpoint.raw.location;
+            const script = getScriptById(
+                state.target.scripts,
+                location.scriptId,
+            );
+
+            if (script) {
+                const breakpoints = state.target.breakpoints;
+                return {
+                    ...state,
+                    target: {
+                        ...state.target,
+                        breakpoints: breakpoints.map(b =>
+                            b.id === verifiedBreakpoint.id
+                                ? { ...verifiedBreakpoint }
+                                : b,
+                        ),
+                    },
+                };
+            } else {
+                logger.error(
+                    `received verify-breakpoint action with unknown script id ${location.scriptId}`,
+                );
+                return state;
+            }
+        case "removed-b":
             return {
                 ...state,
                 target: {
                     ...state.target,
                     breakpoints: state.target.breakpoints.filter(
-                        b => b.verified === true || b.id !== action.id,
-                    ),
-                },
-            };
-        case "removed-vb":
-            return {
-                ...state,
-                target: {
-                    ...state.target,
-                    breakpoints: state.target.breakpoints.filter(
-                        b => b.verified === false || b.id !== action.id,
+                        b => b.id !== action.id,
                     ),
                 },
             };

@@ -1,10 +1,15 @@
 /* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { Target, logger, ActionType, TargetConnection, Action } from "../index";
 import { eventChannel, EventChannel, END, Channel, Task } from "redux-saga";
-import { takeEvery, put, take, fork, call } from "redux-saga/effects";
+import { takeEvery, put, take, fork, call, select } from "redux-saga/effects";
 import { TargetSagaAction } from "./shared";
 import { connect } from "../v8";
-import { SetBreakpointsEnabledRequestAction } from "../state";
+import {
+    SetBreakpointsEnabledRequestAction,
+    SetBreakpointAction,
+    RemovedBreakpointAction,
+    State,
+} from "../state";
 
 function setupTarget(target: Target): EventChannel<TargetSagaAction | END> {
     logger.verbose("sagas: setupTarget");
@@ -50,7 +55,12 @@ function* setupConnection(connection: TargetConnection) {
         });
         connection.on("breakpointResolved", event => {
             logger.verbose("sagas: breakpoint resolved");
-            emit({ type: "verify-breakpoint", breakpoint: event.breakpoint });
+            emit({
+                type: "verify-breakpoint",
+                breakpoint: {
+                    ...event.breakpoint,
+                },
+            });
         });
         connection.on("close", () => emit(END));
 
@@ -74,14 +84,15 @@ function* watchConnectionRequests(target: TargetConnection) {
         yield call(() => target.stepOver());
     });
 
-    yield takeEvery<ActionType>("set-breakpoint", function*() {
-        // TODO
+    yield takeEvery("set-breakpoint", function*(action: SetBreakpointAction) {
+        yield call([target, target.setBreakpoint], action.breakpoint);
     });
-    yield takeEvery<ActionType>("remove-vb-request", function*() {
-        // TODO
-    });
-    yield takeEvery<ActionType>("remove-unvb-request", function*() {
-        // TODO
+    yield takeEvery("remove-b-request", function*(
+        action: RemovedBreakpointAction,
+    ) {
+        logger.verbose("sagas: target: remove-b-request");
+        yield call([target, target.removeBreakpoint], action.id);
+        yield put({ type: "removed-b", id: action.id });
     });
     yield takeEvery("set-b-enable-request", function*(
         a: SetBreakpointsEnabledRequestAction,
@@ -108,21 +119,27 @@ export function* spawnConnection(
     connectionChannel: Channel<TargetConnection | -1>,
 ) {
     logger.verbose(`sagas: spawnConnection ${host}:${port}`);
+    const state: State = yield select();
 
-    const connection: TargetConnection = yield call(connect, host, port);
+    const connection: TargetConnection = yield call(
+        connect,
+        host,
+        port,
+        state.target.breakpoints,
+    );
     const channel: EventChannel<Action> = yield call(
         setupConnection,
         connection,
     );
-
-    yield call(() => connection.enable());
 
     yield fork(watchConnectionRequests, connection);
     yield fork(watchConnectionEvents, channel);
 
     yield put(connectionChannel, connection);
 
-    yield put({ type: "target-connect" });
+    yield put({ type: "connect" });
+
+    yield call(() => connection.enable());
 }
 
 export function* watchTarget(
@@ -150,7 +167,7 @@ export function* watchTarget(
                 task = null;
             }
             yield put(connectionChannel, -1);
-            yield put<Action>({ type: "disconnect" });
+            yield put<Action>({ type: "disconnected" });
         } else {
             throw new Error(`unknown action type ${action["type"]}`);
         }

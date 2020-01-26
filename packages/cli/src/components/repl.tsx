@@ -1,5 +1,12 @@
 import { Client } from "@turbo/net";
-import { logger } from "@turbo/core";
+import {
+    logger,
+    State,
+    ScriptId,
+    Script,
+    uuid,
+    BreakpointId,
+} from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
 import { Eval } from "./eval";
@@ -11,91 +18,27 @@ function js(str: string): string {
     return str;
 }
 
-interface HelpCommand {
-    type: "help";
-    args: string;
-}
-interface QuitCommand {
-    type: "quit";
-    args: string;
-}
-interface StartCommand {
-    type: "start";
-    args: string;
-}
-interface StopCommand {
-    type: "stop";
-    args: string;
-}
-interface RestartCommand {
-    type: "restart";
-    args: string;
-}
-interface PauseCommand {
-    type: "pause";
-    args: string;
-}
-interface ResumeCommand {
-    type: "resume";
-    args: string;
-}
-interface StepIntoCommand {
-    type: "stepInto";
-    args: string;
-}
-interface StepOutCommand {
-    type: "stepOut";
-    args: string;
-}
-interface StepOverCommand {
-    type: "stepOver";
-    args: string;
-}
-interface BackTraceCommand {
-    type: "backtrace";
-    args: string;
-}
-interface EvalComamnd {
-    type: "eval";
-    args: string;
-}
-interface ErrorCommand {
-    type: "error";
-    args: string;
-}
-type Command =
-    | HelpCommand
-    | QuitCommand
-    | StopCommand
-    | StartCommand
-    | RestartCommand
-    | PauseCommand
-    | ResumeCommand
-    | StepIntoCommand
-    | StepOutCommand
-    | StepOverCommand
-    | BackTraceCommand
-    | ErrorCommand
-    | EvalComamnd;
-
-interface CommandObject {
-    type: Command["type"];
-    alts?: string[];
-}
-const COMMANDS: CommandObject[] = [
+const COMMANDS = [
     { type: "help", alts: ["h", "?"] },
     { type: "quit", alts: ["q"] },
     { type: "start", alts: ["run"] },
-    { type: "stop" },
-    { type: "restart" },
+    { type: "stop", alts: [] },
+    { type: "restart", alts: [] },
     { type: "pause", alts: ["p"] },
     { type: "resume", alts: ["r", "c"] },
     { type: "stepInto", alts: ["i", "stepi"] },
     { type: "stepOver", alts: ["n", "step", "stepOver"] },
     { type: "stepOut", alts: ["finish", "f"] },
     { type: "backtrace", alts: ["bt"] },
+    { type: "break", alts: ["b"] },
+    { type: "unbreak", alts: ["ub"] },
+    { type: "breaks", alts: ["bs"] },
     { type: "eval", alts: ["e"] },
-];
+] as const;
+interface Command {
+    type: typeof COMMANDS[number]["type"];
+    args: string;
+}
 
 const SIMPLE_RUNTIME_COMMANDS = [
     "start",
@@ -128,7 +71,7 @@ function findCommandMatch(
     return options.find(o => RegExp(`^${e(o)}\\s+`).test(input) || o === input);
 }
 
-function parse(input: string): Command {
+function parse(input: string): Command | null {
     for (const command of COMMANDS) {
         const options = [command.type, ...(command.alts || [])];
         const match = findCommandMatch(input, options);
@@ -156,6 +99,15 @@ function Help(): JSX.Element {
     );
 }
 
+function getScript(state: State, id: ScriptId | undefined): Script | undefined {
+    return state ? state.target.scripts.find(s => s.id === id) : undefined;
+}
+
+function isInteger(str: string): boolean {
+    const n = Math.floor(Number(str));
+    return n !== Infinity && String(n) === str && n >= 0;
+}
+
 async function handle(
     input: string,
     client: Client,
@@ -172,10 +124,10 @@ async function handle(
 
     const cmd = parse(trimmed);
 
-    if (cmd.type == "help") {
-        return <Help />;
-    } else if (cmd.type === "error") {
+    if (!cmd) {
         return <Box color="red">unable to parse command ${input}</Box>;
+    } else if (cmd.type == "help") {
+        return <Help />;
     } else if (cmd.type == "quit") {
         client.quit();
     } else if (isSimpleRuntimeCommand(cmd.type)) {
@@ -183,6 +135,66 @@ async function handle(
     } else if (cmd.type === "backtrace") {
         // TODO
         return null;
+    } else if (cmd.type === "break" || cmd.type === "unbreak") {
+        const scriptId = state.target.paused
+            ? state.target.callFrames[0].location.scriptId
+            : undefined;
+
+        const script = getScript(state, scriptId);
+
+        const parts = cmd.args.split(" ");
+        const linePart = parts[0];
+        const columnPart = parts[1];
+        const hasLine = isInteger(linePart);
+        const hasCol = isInteger(columnPart);
+
+        if (!hasLine || (!hasCol && columnPart)) {
+            return <Box color="red">invalid args to break</Box>;
+        }
+        if (!script) {
+            return <Box color="red">unable to get script</Box>;
+        }
+
+        const line = Number(linePart) - 1;
+        const column = hasCol ? Number(columnPart) - 1 : undefined;
+
+        if (cmd.type === "break") {
+            client.dispatch({
+                type: "set-breakpoint",
+                breakpoint: {
+                    id: uuid() as BreakpointId,
+                    line,
+                    column,
+                    url: script.url,
+                    rawUrl: script.rawUrl,
+                    raw: undefined,
+                },
+            });
+        } else {
+            const matches = state.target.breakpoints.filter(
+                b =>
+                    b.rawUrl === script.rawUrl &&
+                    b.line === line &&
+                    (!column || b.column === column),
+            );
+            for (const match of matches) {
+                client.dispatch({
+                    type: "remove-b-request",
+                    id: match.id,
+                });
+            }
+        }
+    } else if (cmd.type === "breaks") {
+        const breakpoints = state.target.breakpoints;
+        return (
+            <Box direction="column">
+                {breakpoints.map((b, i) => (
+                    <Box key={i}>
+                        {b.url} - {b.line}:{b.column}
+                    </Box>
+                ))}
+            </Box>
+        );
     } else if (!target.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
