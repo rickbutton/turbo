@@ -68,7 +68,9 @@ export function Code(): JSX.Element {
     const script = useScriptSource(
         callFrame ? callFrame.location.scriptId : undefined,
     );
-    const highlighted = React.useMemo(() => highlightJs(script), [script]);
+    const lines = React.useMemo(() => highlightJs(script).split("\n"), [
+        script,
+    ]);
 
     if (!state) {
         return (
@@ -79,7 +81,6 @@ export function Code(): JSX.Element {
             </LogoText>
         );
     } else if (state.target.paused && callFrame) {
-        const lines = highlighted.split("\n");
         const height = lines.length;
         const loc = callFrame.location;
         return (
