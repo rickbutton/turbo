@@ -6,7 +6,9 @@ import { render } from "../renderer";
 import { log } from "../components/log";
 import { Repl } from "../components/repl";
 import { Code } from "../components/code";
-import { ClientContext } from "../components/helpers";
+import { ClientContext, TurboContext } from "../components/helpers";
+import { Breakpoints } from "../components/breakpoints";
+import { Stack } from "../components/stack";
 
 interface StandardComponent {
     type: "standard";
@@ -23,16 +25,21 @@ const components: { [key: string]: Component } = {
     debug: { type: "standard", value: log.bind(null, "turbo") },
     repl: { type: "react", value: Repl },
     code: { type: "react", value: Code },
+    breakpoints: { type: "react", value: Breakpoints },
+    stack: { type: "react", value: Stack },
 };
 
 interface AppProps {
+    turbo: Turbo;
     client: Client;
 }
 function App(props: React.PropsWithChildren<AppProps>): JSX.Element {
     return (
-        <ClientContext.Provider value={props.client}>
-            {props.children}
-        </ClientContext.Provider>
+        <TurboContext.Provider value={props.turbo}>
+            <ClientContext.Provider value={props.client}>
+                {props.children}
+            </ClientContext.Provider>
+        </TurboContext.Provider>
     );
 }
 
@@ -53,7 +60,7 @@ export function component(turbo: Turbo, name: string): void {
     client.on("ready", () => {
         if (Component.type === "react") {
             render(
-                <App client={client}>
+                <App turbo={turbo} client={client}>
                     <Component.value />
                 </App>,
             );

@@ -21,7 +21,7 @@ import {
     Script,
     Breakpoint,
 } from "./index";
-import { RawBreakpointId, ResolvedBreakpoint } from "./state";
+import { RawBreakpointId, ResolvedBreakpoint, Scope } from "./state";
 
 const CDP = (ChromeRemoteInterface as unknown) as Factory;
 
@@ -64,11 +64,26 @@ function toScript(script: Protocol.Debugger.ScriptParsedEvent): Script {
     };
 }
 
+function toScope(scope: Protocol.Debugger.Scope): Scope {
+    return {
+        type: scope.type,
+        object: toRemoteObject(scope.object),
+        name: scope.name,
+        startLocation: scope.startLocation
+            ? toSourceLocation(scope.startLocation)
+            : undefined,
+        endLocation: scope.endLocation
+            ? toSourceLocation(scope.endLocation)
+            : undefined,
+    };
+}
+
 function toCallFrame(callFrame: Protocol.Debugger.CallFrame): CallFrame {
     return {
         id: callFrame.callFrameId as CallFrameId,
         functionName: callFrame.functionName,
         location: toSourceLocation(callFrame.location),
+        scopes: callFrame.scopeChain.map(s => toScope(s)),
     };
 }
 

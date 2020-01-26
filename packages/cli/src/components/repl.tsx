@@ -1,16 +1,11 @@
 import { Client } from "@turbo/net";
-import {
-    logger,
-    State,
-    ScriptId,
-    Script,
-    uuid,
-    BreakpointId,
-} from "@turbo/core";
+import { logger, uuid, BreakpointId, Turbo } from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
 import { Eval } from "./eval";
-import { useClient } from "./helpers";
+import { useClient, useTurbo, getScript } from "./helpers";
+import { Breakpoints } from "./breakpoints";
+import { Stack } from "./stack";
 
 const PROMPT = "> ";
 
@@ -103,16 +98,13 @@ function Help(): JSX.Element {
     );
 }
 
-function getScript(state: State, id: ScriptId | undefined): Script | undefined {
-    return state ? state.target.scripts.find(s => s.id === id) : undefined;
-}
-
 function isInteger(str: string): boolean {
     const n = Math.floor(Number(str));
     return n !== Infinity && String(n) === str && n >= 0;
 }
 
 async function handle(
+    turbo: Turbo,
     input: string,
     client: Client,
 ): Promise<JSX.Element | null> {
@@ -138,31 +130,7 @@ async function handle(
         client.dispatch({ type: SIMPLE_RUNTIME_COMMANDS[cmd.type] });
     } else if (cmd.type === "stack") {
         if (state.target.paused) {
-            return (
-                <Box direction="column">
-                    {state.target.callFrames.map((f, i) => {
-                        const script = getScript(state, f.location.scriptId);
-                        if (script) {
-                            return (
-                                <Box key={i}>
-                                    <Box color="red">
-                                        {i === state.target.focusedCallFrame
-                                            ? "> "
-                                            : "  "}
-                                    </Box>
-                                    {f.functionName || "<anonymous>"} (
-                                    {script.url}:{f.location.line + 1}
-                                    {f.location.column !== undefined
-                                        ? `:${f.location.column + 1}`
-                                        : ""}
-                                    )
-                                </Box>
-                            );
-                        } else {
-                        }
-                    })}
-                </Box>
-            );
+            return <Stack />;
         } else {
             return <Box color="red">not paused</Box>;
         }
@@ -217,16 +185,7 @@ async function handle(
             }
         }
     } else if (cmd.type === "breaks") {
-        const breakpoints = state.target.breakpoints;
-        return (
-            <Box direction="column">
-                {breakpoints.map((b, i) => (
-                    <Box key={i}>
-                        {b.url} - {b.line}:{b.column}
-                    </Box>
-                ))}
-            </Box>
-        );
+        return <Breakpoints />;
     } else if (!target.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
@@ -245,6 +204,7 @@ async function handle(
 
 export function Repl(): JSX.Element {
     const client = useClient();
+    const turbo = useTurbo();
     const [lines, setLines] = React.useState<JSX.Element[]>([]);
 
     async function onSubmit(value: string): Promise<void> {
@@ -254,7 +214,7 @@ export function Repl(): JSX.Element {
         ];
         setLines(newLines);
 
-        const output = await handle(value, client);
+        const output = await handle(turbo, value, client);
         if (output) {
             setLines([
                 ...newLines,

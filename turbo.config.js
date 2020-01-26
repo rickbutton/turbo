@@ -18,11 +18,15 @@ module.exports = {
                 ],
             },
             {
-                name: "repl",
+                name: "new",
                 panes: [
                     {
                         type: "component",
-                        component: "repl",
+                        component: "breakpoints",
+                    },
+                    {
+                        type: "component",
+                        component: "stack",
                     },
                 ],
             },

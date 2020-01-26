@@ -7,9 +7,18 @@ import {
     RemoteException,
     ScriptId,
     CallFrame,
+    Turbo,
+    Script,
 } from "@turbo/core";
 import React from "react";
 import { highlight } from "cli-highlight";
+
+export const TurboContext = React.createContext<Turbo>(
+    (null as unknown) as Turbo,
+);
+export function useTurbo(): Turbo {
+    return React.useContext(TurboContext);
+}
 
 export const ClientContext = React.createContext<Client>(
     (null as unknown) as Client,
@@ -32,6 +41,13 @@ export function useClientState(): State | null {
     }, [client]);
 
     return state;
+}
+
+export function getScript(
+    state: State,
+    id: ScriptId | undefined,
+): Script | undefined {
+    return state ? state.target.scripts.find(s => s.id === id) : undefined;
 }
 
 export function useScriptSource(id: ScriptId | undefined): string {

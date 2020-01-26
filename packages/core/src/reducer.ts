@@ -175,6 +175,24 @@ function reduce(
                         : state.target.focusedCallFrame,
                 },
             };
+        case "focus":
+            let newFocus = state.target.focusedCallFrame;
+
+            if (
+                state.target.paused &&
+                newFocus >= 0 &&
+                newFocus < state.target.callFrames.length
+            ) {
+                newFocus = action.frame;
+            }
+
+            return {
+                ...state,
+                target: {
+                    ...state.target,
+                    focusedCallFrame: newFocus,
+                },
+            };
         default:
             return state;
     }

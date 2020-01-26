@@ -61,10 +61,18 @@ export interface SourceLocation {
     line: number;
     column?: number;
 }
+export interface Scope {
+    type: string;
+    object: RemoteObject;
+    name?: string;
+    startLocation?: SourceLocation;
+    endLocation?: SourceLocation;
+}
 export interface CallFrame {
     id: CallFrameId;
     functionName: string;
     location: SourceLocation;
+    scopes: Scope[];
 }
 export interface BreakLocation {
     scriptId: ScriptId;
@@ -255,6 +263,10 @@ export type StepOverAction = EmptyAction<"stepOver">;
 
 export type FocusUpCallFrameAction = EmptyAction<"focus-up">;
 export type FocusDownCallFrameAction = EmptyAction<"focus-down">;
+export interface FocusCallFrameAction {
+    type: "focus";
+    frame: number;
+}
 
 export interface AddScriptAction {
     type: "add-script";
@@ -300,6 +312,7 @@ export type Action =
     | StepOverAction
     | FocusUpCallFrameAction
     | FocusDownCallFrameAction
+    | FocusCallFrameAction
     | AddScriptAction
     | SetBreakpointAction
     | VerifyBreakpointAction

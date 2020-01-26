@@ -38,6 +38,20 @@ function getAllSessionIds(): SessionId[] {
     return files.map(f => path.basename(f) as SessionId);
 }
 
+function cleanPath(p: string): string {
+    const cwd = process.cwd();
+
+    const relative = path.relative(cwd, p);
+    const isSubDir =
+        relative && !relative.startsWith("..") && !path.isAbsolute(relative);
+
+    if (isSubDir) {
+        return relative;
+    } else {
+        return p;
+    }
+}
+
 function exit(): void {
     process.exit(0);
 }
@@ -53,6 +67,7 @@ function getEnvironment(): Environment {
         getTmpFolder,
         getTmpFile,
         getAllSessionIds,
+        cleanPath,
         exit,
     };
 }

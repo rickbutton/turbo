@@ -22,6 +22,12 @@ dturbo - run dev version of turbo
         - points a config file at cwd (the turbo dev folder)
     - dturbo -- the rest
  
+enable/disable individual breakpoints
+layered config - 
+    ~/turbo.config.js
+    ~/.turbo.config.js
+    recursive up from cwd
+
 components:
     layout components? - tabs/draggable splitters?
     stack trace - add "focus" to state

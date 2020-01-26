@@ -17,6 +17,7 @@ import {
 import { drawContainer } from "./draw";
 import { BufferTargetContext, BufferTargetMode } from "./buffertarget";
 import { TerminalBufferTarget } from "./terminal";
+import { logger } from "@turbo/core";
 
 type ElementType = string;
 type ElementProps = { [key: string]: any };
@@ -203,10 +204,15 @@ export function render(
     });
     target.on("mouse", event => {
         const { x, y } = event;
-        const targets = getNodesContainingPosition(container.node, x, y);
+        const targets = getNodesContainingPosition(
+            container.node,
+            x - 1,
+            y - 1,
+        );
 
         for (const target of targets) {
             if (event.button === "left" && !event.pressed && target.onClick) {
+                logger.verbose("handling target onClick");
                 target.onClick(event);
             }
             if (target.onMouse) {

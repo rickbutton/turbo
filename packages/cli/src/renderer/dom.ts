@@ -3,6 +3,7 @@ import { applyStyle, NodeStyle } from "./style";
 import stringWidth from "string-width";
 import { BufferTarget, MouseEvent } from "./buffertarget";
 import { Span, parseAnsi } from "./ansi";
+import { logger } from "@turbo/core";
 
 export interface Container {
     drawing: boolean;
@@ -326,9 +327,9 @@ export function getNodesContainingPosition(
         const width = n.yoga.getComputedWidth();
         const height = n.yoga.getComputedHeight();
         const xmin = x;
-        const xmax = x + width;
+        const xmax = x + width - 1;
         const ymin = y;
-        const ymax = y + height;
+        const ymax = y + height - 1;
 
         if (
             positionX >= xmin &&
