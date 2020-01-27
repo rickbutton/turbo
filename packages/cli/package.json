@@ -1,5 +1,5 @@
 {
-  "name": "@turbo/cli",
+  "name": "turbo",
   "version": "0.0.1",
   "license": "MIT",
   "author": "Rick Button <rick@button.dev>",
