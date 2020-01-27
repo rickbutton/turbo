@@ -1,4 +1,4 @@
-import { logger, LOGO, SourceLocation, Breakpoint } from "@turbo/core";
+import { logger, LOGO, Breakpoint } from "@turbo/core";
 import React from "react";
 import { Box, ScrollableBox } from "../renderer";
 import {
@@ -8,29 +8,38 @@ import {
     useScriptSource,
 } from "./helpers";
 
-function numbers(height: number): string[] {
-    const width = String(height).length;
+interface NumbersProps {
+    height: number;
+}
+function Numbers(props: NumbersProps): JSX.Element {
+    const width = String(props.height).length;
     const elements: string[] = [];
 
-    for (let i = 0; i < height; i++) {
+    for (let i = 0; i < props.height; i++) {
         elements.push(String(i + 1).padStart(width, " "));
     }
-    return elements;
+    return <Box direction="column">{elements}</Box>;
 }
 
-function gutter(
-    height: number,
-    loc: SourceLocation,
-    breakpoints: Breakpoint[],
-): JSX.Element[] {
+interface GutterProps {
+    height: number;
+}
+function Gutter(props: GutterProps): JSX.Element {
+    const state = useClientState();
+    const callFrame = useFocusedCallFrame();
+
+    if (!state) return <Box />;
+
+    const breakpoints = state.target.breakpoints;
+
     const breakpointsByLine = breakpoints.reduce((map, breakpoint) => {
         map[breakpoint.line] = breakpoint;
         return map;
     }, {} as { [key: number]: Breakpoint });
 
     const elements: JSX.Element[] = [];
-    for (let i = 0; i < height; i++) {
-        if (i === loc.line) {
+    for (let i = 0; i < props.height; i++) {
+        if (callFrame && i === callFrame.location.line) {
             elements.push(
                 <Box key={i} height={1} width={2} color="red">
                     {" >"}
@@ -39,7 +48,7 @@ function gutter(
         } else if (breakpointsByLine[i]) {
             elements.push(
                 <Box key={i} height={1} width={2} color="red">
-                    {" 0"}
+                    {" O"}
                 </Box>,
             );
         } else {
@@ -50,7 +59,7 @@ function gutter(
             );
         }
     }
-    return elements;
+    return <Box direction="column">{elements}</Box>;
 }
 
 function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
@@ -85,10 +94,8 @@ export function Code(): JSX.Element {
         const loc = callFrame.location;
         return (
             <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
-                <Box direction="column">{numbers(height)}</Box>
-                <Box direction="column">
-                    {gutter(height, loc, state.target.breakpoints)}
-                </Box>
+                <Numbers height={height} />
+                <Gutter height={height} />
                 <Box direction="column" grow={1}>
                     {lines}
                 </Box>

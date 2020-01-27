@@ -1,5 +1,5 @@
 import { generateTmuxStartCommand, generateSessionId } from "@turbo/tmux";
-import { LOGO, Turbo, Layout, SessionId } from "@turbo/core";
+import { Turbo, Layout, SessionId } from "@turbo/core";
 import { Client } from "@turbo/net";
 import * as ffi from "ffi";
 import * as ref from "ref";
@@ -79,8 +79,6 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
 }
 
 export function start(turbo: Turbo): void {
-    console.log(LOGO);
-
     const id = generateSessionId(turbo);
 
     const layout = turbo.config.layout || defaultLayout;

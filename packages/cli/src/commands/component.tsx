@@ -14,9 +14,12 @@ interface StandardComponent {
     type: "standard";
     value: (client: Client) => void;
 }
+interface EmptyReactProps {
+    [key: string]: undefined;
+}
 interface ReactComponent {
     type: "react";
-    value: () => JSX.Element;
+    value: (props: EmptyReactProps) => JSX.Element;
 }
 type Component = StandardComponent | ReactComponent;
 

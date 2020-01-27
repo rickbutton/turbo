@@ -185,7 +185,7 @@ async function handle(
             }
         }
     } else if (cmd.type === "breaks") {
-        return <Breakpoints />;
+        return <Breakpoints breakpoints={state.target.breakpoints} />;
     } else if (!target.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
