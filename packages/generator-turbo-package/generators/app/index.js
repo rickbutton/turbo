@@ -1,13 +1,21 @@
-'use strict';
-const Generator = require('yeoman-generator');
-const chalk = require('chalk');
-const yosay = require('yosay');
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
+/* eslint-disable @typescript-eslint/no-var-requires */
+/* eslint-disable @typescript-eslint/ban-ts-ignore */
+
+"use strict";
+const Generator = require("yeoman-generator");
+const chalk = require("chalk");
+const yosay = require("yosay");
 const path = require("path");
 
 module.exports = class extends Generator {
     prompting() {
         this.log(
-          yosay(`Welcome to the ${chalk.red('generator-turbo-package')} generator!`)
+            yosay(
+                `Welcome to the ${chalk.red(
+                    "generator-turbo-package",
+                )} generator!`,
+            ),
         );
 
         const prompts = [

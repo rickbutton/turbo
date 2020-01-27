@@ -1,6 +1,10 @@
 {
   "name": "@turbo/<%= name %>",
-  "version": "1.0.0",
+  "version": "0.0.1",
+  "license": "MIT",
+  "author": "Rick Button <rick@button.dev>",
+  "homepage": "https://github.com/rickbutton/turbo",
+  "description": "the turbo javascript debugger",
   "main": "lib/index",
   "types": "lib/index",
   "files": [
@@ -8,14 +12,12 @@
   ],
   "scripts": {
     "build": "npm run clean && npm run compile",
-    "watch": "npm run build && npm run compile-watch",
-    "clean": "rm -rf ./lib",
-    "compile": "tsc -p tsconfig.build.json",
-    "compile-watch": "tsc -w -p tsconfig.build.json",
+    "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
+    "compile": "tsc -b tsconfig.build.json",
+    "compile-watch": "tsc -w -b tsconfig.build.json",
     "prepublishOnly": "npm run build"
   },
-  "devDependencies": {
-    "typescript": "^3.6.4",
-    "@types/node": "^12.12.5"
+  "publishConfig": {
+    "access": "public"
   }
 }
