@@ -1,11 +1,4 @@
-import {
-    Target,
-    TargetEvents,
-    Environment,
-    TargetFactory,
-    EmitterBase,
-    logger,
-} from "@turbo/core";
+import { Target, TargetEvents, EmitterBase, logger, Turbo } from "@turbo/core";
 import child from "child_process";
 
 const NODE_EXIT_REGEX = /Waiting for the debugger to disconnect\.\.\.\n$/;
@@ -15,17 +8,14 @@ const NODE_PORT_REGEX = /Debugger listening on ws:\/\/([^:]+):(\d+)/;
 class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     private process: child.ChildProcess | null = null;
     private config: NodeConnectorConfig;
-    private env: Environment;
+    private turbo: Turbo;
 
-    constructor(config: NodeConnectorConfig, env: Environment) {
+    constructor(config: NodeConnectorConfig, turbo: Turbo) {
         super();
         this.config = config;
-        this.env = env;
+        this.turbo = turbo;
     }
 
-    get name(): string {
-        return this.config.name || "node";
-    }
     start(): void {
         logger.debug("process: " + (this.process !== null));
         if (this.process === null) {
@@ -46,7 +36,7 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
     }
 
     private spawn(): void {
-        const nodePath = this.config.nodePath || this.env.nodePath;
+        const nodePath = this.config.nodePath || this.turbo.env.nodePath;
         const args = ["--inspect-brk=0", this.config.script];
 
         logger.info(
@@ -100,12 +90,15 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
 
 export interface NodeConnectorConfig {
     readonly script: string;
-    readonly name?: string;
     readonly nodePath?: string;
 }
 
-export function node(config: NodeConnectorConfig): TargetFactory {
-    return (env: Environment): Target => {
-        return new ManagedScript(config, env);
-    };
+export default function node(
+    config: NodeConnectorConfig,
+    turbo: Turbo,
+): Target {
+    if (!config.script) {
+        throw new Error(`missing script option`);
+    }
+    return new ManagedScript(config, turbo);
 }

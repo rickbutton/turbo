@@ -1,4 +1,10 @@
-import { Turbo, Layout, SessionId, generateSessionId } from "@turbo/core";
+import {
+    Turbo,
+    Layout,
+    SessionId,
+    generateSessionId,
+    createShell,
+} from "@turbo/core";
 import { Client } from "@turbo/net";
 import child from "child_process";
 
@@ -63,7 +69,7 @@ export function start(turbo: Turbo): void {
     client.connect();
 
     client.on("ready", () => {
-        const shell = turbo.config.shell(turbo.env);
+        const shell = createShell(turbo);
         shell.start(id, layout, turbo);
     });
 }

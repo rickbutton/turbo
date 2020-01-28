@@ -21,6 +21,7 @@ export interface Environment {
     readonly getTmpFile: (context: string, name: string) => string;
     readonly getAllSessionIds: () => SessionId[];
     readonly cleanPath: (path: string) => string;
+    readonly require: (path: string) => any;
     readonly exit: () => void;
 }
 
@@ -47,17 +48,22 @@ interface ShellPane {
 
 export type Pane = ComponentPane | ExecPane | ShellPane;
 
+interface Options {
+    [key: string]: any;
+}
+type TargetConfig = string | [string, Options];
+type ShellConfig = string | [string, Options];
 export interface Config {
-    target: TargetFactory;
-    shell: ShellFactory;
+    target: TargetConfig;
+    shell: ShellConfig;
     layout?: Layout;
 }
 
+export type ShellFactory = (options: Options, turbo: Turbo) => Shell;
 export interface Shell {
     start(id: SessionId, layout: Layout, turbo: Turbo): void;
     getSessionId(): SessionId | undefined;
 }
-export type ShellFactory = (env: Environment) => Shell;
 
 export interface StartedEvent {
     interface: {
@@ -72,12 +78,11 @@ export interface TargetEvents {
     stderr: string;
 }
 export interface Target extends Emitter<TargetEvents> {
-    readonly name: string;
     readonly isRunning: boolean;
     readonly start: () => void;
     readonly stop: () => void;
 }
-export type TargetFactory = (env: Environment) => Target;
+export type Connector = (options: Options, turbo: Turbo) => Target;
 
 export interface TurboOptions {
     sessionId?: SessionId;
@@ -97,7 +102,7 @@ export function getCurrentSessionId(turbo: Turbo): SessionId | undefined {
         return turbo.options.sessionId;
     }
 
-    const shell = turbo.config.shell(turbo.env);
+    const shell = createShell(turbo);
     const shellId = shell.getSessionId();
     if (shellId) {
         return shellId;
@@ -123,6 +128,36 @@ export function generateSessionId(turbo: Turbo): SessionId {
         const id = standardIds.length + 1;
         return `${DEFAULT_SESSION_ID}-${id}` as SessionId;
     }
+}
+
+export function resolvePlugin<T>(turbo: Turbo, type: string, name: string): T {
+    const shorthand = `${type}-${name}`;
+    let mod = turbo.env.require(shorthand);
+    if (mod) return mod.default;
+
+    mod = turbo.env.require(name);
+    if (mod) return mod.default;
+
+    throw new Error(`unable to resolve plugin ${type}-${name}`);
+}
+export function createTarget(turbo: Turbo): Target {
+    const config = turbo.config.target;
+    const name = Array.isArray(config) ? config[0] : config;
+    const options = Array.isArray(config) ? config[1] : {};
+
+    const connector = resolvePlugin<Connector>(turbo, "connector", name);
+
+    return connector(options, turbo);
+}
+
+export function createShell(turbo: Turbo): Shell {
+    const config = turbo.config.shell;
+    const name = Array.isArray(config) ? config[0] : config;
+    const options = Array.isArray(config) ? config[1] : {};
+
+    const shell = resolvePlugin<ShellFactory>(turbo, "shell", name);
+
+    return shell(options, turbo);
 }
 
 export { Emitter, EmitterBase } from "./emitter";

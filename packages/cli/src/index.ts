@@ -14,12 +14,6 @@ import { kill } from "./commands/kill";
 import { LOGO, TurboOptions, Turbo } from "@turbo/core";
 import { getTurbo } from "./turbo";
 
-import { node as connectorNode } from "@turbo/connector-node";
-import { tmux as shellTmux } from "@turbo/shell-tmux";
-
-export const node = connectorNode;
-export const tmux = shellTmux;
-
 function getOptions(argv: any): TurboOptions {
     return {
         sessionId: argv.session || undefined,

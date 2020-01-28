@@ -1,17 +1,10 @@
 import { generateTmuxStartCommand } from "./index";
-import {
-    SessionId,
-    Environment,
-    Config,
-    Turbo,
-    Layout,
-    TargetFactory,
-} from "@turbo/core";
+import { SessionId, Environment, Config, Turbo, Layout } from "@turbo/core";
 
 function createConfig(): Config {
     return {
-        target: {} as TargetFactory,
-        shell: {} as any,
+        target: "node",
+        shell: "tmux",
     };
 }
 
@@ -39,6 +32,7 @@ function createEnv(inTmux = false): Environment {
         nodePath: "/tmp/node",
         scriptPath: "/tmp/turbo.js",
         cleanPath: jest.fn(),
+        require: jest.fn(),
         exit: jest.fn(),
     };
 }

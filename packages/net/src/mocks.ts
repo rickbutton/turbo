@@ -1,10 +1,4 @@
-import {
-    Config,
-    TargetFactory,
-    Environment,
-    Turbo,
-    SessionId,
-} from "@turbo/core";
+import { Config, Environment, Turbo, SessionId } from "@turbo/core";
 
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
@@ -28,11 +22,12 @@ const TEST_ENV: Environment = {
     nodePath: "/tmp/node",
     scriptPath: "/tmp/turbo.js",
     cleanPath: jest.fn(),
+    require: jest.fn(),
     exit: jest.fn(),
 };
 const TEST_CONFIG: Config = {
-    target: {} as TargetFactory,
-    shell: {} as any,
+    target: "node",
+    shell: "tmux",
 };
 export const TEST_TURBO: Turbo = {
     env: TEST_ENV,

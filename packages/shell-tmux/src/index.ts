@@ -5,7 +5,6 @@ import {
     Pane,
     Window,
     Layout,
-    ShellFactory,
     Shell,
 } from "@turbo/core";
 import ArrayType from "ref-array";
@@ -163,31 +162,29 @@ function execvp(command: string, args: string[]): void {
     ]);
 }
 
-export function tmux(): ShellFactory {
-    return (env: Environment): Shell => {
-        return {
-            start(id: SessionId, layout: Layout, turbo: Turbo): void {
-                const { command, args } = generateTmuxStartCommand(
-                    id,
-                    layout,
-                    turbo,
-                );
-                execvp(command, args);
-            },
-            getSessionId(): SessionId | undefined {
-                const ids = env.getAllSessionIds();
-                if (inTmux(env)) {
-                    const tmuxId = env
-                        .execSync("tmux display-message -p '#S'")
-                        .toString()
-                        .split("\n")[0] as SessionId;
+export default function tmux(options: {}, turbo: Turbo): Shell {
+    return {
+        start(id: SessionId, layout: Layout, turbo: Turbo): void {
+            const { command, args } = generateTmuxStartCommand(
+                id,
+                layout,
+                turbo,
+            );
+            execvp(command, args);
+        },
+        getSessionId(): SessionId | undefined {
+            const ids = turbo.env.getAllSessionIds();
+            if (inTmux(turbo.env)) {
+                const tmuxId = turbo.env
+                    .execSync("tmux display-message -p '#S'")
+                    .toString()
+                    .split("\n")[0] as SessionId;
 
-                    if (ids.includes(tmuxId)) {
-                        return tmuxId;
-                    }
+                if (ids.includes(tmuxId)) {
+                    return tmuxId;
                 }
-                return undefined;
-            },
-        };
+            }
+            return undefined;
+        },
     };
 }

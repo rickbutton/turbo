@@ -1,8 +1,6 @@
-const turbo = require("turbo");
-
 module.exports = {
-    target: turbo.node({ script: "test.js", name: "test.js test" }),
-    shell: turbo.tmux(),
+    target: ["node", { script: "test.js", name: "test.js test" }],
+    shell: "tmux",
     layout: {
         windows: [
             {

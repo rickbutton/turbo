@@ -56,6 +56,34 @@ function exit(): void {
     process.exit(0);
 }
 
+function tryRequire(path: string): any {
+    try {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires
+        const mod = require(path);
+
+        if (mod.__esModule) {
+            return mod;
+        } else {
+            return { default: mod };
+        }
+    } catch (e) {
+        if (e.code !== "MODULE_NOT_FOUND") {
+            throw e;
+        }
+        return false;
+    }
+}
+
+function turboRequire(path: string): any {
+    let mod = tryRequire(`@turbo/${path}`);
+    if (mod) return mod;
+
+    mod = tryRequire(path);
+    if (mod) return mod;
+
+    return false;
+}
+
 function getEnvironment(): Environment {
     const nodePath = process.argv[0];
     const scriptPath = process.argv[1];
@@ -68,6 +96,7 @@ function getEnvironment(): Environment {
         getTmpFile,
         getAllSessionIds,
         cleanPath,
+        require: turboRequire,
         exit,
     };
 }

@@ -5,6 +5,7 @@ import {
     format,
     LogEvent,
     getCurrentSessionId,
+    createTarget,
 } from "@turbo/core";
 import { SocketLogServer, SocketServer } from "@turbo/net";
 
@@ -42,8 +43,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
         turboLog.log(msg);
     });
 
-    const targetFactory = turbo.config.target;
-    const target = targetFactory(turbo.env);
+    const target = createTarget(turbo);
     target.on("stdout", log => targetLog.log(log));
     target.on("stderr", log => targetLog.log(log));
     process.on("exit", () => target.stop());
