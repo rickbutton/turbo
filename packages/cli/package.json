@@ -34,7 +34,6 @@
     "@types/terminal-kit": "^1.28.0",
     "@types/yargs": "^13.0.3",
     "@types/yoga-layout": "^1.9.1",
-    "chrome-remote-interface": "^0.28.1",
     "cli-highlight": "^2.1.4",
     "react": "^16.12.0",
     "react-reconciler": "^0.24.0",
