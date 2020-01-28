@@ -1,6 +1,6 @@
 {
   "name": "@turbo/connector-node",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "license": "MIT",
   "author": "Rick Button <rick@button.dev>",
   "homepage": "https://github.com/rickbutton/turbo",
@@ -21,7 +21,7 @@
     "@types/node": "^12.12.5"
   },
   "dependencies": {
-    "@turbo/core": "^0.0.1"
+    "@turbo/core": "^0.2.0"
   },
   "publishConfig": {
     "access": "public"

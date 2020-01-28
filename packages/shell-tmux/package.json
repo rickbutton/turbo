@@ -1,6 +1,6 @@
 {
   "name": "@turbo/shell-tmux",
-  "version": "0.0.1",
+  "version": "0.2.0",
   "license": "MIT",
   "author": "Rick Button <rick@button.dev>",
   "homepage": "https://github.com/rickbutton/turbo",
@@ -23,7 +23,7 @@
     "@types/ref-array": "^0.0.28"
   },
   "dependencies": {
-    "@turbo/core": "^0.0.1",
+    "@turbo/core": "^0.2.0",
     "ffi": "github:lxe/node-ffi#node-12",
     "ref": "github:lxe/ref#node-12",
     "ref-array": "github:lxe/ref-array#node-12"
