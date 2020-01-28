@@ -3,6 +3,7 @@ import { mocked } from "ts-jest/utils";
 import fs from "fs";
 import path from "path";
 import child from "child_process";
+import { getCurrentSessionId } from "@turbo/core";
 
 jest.mock("child_process", () => ({
     execSync: jest.fn().mockImplementation((command: string) => {
@@ -79,6 +80,11 @@ describe("Turbo", () => {
                 ["/tmp/exists/foo/turbo.config.js"],
                 ["/tmp/exists/turbo.config.js"],
             ]);
+        });
+
+        test("getCurrentSessionId returns the correct id", () => {
+            const turbo = getTurbo({});
+            expect(getCurrentSessionId(turbo)).toBe("session");
         });
     });
 });

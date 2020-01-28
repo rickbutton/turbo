@@ -49,8 +49,15 @@ export type Pane = ComponentPane | ExecPane | ShellPane;
 
 export interface Config {
     target: TargetFactory;
+    shell: ShellFactory;
     layout?: Layout;
 }
+
+export interface Shell {
+    start(id: SessionId, layout: Layout, turbo: Turbo): void;
+    getSessionId(): SessionId | undefined;
+}
+export type ShellFactory = (env: Environment) => Shell;
 
 export interface StartedEvent {
     interface: {
@@ -83,6 +90,39 @@ export interface Turbo {
 
 export function uuid(): string {
     return uuidv4();
+}
+
+export function getCurrentSessionId(turbo: Turbo): SessionId | undefined {
+    if (turbo.options.sessionId) {
+        return turbo.options.sessionId;
+    }
+
+    const shell = turbo.config.shell(turbo.env);
+    const shellId = shell.getSessionId();
+    if (shellId) {
+        return shellId;
+    }
+
+    const ids = turbo.env.getAllSessionIds();
+    if (ids.length === 1) {
+        return ids[0];
+    }
+
+    return undefined;
+}
+
+export const DEFAULT_SESSION_ID = "turbo" as SessionId;
+export function generateSessionId(turbo: Turbo): SessionId {
+    const sessionIds = turbo.env.getAllSessionIds();
+
+    const standardIds = sessionIds.filter(id => /^turbo(-.+)?$/.test(id));
+
+    if (!standardIds.includes(DEFAULT_SESSION_ID)) {
+        return DEFAULT_SESSION_ID;
+    } else {
+        const id = standardIds.length + 1;
+        return `${DEFAULT_SESSION_ID}-${id}` as SessionId;
+    }
 }
 
 export { Emitter, EmitterBase } from "./emitter";

@@ -76,6 +76,9 @@ function validateConfig(config: Config): void {
     if (!config.target) {
         throw new Error("must specify a target in turbo config");
     }
+    if (!config.shell) {
+        throw new Error("must specify a shell in turbo config");
+    }
 }
 
 function getConfig(basePath?: string): Config {

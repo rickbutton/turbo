@@ -1,5 +1,0 @@
-new-window -n "watch" "nvim;zsh"
-new-window "yarn test-watch;zsh"
-split-window -v "yarn watch;zsh"
-new-window -n "sh"
-new-window -n "sh2"

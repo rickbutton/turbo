@@ -1,5 +1,5 @@
 {
-  "name": "@turbo/tmux",
+  "name": "@turbo/shell-tmux",
   "version": "0.0.1",
   "license": "MIT",
   "author": "Rick Button <rick@button.dev>",
@@ -17,8 +17,16 @@
     "compile-watch": "tsc -w -b tsconfig.build.json",
     "prepublishOnly": "npm run build"
   },
+  "devDependencies": {
+    "@types/ffi": "^0.2.2",
+    "@types/ref": "^0.0.28",
+    "@types/ref-array": "^0.0.28"
+  },
   "dependencies": {
-    "@turbo/core": "^0.0.1"
+    "@turbo/core": "^0.0.1",
+    "ffi": "github:lxe/node-ffi#node-12",
+    "ref": "github:lxe/ref#node-12",
+    "ref-array": "github:lxe/ref-array#node-12"
   },
   "publishConfig": {
     "access": "public"

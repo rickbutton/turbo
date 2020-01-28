@@ -32,6 +32,7 @@ const TEST_ENV: Environment = {
 };
 const TEST_CONFIG: Config = {
     target: {} as TargetFactory,
+    shell: {} as any,
 };
 export const TEST_TURBO: Turbo = {
     env: TEST_ENV,

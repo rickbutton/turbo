@@ -1,5 +1,11 @@
-import { Turbo, logger, makeStore, format, LogEvent } from "@turbo/core";
-import { getCurrentSessionId } from "@turbo/tmux";
+import {
+    Turbo,
+    logger,
+    makeStore,
+    format,
+    LogEvent,
+    getCurrentSessionId,
+} from "@turbo/core";
 import { SocketLogServer, SocketServer } from "@turbo/net";
 
 function debounce<T extends (...args: any[]) => void>(

@@ -1,4 +1,4 @@
-import { generateTmuxStartCommand, getCurrentSessionId } from "./index";
+import { generateTmuxStartCommand } from "./index";
 import {
     SessionId,
     Environment,
@@ -11,6 +11,7 @@ import {
 function createConfig(): Config {
     return {
         target: {} as TargetFactory,
+        shell: {} as any,
     };
 }
 
@@ -163,9 +164,4 @@ test("generateTmuxStartCommand creates a command for multiple windows", () => {
             ...POST_CMDS,
         ],
     });
-});
-
-test("getCurrentSessionId returns the correct id", () => {
-    const turbo = createTurbo(createEnv(true), createConfig());
-    expect(getCurrentSessionId(turbo)).toBe("session");
 });

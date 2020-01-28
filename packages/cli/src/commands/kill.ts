@@ -1,5 +1,4 @@
-import { Turbo } from "@turbo/core";
-import { getCurrentSessionId } from "@turbo/tmux";
+import { Turbo, getCurrentSessionId } from "@turbo/core";
 import { Client } from "@turbo/net";
 
 export function kill(turbo: Turbo): void {

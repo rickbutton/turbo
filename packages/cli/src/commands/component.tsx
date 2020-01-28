@@ -1,6 +1,5 @@
-import { Turbo, logger } from "@turbo/core";
+import { Turbo, logger, getCurrentSessionId } from "@turbo/core";
 import { Client } from "@turbo/net";
-import { getCurrentSessionId } from "@turbo/tmux";
 import React from "react";
 import { render } from "../renderer";
 import { log } from "../components/log";

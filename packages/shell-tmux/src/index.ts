@@ -5,21 +5,12 @@ import {
     Pane,
     Window,
     Layout,
+    ShellFactory,
+    Shell,
 } from "@turbo/core";
-
-export const DEFAULT_SESSION_ID = "turbo" as SessionId;
-export function generateSessionId(turbo: Turbo): SessionId {
-    const sessionIds = turbo.env.getAllSessionIds();
-
-    const standardIds = sessionIds.filter(id => /^turbo(-.+)?$/.test(id));
-
-    if (!standardIds.includes(DEFAULT_SESSION_ID)) {
-        return DEFAULT_SESSION_ID;
-    } else {
-        const id = standardIds.length + 1;
-        return `${DEFAULT_SESSION_ID}-${id}` as SessionId;
-    }
-}
+import ArrayType from "ref-array";
+import * as ffi from "ffi";
+import * as ref from "ref";
 
 function getNodeCommand(
     env: Environment,
@@ -114,7 +105,7 @@ function generateSessionArgs(
     layout: Layout,
     turbo: Turbo,
 ): string[] {
-    const tmux = inTmux(turbo);
+    const tmux = inTmux(turbo.env);
 
     const footer = tmux
         ? Array(layout.windows.length - 1)
@@ -143,30 +134,60 @@ export function generateTmuxStartCommand(
     };
 }
 
-function inTmux(turbo: Turbo): boolean {
-    return Boolean(turbo.env.getVar("TMUX"));
+function inTmux(env: Environment): boolean {
+    return Boolean(env.getVar("TMUX"));
 }
 
-export function getCurrentSessionId(turbo: Turbo): SessionId | undefined {
-    if (turbo.options.sessionId) {
-        return turbo.options.sessionId;
+const stringArray = ArrayType("string");
+function getFd(v: any): void {
+    return v._handle.fd;
+}
+
+function execvp(command: string, args: string[]): void {
+    if (args.length === 0) {
+        throw new Error("invalid args to execvp");
     }
 
-    const ids = turbo.env.getAllSessionIds();
-    if (inTmux(turbo)) {
-        const tmuxId = turbo.env
-            .execSync("tmux display-message -p '#S'")
-            .toString()
-            .split("\n")[0] as SessionId;
+    const current = ffi.Library((null as unknown) as string, {
+        execvp: ["int", ["string", stringArray]],
+        dup2: ["int", ["int", "int"]],
+    });
+    current.dup2(getFd(process.stdin), 0);
+    current.dup2(getFd(process.stdout), 1);
+    current.dup2(getFd(process.stderr), 2);
 
-        if (ids.includes(tmuxId)) {
-            return tmuxId;
-        }
-    }
+    return current.execvp(command, [
+        command,
+        ...args.slice(),
+        (ref.NULL as unknown) as string[],
+    ]);
+}
 
-    if (ids.length === 1) {
-        return ids[0];
-    }
+export function tmux(): ShellFactory {
+    return (env: Environment): Shell => {
+        return {
+            start(id: SessionId, layout: Layout, turbo: Turbo): void {
+                const { command, args } = generateTmuxStartCommand(
+                    id,
+                    layout,
+                    turbo,
+                );
+                execvp(command, args);
+            },
+            getSessionId(): SessionId | undefined {
+                const ids = env.getAllSessionIds();
+                if (inTmux(env)) {
+                    const tmuxId = env
+                        .execSync("tmux display-message -p '#S'")
+                        .toString()
+                        .split("\n")[0] as SessionId;
 
-    return undefined;
+                    if (ids.includes(tmuxId)) {
+                        return tmuxId;
+                    }
+                }
+                return undefined;
+            },
+        };
+    };
 }

@@ -1,9 +1,5 @@
-import { generateTmuxStartCommand, generateSessionId } from "@turbo/tmux";
-import { Turbo, Layout, SessionId } from "@turbo/core";
+import { Turbo, Layout, SessionId, generateSessionId } from "@turbo/core";
 import { Client } from "@turbo/net";
-import * as ffi from "ffi";
-import * as ref from "ref";
-import ArrayType from "ref-array";
 import child from "child_process";
 
 const defaultLayout: Layout = {
@@ -19,32 +15,6 @@ const defaultLayout: Layout = {
         { name: "sh", panes: [{ type: "shell" }] },
     ],
 };
-
-const stringArray = ArrayType("string");
-
-function getFd(v: any): void {
-    return v._handle.fd;
-}
-
-function execvp(command: string, args: string[]): void {
-    if (args.length === 0) {
-        throw new Error("invalid args to execvp");
-    }
-
-    const current = ffi.Library((null as unknown) as string, {
-        execvp: ["int", ["string", stringArray]],
-        dup2: ["int", ["int", "int"]],
-    });
-    current.dup2(getFd(process.stdin), 0);
-    current.dup2(getFd(process.stdout), 1);
-    current.dup2(getFd(process.stderr), 2);
-
-    return current.execvp(command, [
-        command,
-        ...args.slice(),
-        (ref.NULL as unknown) as string[],
-    ]);
-}
 
 function spawnDaemon(turbo: Turbo, id: SessionId): void {
     try {
@@ -82,9 +52,6 @@ export function start(turbo: Turbo): void {
     const id = generateSessionId(turbo);
 
     const layout = turbo.config.layout || defaultLayout;
-
-    const { command, args } = generateTmuxStartCommand(id, layout, turbo);
-
     // spawn daemon in background
     spawnDaemon(turbo, id);
 
@@ -96,7 +63,7 @@ export function start(turbo: Turbo): void {
     client.connect();
 
     client.on("ready", () => {
-        // replace current process with spawned tmux
-        execvp(command, args);
+        const shell = turbo.config.shell(turbo.env);
+        shell.start(id, layout, turbo);
     });
 }
