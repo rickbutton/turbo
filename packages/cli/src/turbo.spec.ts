@@ -3,7 +3,7 @@ import { mocked } from "ts-jest/utils";
 import fs from "fs";
 import path from "path";
 import child from "child_process";
-import { getCurrentSessionId } from "@turbo/core";
+import { getCurrentSessionId, Shell } from "@turbo/core";
 
 jest.mock("child_process", () => ({
     execSync: jest.fn().mockImplementation((command: string) => {
@@ -25,13 +25,24 @@ jest.mock("fs", () => ({
     existsSync: jest.fn().mockImplementation((p: fs.PathLike) => {
         const resolved = path.resolve(p.toString());
         if (resolved === "/tmp/exists/turbo.config.js") return true;
+        if (resolved === "/tmp/turbo/sessions") return true;
         return false;
+    }),
+    readdirSync: jest.fn().mockImplementation((p: fs.PathLike) => {
+        const resolved = path.resolve(p.toString());
+        if (resolved === "/tmp/turbo/sessions")
+            return ["/tmp/turbo/sessions/session"];
+        return [];
     }),
 }));
 jest.mock(
     "/tmp/exists/turbo.config.js",
     () => ({
         target: {},
+        shell: (): Shell => ({
+            start: jest.fn(),
+            getSessionId: jest.fn().mockReturnValue(undefined),
+        }),
     }),
     { virtual: true },
 );
