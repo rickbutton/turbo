@@ -1,6 +1,6 @@
 {
   "name": "@turbo/shell-tmux",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "license": "MIT",
   "author": "Rick Button <rick@button.dev>",
   "homepage": "https://github.com/rickbutton/turbo",
@@ -23,7 +23,7 @@
     "@types/ref-napi": "^1.4.0"
   },
   "dependencies": {
-    "@turbo/core": "^0.2.0",
+    "@turbo/core": "^0.2.3",
     "ffi-napi": "^2.4.6",
     "ref-array-di": "^1.2.1",
     "ref-napi": "^1.4.3"

@@ -1,6 +1,6 @@
 {
   "name": "turbo",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "license": "MIT",
   "author": "Rick Button <rick@button.dev>",
   "homepage": "https://github.com/rickbutton/turbo",
@@ -26,10 +26,10 @@
     "@types/node": "^12.12.5"
   },
   "dependencies": {
-    "@turbo/connector-node": "^0.2.0",
-    "@turbo/core": "^0.2.0",
-    "@turbo/net": "^0.2.0",
-    "@turbo/shell-tmux": "^0.2.0",
+    "@turbo/connector-node": "^0.2.3",
+    "@turbo/core": "^0.2.3",
+    "@turbo/net": "^0.2.3",
+    "@turbo/shell-tmux": "^0.2.3",
     "@types/react": "^16.9.16",
     "@types/react-reconciler": "^0.18.0",
     "@types/terminal-kit": "^1.28.0",
