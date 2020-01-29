@@ -22,6 +22,7 @@ export interface Environment {
     readonly getAllSessionIds: () => SessionId[];
     readonly cleanPath: (path: string) => string;
     readonly require: (path: string) => any;
+    readonly readFile: (path: string) => string;
     readonly exit: () => void;
 }
 

@@ -23,6 +23,7 @@ const TEST_ENV: Environment = {
     scriptPath: "/tmp/turbo.js",
     cleanPath: jest.fn(),
     require: jest.fn(),
+    readFile: jest.fn(),
     exit: jest.fn(),
 };
 const TEST_CONFIG: Config = {

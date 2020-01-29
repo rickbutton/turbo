@@ -10,23 +10,45 @@ jest.mock("child_process", () => ({
         return Buffer.from(`FOO${command}BAR`, "utf8");
     }),
 }));
+jest.mock("os", () => ({
+    homedir: jest.fn().mockReturnValue("/home/user"),
+}));
 jest.mock("process", () => ({
     argv: ["/tmp/foo/node", "/tmp/foo/myScript.js"],
-    cwd: (): string => {
-        return "/tmp/exists/foo/bar/baz/";
-    },
+    cwd: jest.fn().mockReturnValue("/tmp/exists/foo/bar/baz/"),
     env: {
         FOO: "BAR",
         foo: "bar",
         BAR: "BAZ",
     },
 }));
+const FILES: { [key: string]: string } = {
+    "/home/user/.turbo.config.json": JSON.stringify({ one: "one", two: "two" }),
+    "/tmp/exists/foo/bar/baz/turbo.config.json": JSON.stringify({
+        three: "three",
+        one: "three",
+    }),
+    "/tmp/exists/foo/turbo.config.json": JSON.stringify({
+        three: "four",
+    }),
+    "/tmp/exists/turbo.config.json": JSON.stringify({
+        five: "five",
+    }),
+    "/turbo.config.json": JSON.stringify({
+        two: null,
+    }),
+};
 jest.mock("fs", () => ({
     existsSync: jest.fn().mockImplementation((p: fs.PathLike) => {
         const resolved = path.resolve(p.toString());
-        if (resolved === "/tmp/exists/turbo.config.js") return true;
+        if (FILES[resolved]) return true;
         if (resolved === "/tmp/turbo/sessions") return true;
         return false;
+    }),
+    readFileSync: jest.fn().mockImplementation((p: fs.PathLike) => {
+        const resolved = path.resolve(p.toString());
+        if (FILES[resolved]) return FILES[resolved];
+        throw new Error();
     }),
     readdirSync: jest.fn().mockImplementation((p: fs.PathLike) => {
         const resolved = path.resolve(p.toString());
@@ -83,11 +105,35 @@ describe("Turbo", () => {
             const _ = getTurbo({});
 
             expect(mocked(fs.existsSync).mock.calls).toEqual([
-                ["/tmp/exists/foo/bar/baz/turbo.config.js"],
-                ["/tmp/exists/foo/bar/turbo.config.js"],
-                ["/tmp/exists/foo/turbo.config.js"],
-                ["/tmp/exists/turbo.config.js"],
+                ["/home/user/.turbo.config.json"],
+                ["/tmp/exists/foo/bar/baz/turbo.config.json"],
+                ["/tmp/exists/foo/bar/turbo.config.json"],
+                ["/tmp/exists/foo/turbo.config.json"],
+                ["/tmp/exists/turbo.config.json"],
+                ["/tmp/turbo.config.json"],
+                ["/turbo.config.json"],
             ]);
+        });
+        test("getConfig merges the configuration in the correct resolution order", () => {
+            const _ = getTurbo({});
+            const output = _.config as any;
+
+            expect(Object.keys(output)).toEqual([
+                "target",
+                "shell",
+                "one",
+                "two",
+                "three",
+                "five",
+            ]);
+            expect(output).toEqual({
+                target: "node",
+                shell: "tmux",
+                one: "three",
+                two: null,
+                three: "four",
+                five: "five",
+            });
         });
 
         test("getCurrentSessionId returns the correct id", () => {

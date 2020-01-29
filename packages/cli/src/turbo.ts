@@ -2,6 +2,8 @@ import process from "process";
 import path from "path";
 import fs from "fs";
 import child from "child_process";
+import os from "os";
+import JSON5 from "json5";
 import {
     TurboOptions,
     Turbo,
@@ -84,6 +86,10 @@ function turboRequire(path: string): any {
     return false;
 }
 
+function readFile(path: string): string {
+    return fs.readFileSync(path).toString();
+}
+
 function getEnvironment(): Environment {
     const nodePath = process.argv[0];
     const scriptPath = process.argv[1];
@@ -97,36 +103,56 @@ function getEnvironment(): Environment {
         getAllSessionIds,
         cleanPath,
         require: turboRequire,
+        readFile,
         exit,
     };
 }
 
-function validateConfig(config: Config): void {
-    if (!config.target) {
-        throw new Error("must specify a target in turbo config");
-    }
-    if (!config.shell) {
-        throw new Error("must specify a shell in turbo config");
-    }
+function loadJson(path: string): any {
+    const text = fs.readFileSync(path).toString();
+    return JSON5.parse(text);
 }
 
-function getConfig(basePath?: string): Config {
-    const dir = basePath || process.cwd();
-    const parsed = path.parse(dir);
+const DEFAULT_CONFIG: Config = {
+    target: "node",
+    shell: "tmux",
+};
 
-    const configFileName = "turbo.config.js";
+// TODO: load from json instead of js
+// load in current directory
+// load in home directory
+// support "extends" property
+// add a schema!
+function getConfig(): Config {
+    const fileName = "turbo.config.json";
+    const home = os.homedir();
 
-    const configPath = path.join(dir, configFileName);
+    const config: Config = { ...DEFAULT_CONFIG } as Config;
 
-    if (fs.existsSync(configPath)) {
-        const config = require(configPath) as Config;
-        validateConfig(config);
-        return config;
-    } else if (dir !== parsed.root) {
-        return getConfig(path.resolve(dir, ".."));
-    } else {
-        throw new Error("unable to find turbo.config.js");
+    const homeFile = path.join(home, "." + fileName);
+    if (fs.existsSync(homeFile)) {
+        const data = loadJson(homeFile);
+        Object.assign(config, data);
     }
+
+    let dir = process.cwd();
+    const root = path.parse(dir).root;
+
+    while (true) {
+        const file = path.join(dir, fileName);
+        if (fs.existsSync(file)) {
+            const data = loadJson(file);
+            Object.assign(config, data);
+        }
+
+        if (dir === root) {
+            break;
+        } else {
+            dir = path.join(dir, "..");
+        }
+    }
+
+    return config;
 }
 
 export function getTurbo(options: TurboOptions): Turbo {
