@@ -1,35 +1,27 @@
-tests for cli, logger, connector-node, net, core/reducer, core/v8
-
+MUST FOR 1.0
+tests!
 layout strings (at least a good default)
-
-tooltip widget - React portal?
-
-add wrap options
- - word
- - newline
-
-colors for eval command - buffer drawChars with ansi escapes
-
 use yargs for entire repl?
-
 desired focus - on first launch
-
+fix - content height changing inside ScrollableBox not detected
 show prompt for picking session when more than one is running
-
-dturbo - run dev version of turbo
-    - another npm package
-    - dturbo link
-        - points a config file at cwd (the turbo dev folder)
-    - dturbo -- the rest
- 
-enable/disable individual breakpoints\
-
+enable/disable individual breakpoints
 components:
     layout components? - tabs/draggable splitters?
     stack trace - add "focus" to state
     break points
     watchers?
-
 vim plugin
 
+NICE TO HAVE
+tooltip widget - React portal?
+add wrap options
+ - word
+ - newline
+colors for eval command - buffer drawChars with ansi escapes
+dturbo - run dev version of turbo
+    - another npm package
+    - dturbo link
+        - points a config file at cwd (the turbo dev folder)
+    - dturbo -- the rest
 use node-pty to implement a tmux replacement for windows users
