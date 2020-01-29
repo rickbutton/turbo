@@ -7,9 +7,6 @@ import {
     Layout,
     Shell,
 } from "@turbo/core";
-import ArrayType from "ref-array";
-import * as ffi from "ffi";
-import * as ref from "ref";
 
 function getNodeCommand(
     env: Environment,
@@ -137,7 +134,20 @@ function inTmux(env: Environment): boolean {
     return Boolean(env.getVar("TMUX"));
 }
 
-const stringArray = ArrayType("string");
+function getFfi(): any {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ffi = require("ffi-napi");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ref = require("ref-napi");
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const ArrayTypeConstructor = require("ref-array-di");
+
+    const ArrayType = ArrayTypeConstructor(ref as any);
+    const stringArray = ArrayType(ref.types.CString as any);
+
+    return { ffi, ref, stringArray };
+}
+
 function getFd(v: any): void {
     return v._handle.fd;
 }
@@ -146,6 +156,8 @@ function execvp(command: string, args: string[]): void {
     if (args.length === 0) {
         throw new Error("invalid args to execvp");
     }
+
+    const { ffi, ref, stringArray } = getFfi();
 
     const current = ffi.Library((null as unknown) as string, {
         execvp: ["int", ["string", stringArray]],

@@ -3,7 +3,7 @@ import { mocked } from "ts-jest/utils";
 import fs from "fs";
 import path from "path";
 import child from "child_process";
-import { getCurrentSessionId, Shell } from "@turbo/core";
+import { getCurrentSessionId } from "@turbo/core";
 
 jest.mock("child_process", () => ({
     execSync: jest.fn().mockImplementation((command: string) => {
@@ -38,11 +38,8 @@ jest.mock("fs", () => ({
 jest.mock(
     "/tmp/exists/turbo.config.js",
     () => ({
-        target: {},
-        shell: (): Shell => ({
-            start: jest.fn(),
-            getSessionId: jest.fn().mockReturnValue(undefined),
-        }),
+        target: "node",
+        shell: "tmux",
     }),
     { virtual: true },
 );

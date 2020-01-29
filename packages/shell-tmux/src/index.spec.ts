@@ -1,3 +1,7 @@
+jest.mock("ffi-napi");
+jest.mock("ref-napi");
+jest.mock("ref-array-di");
+
 import { generateTmuxStartCommand } from "./index";
 import { SessionId, Environment, Config, Turbo, Layout } from "@turbo/core";
 

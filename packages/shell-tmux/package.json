@@ -18,15 +18,15 @@
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "@types/ffi": "^0.2.2",
-    "@types/ref": "^0.0.28",
-    "@types/ref-array": "^0.0.28"
+    "@types/ffi-napi": "^2.4.1",
+    "@types/ref-array-di": "^1.2.0",
+    "@types/ref-napi": "^1.4.0"
   },
   "dependencies": {
     "@turbo/core": "^0.2.0",
-    "ffi": "github:lxe/node-ffi#node-12",
-    "ref": "github:lxe/ref#node-12",
-    "ref-array": "github:lxe/ref-array#node-12"
+    "ffi-napi": "^2.4.6",
+    "ref-array-di": "^1.2.1",
+    "ref-napi": "^1.4.3"
   },
   "publishConfig": {
     "access": "public"
