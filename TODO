@@ -2,6 +2,9 @@ MUST FOR 1.0
 tests!
 layout strings (at least a good default)
 use yargs for entire repl?
+ - autocomplete - use new node repl as guide, we can show rest of parameters for function calls?
+ - suggestions?
+ - history
 desired focus - on first launch
 fix - content height changing inside ScrollableBox not detected
 enable/disable individual breakpoints
