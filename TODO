@@ -4,7 +4,6 @@ layout strings (at least a good default)
 use yargs for entire repl?
 desired focus - on first launch
 fix - content height changing inside ScrollableBox not detected
-show prompt for picking session when more than one is running
 enable/disable individual breakpoints
 components:
     layout components? - tabs/draggable splitters?
@@ -25,3 +24,4 @@ dturbo - run dev version of turbo
         - points a config file at cwd (the turbo dev folder)
     - dturbo -- the rest
 use node-pty to implement a tmux replacement for windows users
+show prompt for picking session when more than one is running
