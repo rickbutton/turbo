@@ -7,6 +7,7 @@ import {
     useFocusedCallFrame,
     useScriptSource,
     useClient,
+    useTurbo,
 } from "./helpers";
 import { setBreakpoint, removeBreakpoint } from "./actions";
 
@@ -100,6 +101,7 @@ function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
 }
 
 export function Code(): JSX.Element {
+    const turbo = useTurbo();
     const client = useClient();
     const state = useClientState();
     const callFrame = useFocusedCallFrame();
@@ -130,8 +132,9 @@ export function Code(): JSX.Element {
         }
     }
 
+    let content: JSX.Element;
     if (!state) {
-        return (
+        content = (
             <LogoText>
                 <Box wrap={true}>
                     The component has not synced with the daemon.
@@ -141,7 +144,7 @@ export function Code(): JSX.Element {
     } else if (state.target.paused && callFrame) {
         const height = lines.length;
         const loc = callFrame.location;
-        return (
+        content = (
             <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
                 <Numbers height={height} onClick={onGutterClick} />
                 <Gutter height={height} onClick={onGutterClick} />
@@ -151,7 +154,7 @@ export function Code(): JSX.Element {
             </ScrollableBox>
         );
     } else if (state.target.connected) {
-        return (
+        content = (
             <LogoText>
                 <Box wrap={true}>The target is not paused.</Box>
                 <Box wrap={true} marginTop={1} color={"gray"}>
@@ -161,7 +164,7 @@ export function Code(): JSX.Element {
             </LogoText>
         );
     } else {
-        return (
+        content = (
             <LogoText>
                 <Box wrap={true}>The target is not running.</Box>
                 <Box wrap={true} marginTop={1} color={"gray"}>
@@ -171,4 +174,18 @@ export function Code(): JSX.Element {
             </LogoText>
         );
     }
+
+    let title = "";
+    if (script) {
+        title = turbo.env.cleanPath(script.url);
+    }
+
+    return (
+        <Box direction="column">
+            <Box bg={"brightWhite"} color={"black"}>
+                {title}
+            </Box>
+            {content}
+        </Box>
+    );
 }

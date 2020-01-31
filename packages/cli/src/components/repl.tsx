@@ -219,6 +219,9 @@ export function Repl(): JSX.Element {
 
     return (
         <Box direction="column">
+            <Box marginBottom={1} bg={"brightWhite"} color={"black"}>
+                repl
+            </Box>
             <ScrollableBox direction="column" grow={1} snapToBottom={true}>
                 {lines}
                 <Input prompt={PROMPT} onSubmit={onSubmit} />
