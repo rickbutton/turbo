@@ -5,7 +5,6 @@ use yargs for entire repl?
  - autocomplete - use new node repl as guide, we can show rest of parameters for function calls?
  - suggestions?
  - history
-desired focus - on first launch
 fix - content height changing inside ScrollableBox not detected
 enable/disable individual breakpoints
 components:

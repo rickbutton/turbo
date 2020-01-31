@@ -34,7 +34,7 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
     const viewport = useSize(viewportRef);
     const shouldSnapToBottom = props.snapToBottom || false;
 
-    const [desiredFocus, setDesiredFocus] = React.useState(props.desiredFocus);
+    const [desiredFocus, setDesiredFocus] = React.useState(-1);
     const [contentHeight, setContentHeight] = React.useState(0);
     const [viewportOffset, setViewportOffset] = React.useState(0);
     const [snappedToBottom, setSnappedToBottom] = React.useState(
@@ -64,25 +64,36 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
         offset: number,
         userInteraction: boolean,
     ): void {
-        const firstLine = contentHeight - viewportOffset;
-        const lastLine = firstLine + viewport.height;
+        const firstLineInViewport = contentHeight - viewportOffset;
+        const lastLineInViewport = firstLineInViewport + viewport.height;
 
         const oldDesiredFocus = desiredFocus;
         const newDesiredFocus = props.desiredFocus;
         const desiredFocusInView =
             typeof props.desiredFocus !== "undefined"
-                ? props.desiredFocus >= firstLine &&
-                  props.desiredFocus <= lastLine
+                ? props.desiredFocus >= firstLineInViewport &&
+                  props.desiredFocus <= lastLineInViewport
                 : true;
 
         let newOffset = offset;
-        if (!desiredFocusInView && oldDesiredFocus !== newDesiredFocus) {
-            newOffset =
-                (newDesiredFocus || 0) - Math.floor(viewport.height / 2);
+
+        if (
+            typeof newDesiredFocus !== "undefined" &&
+            !desiredFocusInView &&
+            oldDesiredFocus !== newDesiredFocus &&
+            newDesiredFocus < contentHeight
+        ) {
+            // set offset to put desired focus in the middle of the box
+            newOffset = newDesiredFocus - Math.floor(viewport.height / 2);
+
+            // set desired focus because the request has been satisfied
+            setDesiredFocus(newDesiredFocus);
         } else if (snappedToBottom && !userInteraction) {
+            // set focus to bottom, because snapped to bottom
             newOffset = maxViewportOffset;
         }
 
+        // ensure offset is inside range
         if (newOffset < minViewportOffset) {
             newOffset = minViewportOffset;
         } else if (newOffset > maxViewportOffset) {
@@ -99,7 +110,6 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
             setSnappedToBottom(shouldUnsnap);
             setViewportOffset(newOffset);
         }
-        setDesiredFocus(newDesiredFocus);
     }
 
     function updateBarHeight(): void {
