@@ -37,16 +37,6 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
         spawned.on("error", err => {
             console.error(err);
         });
-        if (spawned.stdout) {
-            spawned.stdout.on("data", data => {
-                process.stdout.write(data);
-            });
-        }
-        if (spawned.stderr) {
-            spawned.stderr.on("data", data => {
-                process.stderr.write(data);
-            });
-        }
     } catch (e) {
         console.error("failed to spawn daemon");
         console.error(e);

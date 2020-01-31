@@ -8,7 +8,6 @@ import {
     ScriptId,
     CallFrame,
     Turbo,
-    Script,
 } from "@turbo/core";
 import React from "react";
 import { highlight } from "cli-highlight";
@@ -41,13 +40,6 @@ export function useClientState(): State | null {
     }, [client]);
 
     return state;
-}
-
-export function getScript(
-    state: State,
-    id: ScriptId | undefined,
-): Script | undefined {
-    return state ? state.target.scripts.find(s => s.id === id) : undefined;
 }
 
 export function useScriptSource(id: ScriptId | undefined): string {

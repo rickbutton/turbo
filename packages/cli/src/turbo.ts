@@ -118,11 +118,6 @@ const DEFAULT_CONFIG: Config = {
     shell: "tmux",
 };
 
-// TODO: load from json instead of js
-// load in current directory
-// load in home directory
-// support "extends" property
-// add a schema!
 function getConfig(): Config {
     const fileName = "turbo.config.json";
     const home = os.homedir();

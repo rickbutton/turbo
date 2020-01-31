@@ -6,8 +6,8 @@ import { log } from "../components/log";
 import { Repl } from "../components/repl";
 import { Code } from "../components/code";
 import { ClientContext, TurboContext } from "../components/helpers";
-import { Breakpoints } from "../components/breakpoints";
-import { Stack } from "../components/stack";
+import { BreakpointsComponent } from "../components/breakpoints";
+import { StackComponent } from "../components/stack";
 
 interface StandardComponent {
     type: "standard";
@@ -27,8 +27,8 @@ const components: { [key: string]: Component } = {
     debug: { type: "standard", value: log.bind(null, "turbo") },
     repl: { type: "react", value: Repl },
     code: { type: "react", value: Code },
-    breakpoints: { type: "react", value: Breakpoints },
-    stack: { type: "react", value: Stack },
+    breakpoints: { type: "react", value: BreakpointsComponent },
+    stack: { type: "react", value: StackComponent },
 };
 
 interface AppProps {

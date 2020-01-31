@@ -3,7 +3,7 @@ import { logger, uuid, BreakpointId, Turbo } from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
 import { Eval } from "./eval";
-import { useClient, useTurbo, getScript } from "./helpers";
+import { useClient, useTurbo } from "./helpers";
 import { Breakpoints } from "./breakpoints";
 import { Stack } from "./stack";
 
@@ -130,7 +130,13 @@ async function handle(
         client.dispatch({ type: SIMPLE_RUNTIME_COMMANDS[cmd.type] });
     } else if (cmd.type === "stack") {
         if (state.target.paused) {
-            return <Stack />;
+            return (
+                <Stack
+                    callFrames={state.target.callFrames}
+                    scripts={state.target.scripts}
+                    interactive={false}
+                />
+            );
         } else {
             return <Box color="red">not paused</Box>;
         }
@@ -140,7 +146,7 @@ async function handle(
                   .scriptId
             : undefined;
 
-        const script = getScript(state, scriptId);
+        const script = state.target.scripts.find(s => s.id === scriptId);
 
         const parts = cmd.args.split(" ");
         const linePart = parts[0];
