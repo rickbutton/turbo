@@ -7,6 +7,8 @@ import {
 } from "./buffertarget";
 // eslint-disable-next-line @typescript-eslint/camelcase
 import { unstable_batchedUpdates } from "./renderer";
+// eslint-disable-next-line @typescript-eslint/camelcase
+import { unstable_calculateTextHeight } from ".";
 
 export function useBufferTarget(): BufferTarget {
     return React.useContext(BufferTargetContext);
@@ -28,6 +30,36 @@ export function useTerminalSize(): TerminalSize {
     }, [target.width, target.height]);
 
     return { width, height };
+}
+
+export function useOnHeightChanged(
+    ref: React.RefObject<any>,
+    width: number,
+): number {
+    const [height, setHeight] = React.useState(0);
+
+    function onNodeDrawn(): void {
+        const newHeight = unstable_calculateTextHeight(ref.current, width);
+
+        if (height !== newHeight) {
+            setHeight(newHeight);
+        }
+    }
+
+    React.useEffect(() => {
+        if (ref.current) {
+            // eslint-disable-next-line @typescript-eslint/camelcase
+            ref.current.unstable_onNodeDrawn = onNodeDrawn;
+        }
+        return (): void => {
+            if (ref.current) {
+                // eslint-disable-next-line @typescript-eslint/camelcase
+                ref.current.unstable_onNodeDrawn = undefined;
+            }
+        };
+    }, [ref.current]);
+
+    return height;
 }
 
 export function useInput(cb: (event: InputEvent) => void): void {

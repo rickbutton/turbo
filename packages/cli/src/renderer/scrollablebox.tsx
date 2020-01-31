@@ -1,7 +1,6 @@
 import React from "react";
 import { Box, BoxProps, MouseEvent } from ".";
-// eslint-disable-next-line @typescript-eslint/camelcase
-import { unstable_calculateTextHeight } from ".";
+import { useOnHeightChanged } from "./hooks";
 
 function useSize(ref: React.RefObject<any>): { width: number; height: number } {
     const [width, setWidth] = React.useState(0);
@@ -35,25 +34,15 @@ export function ScrollableBox(props: ScrollableBoxProps): JSX.Element {
     const shouldSnapToBottom = props.snapToBottom || false;
 
     const [desiredFocus, setDesiredFocus] = React.useState(-1);
-    const [contentHeight, setContentHeight] = React.useState(0);
     const [viewportOffset, setViewportOffset] = React.useState(0);
     const [snappedToBottom, setSnappedToBottom] = React.useState(
         props.snapToBottom,
     );
     const [barHeight, setBarHeight] = React.useState(0);
+    const contentHeight = useOnHeightChanged(contentRef, viewport.width);
 
     const minViewportOffset = 0;
     const maxViewportOffset = Math.max(0, contentHeight - viewport.height);
-
-    React.useEffect(() => {
-        if (contentRef.current && viewport.width !== 0) {
-            const height = unstable_calculateTextHeight(
-                contentRef.current,
-                viewport.width,
-            );
-            setContentHeight(height);
-        }
-    });
 
     React.useEffect(() => {
         updateViewportOffset(viewportOffset, false);

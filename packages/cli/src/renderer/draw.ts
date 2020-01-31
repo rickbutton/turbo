@@ -55,11 +55,24 @@ function normalizeSpanColor(
     };
 }
 
+class DrawContext {
+    private funcs: Set<() => void> = new Set();
+    public add(func: () => void): void {
+        this.funcs.add(func);
+    }
+    public complete(): void {
+        for (const func of this.funcs) {
+            func();
+        }
+    }
+}
+
 function drawNode(
     node: Node,
     offsetX: number,
     offsetY: number,
     container: Container,
+    context: DrawContext,
 ): void {
     const { target } = container;
     const x = offsetX + node.yoga.getComputedLeft();
@@ -137,18 +150,22 @@ function drawNode(
                 target.clearCursor();
             }
         }
+        if (node.unstable_onNodeDrawn) {
+            context.add(node.unstable_onNodeDrawn);
+        }
 
         if (node.bg !== undefined) {
             target.fillBg(xmin, xmax, ymin, ymax, node.bg);
         }
 
         for (const child of node.children) {
-            drawNode(child, x, y, container);
+            drawNode(child, x, y, container, context);
         }
     }
 }
 
 export function drawContainer(container: Container): void {
+    const context = new DrawContext();
     const { node, target } = container;
     const { width, height } = target;
     if (container.drawing) {
@@ -189,9 +206,10 @@ export function drawContainer(container: Container): void {
     const realWidth = node.yoga.getComputedWidth();
     const realHeight = node.yoga.getComputedHeight();
     target.prepare(realWidth, realHeight);
-    drawNode(node, x, y, container);
+    drawNode(node, x, y, container, context);
 
     target.flush(delta);
 
     container.drawing = false;
+    context.complete();
 }

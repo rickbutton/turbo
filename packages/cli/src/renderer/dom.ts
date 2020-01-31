@@ -30,6 +30,9 @@ export interface ComplexNode {
 
     onClick?(event: MouseEvent): void;
     onMouse?(event: MouseEvent): void;
+
+    // eslint-disable-next-line @typescript-eslint/camelcase
+    unstable_onNodeDrawn?(): void;
 }
 
 interface TextSize {
