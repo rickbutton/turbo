@@ -43,6 +43,15 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
         process.exit(1);
     }
 }
+// make daemon not crash on missing target script
+// daemon server sends "error message?"
+// embeds "lastErrors" in pong message?
+// make client auto-ping on connection?
+//
+// can use a mapping of error code -> error # in TS
+// if needed to communicate specific errors to spawner from daemon
+//
+// write a wrapper around error handling for client users
 
 export function start(turbo: Turbo): void {
     const id = generateSessionId(turbo);

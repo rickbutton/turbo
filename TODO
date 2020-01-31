@@ -9,8 +9,6 @@ fix - content height changing inside ScrollableBox not detected
 enable/disable individual breakpoints
 components:
     layout components? - tabs/draggable splitters?
-    stack trace - add "focus" to state
-    break points
     watchers?
 vim plugin
 
