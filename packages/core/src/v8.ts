@@ -325,15 +325,22 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
         logger.debug(
             `v8 setBreakpoint ${breakpoint.rawUrl} ${breakpoint.line}:${breakpoint.column}`,
         );
-        const {
-            breakpointId,
-            locations,
-        } = await this.client.Debugger.setBreakpointByUrl({
-            url: breakpoint.rawUrl,
-            lineNumber: breakpoint.line,
-            columnNumber: breakpoint.column,
-            condition: breakpoint.condition,
-        });
+        let breakpointId: RawBreakpointId;
+        let locations: Protocol.Debugger.Location[];
+        try {
+            const result = await this.client.Debugger.setBreakpointByUrl({
+                url: breakpoint.rawUrl,
+                lineNumber: breakpoint.line,
+                columnNumber: breakpoint.column,
+                condition: breakpoint.condition,
+            });
+            breakpointId = result.breakpointId as RawBreakpointId;
+            locations = result.locations;
+        } catch (e) {
+            logger.error(e.error);
+            logger.error(e.stack || "");
+            return;
+        }
 
         logger.debug(`new breakpoint id: ${breakpointId}`);
         logger.debug(JSON.stringify(locations, null, 4));

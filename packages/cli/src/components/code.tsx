@@ -6,23 +6,33 @@ import {
     highlightJs,
     useFocusedCallFrame,
     useScriptSource,
+    useClient,
 } from "./helpers";
+import { setBreakpoint, removeBreakpoint } from "./actions";
 
 interface NumbersProps {
     height: number;
+    onClick?(line: number): void;
 }
+
 function Numbers(props: NumbersProps): JSX.Element {
     const width = String(props.height).length;
-    const elements: string[] = [];
+    const onClick = props.onClick || ((): void => undefined);
+    const elements: JSX.Element[] = [];
 
     for (let i = 0; i < props.height; i++) {
-        elements.push(String(i + 1).padStart(width, " "));
+        elements.push(
+            <Box key={i} onClick={onClick.bind(null, i)}>
+                {String(i + 1).padStart(width, " ")}
+            </Box>,
+        );
     }
     return <Box direction="column">{elements}</Box>;
 }
 
 interface GutterProps {
     height: number;
+    onClick?(line: number): void;
 }
 function Gutter(props: GutterProps): JSX.Element {
     const state = useClientState();
@@ -30,6 +40,7 @@ function Gutter(props: GutterProps): JSX.Element {
 
     if (!state) return <Box />;
 
+    const onClick = props.onClick || ((): void => undefined);
     const breakpoints = state.target.breakpoints;
 
     const breakpointsByLine = breakpoints.reduce((map, breakpoint) => {
@@ -41,19 +52,36 @@ function Gutter(props: GutterProps): JSX.Element {
     for (let i = 0; i < props.height; i++) {
         if (callFrame && i === callFrame.location.line) {
             elements.push(
-                <Box key={i} height={1} width={2} color="red">
+                <Box
+                    key={i}
+                    height={1}
+                    width={2}
+                    color="red"
+                    onClick={onClick.bind(null, i)}
+                >
                     {" >"}
                 </Box>,
             );
         } else if (breakpointsByLine[i]) {
             elements.push(
-                <Box key={i} height={1} width={2} color="red">
+                <Box
+                    key={i}
+                    height={1}
+                    width={2}
+                    color="red"
+                    onClick={onClick.bind(null, i)}
+                >
                     {" O"}
                 </Box>,
             );
         } else {
             elements.push(
-                <Box key={i} height={1} width={2}>
+                <Box
+                    key={i}
+                    height={1}
+                    width={2}
+                    onClick={onClick.bind(null, i)}
+                >
                     {"  "}
                 </Box>,
             );
@@ -72,14 +100,35 @@ function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
 }
 
 export function Code(): JSX.Element {
+    const client = useClient();
     const state = useClientState();
     const callFrame = useFocusedCallFrame();
-    const script = useScriptSource(
+    const script =
+        state && callFrame
+            ? state.target.scripts.find(
+                  s => s.id === callFrame.location.scriptId,
+              )
+            : null;
+    const source = useScriptSource(
         callFrame ? callFrame.location.scriptId : undefined,
     );
-    const lines = React.useMemo(() => highlightJs(script).split("\n"), [
-        script,
+    const lines = React.useMemo(() => highlightJs(source).split("\n"), [
+        source,
     ]);
+
+    function onGutterClick(line: number): void {
+        if (!state || !script) return;
+
+        const matches = state.target.breakpoints.filter(b => b.line === line);
+
+        if (matches.length > 0) {
+            for (const match of matches) {
+                client.dispatch(removeBreakpoint(match.id));
+            }
+        } else {
+            client.dispatch(setBreakpoint(script, line));
+        }
+    }
 
     if (!state) {
         return (
@@ -94,8 +143,8 @@ export function Code(): JSX.Element {
         const loc = callFrame.location;
         return (
             <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
-                <Numbers height={height} />
-                <Gutter height={height} />
+                <Numbers height={height} onClick={onGutterClick} />
+                <Gutter height={height} onClick={onGutterClick} />
                 <Box direction="column" grow={1}>
                     {lines}
                 </Box>

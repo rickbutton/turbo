@@ -210,7 +210,14 @@ export function makeStore(
     target: Target,
     state: State,
 ): Store {
-    const sagaMiddleware = createSagaMiddleware();
+    const sagaMiddleware = createSagaMiddleware({
+        onError: function(e: Error) {
+            logger.error(e.message);
+            if (e.stack) {
+                logger.error(e.stack);
+            }
+        },
+    });
 
     const store = createStore(
         reduce.bind(null, state),

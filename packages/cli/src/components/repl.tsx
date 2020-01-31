@@ -1,11 +1,12 @@
 import { Client } from "@turbo/net";
-import { logger, uuid, BreakpointId, Turbo } from "@turbo/core";
+import { logger, Turbo } from "@turbo/core";
 import React from "react";
 import { Box, Input, ScrollableBox } from "../renderer";
 import { Eval } from "./eval";
 import { useClient, useTurbo } from "./helpers";
 import { Breakpoints } from "./breakpoints";
 import { Stack } from "./stack";
+import { setBreakpoint, removeBreakpoint } from "./actions";
 
 const PROMPT = "> ";
 
@@ -165,17 +166,7 @@ async function handle(
         const column = hasCol ? Number(columnPart) - 1 : undefined;
 
         if (cmd.type === "break") {
-            client.dispatch({
-                type: "set-breakpoint",
-                breakpoint: {
-                    id: uuid() as BreakpointId,
-                    line,
-                    column,
-                    url: script.url,
-                    rawUrl: script.rawUrl,
-                    raw: undefined,
-                },
-            });
+            client.dispatch(setBreakpoint(script, line, column));
         } else {
             const matches = state.target.breakpoints.filter(
                 b =>
@@ -184,10 +175,7 @@ async function handle(
                     (!column || b.column === column),
             );
             for (const match of matches) {
-                client.dispatch({
-                    type: "remove-b-request",
-                    id: match.id,
-                });
+                client.dispatch(removeBreakpoint(match.id));
             }
         }
     } else if (cmd.type === "breaks") {

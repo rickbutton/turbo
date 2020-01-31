@@ -195,7 +195,11 @@ export abstract class BaseClient<
     ): Promise<ResponsePayload<T>> {
         return new Promise<ResponsePayload<T>>((resolve, reject) => {
             const id = setTimeout(() => {
-                reject(new Error("response timeout reached"));
+                reject(
+                    new Error(
+                        `response timeout reached for request with type ${req.type}`,
+                    ),
+                );
             }, RESPONSE_TIMEOUT);
             function cancelTimeout(): void {
                 clearTimeout(id);

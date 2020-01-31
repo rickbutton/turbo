@@ -10,6 +10,7 @@ components:
     layout components? - tabs/draggable splitters?
     watchers?
 vim plugin
+better error handling in sagas
 
 NICE TO HAVE
 tooltip widget - React portal?

@@ -148,10 +148,10 @@ function* watchForServerRequests(
                         .then(value => ({ error: false, value })),
                 );
             } else {
-                return {
+                respond({
                     error: true,
                     value: `unable to get source because the target is not connected`,
-                };
+                });
             }
         } else if (isRequestType("getProperties", request)) {
             if (targetConnection !== -1) {
