@@ -40,7 +40,7 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
     } catch (e) {
         console.error("failed to spawn daemon");
         console.error(e);
-        process.exit(1);
+        turbo.env.exit();
     }
 }
 // make daemon not crash on missing target script

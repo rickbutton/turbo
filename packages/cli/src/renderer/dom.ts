@@ -181,8 +181,6 @@ export function calculateTextHeight(node: Node, width: number): number {
     const clone = cloneNode(node);
     appendChildNode(root, clone);
 
-    forAllTextChildren(root, updateTextNodeLayout);
-
     root.yoga.calculateLayout(width, 1, yoga.DIRECTION_LTR);
 
     const height = clone.yoga.getComputedHeight();
@@ -204,8 +202,6 @@ export function updateTextNodeLayout(node: TextNode): void {
     node.parts = [];
 
     const wrap = node.parent.wrap;
-
-    node.yoga.setFlexDirection(yoga.FLEX_DIRECTION_ROW);
     node.yoga.setFlexWrap(wrap ? yoga.WRAP_WRAP : yoga.WRAP_NO_WRAP);
 
     const spans = parseAnsi(node.value, wrap);
@@ -239,6 +235,7 @@ export function createTextNode(text: string): TextNode {
         yoga: yoga.Node.create(),
     };
     node.yoga.setFlexWrap(yoga.WRAP_WRAP);
+    node.yoga.setFlexDirection(yoga.FLEX_DIRECTION_ROW);
     return node;
 }
 
@@ -249,10 +246,6 @@ export function removeChildNode(node: ComplexNode, child: Node): void {
         node.children.splice(index, 1);
         const yoga = node.yoga.getChild(index);
         node.yoga.removeChild(yoga);
-    }
-
-    if (child.type === "text") {
-        updateTextNodeLayout(child);
     }
 }
 
@@ -315,9 +308,18 @@ export function applyAttributes(
             : true;
     node.color = node.attributes.color;
     node.bg = node.attributes.bg;
-    node.wrap = Boolean(node.attributes.wrap);
     node.onClick = node.attributes.onClick;
     node.onMouse = node.attributes.onMouse;
+
+    const wrap = Boolean(node.attributes.wrap);
+    if (node.wrap !== wrap) {
+        node.wrap = wrap;
+        for (const child of node.children) {
+            if (child.type === "text") {
+                updateTextNodeLayout(child);
+            }
+        }
+    }
 }
 
 export function getNodesContainingPosition(

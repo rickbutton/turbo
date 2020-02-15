@@ -3,6 +3,7 @@ import {
     RemoteObject,
     RemoteObjectProperty,
     RemoteException,
+    logger,
 } from "@turbo/core";
 import { Box } from "../renderer";
 import { useObjectProperties, highlightJs } from "./helpers";
@@ -28,12 +29,21 @@ function formatString(str: string): JSX.Element {
 
 interface ObjectPropertyProps {
     prop: RemoteObjectProperty;
+    simple: boolean;
+    seenGlobal: boolean;
 }
 function ObjectProperty(props: ObjectPropertyProps): JSX.Element {
-    const prop = props.prop;
+    const { prop, simple, seenGlobal } = props;
     return (
         <Box>
-            {prop.name}: {<ObjectView value={prop.value} />}
+            {prop.name}:{" "}
+            {
+                <ObjectView
+                    value={prop.value}
+                    simple={simple}
+                    seenGlobal={seenGlobal}
+                />
+            }
         </Box>
     );
 }
@@ -57,9 +67,12 @@ function ErrorStringOrException(
 const MAX_PROPS_TO_SHOW_WHEN_CLOSED = 5;
 interface ObjectTreeProps {
     value: RemoteObject;
+    simple: boolean;
+    seenGlobal: boolean;
 }
 function ObjectTree(props: ObjectTreeProps): JSX.Element {
-    const value = props.value;
+    const { value, seenGlobal } = props;
+
     const [open, setOpen] = React.useState(false);
 
     function toggleOpen(): void {
@@ -78,7 +91,6 @@ function ObjectTree(props: ObjectTreeProps): JSX.Element {
             return <ErrorStringOrException value={error} />;
         } else if (properties) {
             const toShow = properties.filter(p => p.name !== "__proto__");
-            const showArrow = toShow.length > MAX_PROPS_TO_SHOW_WHEN_CLOSED;
 
             if (toShow.length === 0) {
                 return <Box>{"{}"}</Box>;
@@ -87,32 +99,35 @@ function ObjectTree(props: ObjectTreeProps): JSX.Element {
                     0,
                     MAX_PROPS_TO_SHOW_WHEN_CLOSED,
                 );
-                const restProps = toShow.slice(MAX_PROPS_TO_SHOW_WHEN_CLOSED);
                 return (
                     <Box direction="column">
                         <Box onClick={toggleOpen}>
                             {firstProps.map((p, i) => (
                                 <Box key={i}>
-                                    {i === 0 && showArrow && !open ? "► " : ""}
-                                    {i === 0 && showArrow && open ? "▼ " : ""}
-                                    {i === 0 ? "{ " : "  "}
-                                    <ObjectProperty prop={p} />
+                                    {i === 0 ? (open ? "▼ { " : "► { ") : " "}
+                                    <ObjectProperty
+                                        prop={p}
+                                        simple={true}
+                                        seenGlobal={seenGlobal}
+                                    />
                                     {i === firstProps.length - 1
-                                        ? showArrow
-                                            ? open
-                                                ? ""
-                                                : " …}"
+                                        ? toShow.length >
+                                          MAX_PROPS_TO_SHOW_WHEN_CLOSED
+                                            ? " …}"
                                             : " }"
                                         : ""}
                                 </Box>
                             ))}
                         </Box>
-                        {showArrow && open ? (
+                        {open ? (
                             <Box direction="column" marginLeft={4}>
-                                {restProps.map((p, i) => (
+                                {toShow.map((p, i) => (
                                     <Box key={i}>
-                                        <ObjectProperty prop={p} />
-                                        {i === restProps.length - 1 ? " }" : ""}
+                                        <ObjectProperty
+                                            prop={p}
+                                            simple={true}
+                                            seenGlobal={seenGlobal}
+                                        />
                                     </Box>
                                 ))}
                             </Box>
@@ -126,11 +141,12 @@ function ObjectTree(props: ObjectTreeProps): JSX.Element {
 }
 
 interface ComplexObjectProps {
-    simpleExceptions: boolean;
     value: RemoteObject;
+    simple: boolean;
+    seenGlobal: boolean;
 }
 function ComplexObject(props: ComplexObjectProps): JSX.Element {
-    const { simpleExceptions, value } = props;
+    const { simple, value, seenGlobal } = props;
     if (value.type !== "object") {
         return <Box>unknown type ${value["type"]}</Box>;
     }
@@ -138,42 +154,69 @@ function ComplexObject(props: ComplexObjectProps): JSX.Element {
     // TODO: array, node, regexp, date, map, set, weapmap, weakset,
     // iterator, generator, proxy, typedarray, arraybuffer, dataview
     if (value.subtype === "error") {
-        const text = simpleExceptions
+        const text = simple
             ? value.description.split("\n")[0]
             : value.description;
         return <Box color="red">{text}</Box>;
     } else if (value.subtype === "null") {
         return js("null");
+    } else if (simple) {
+        const name = value.className === "Object" ? "{}" : value.className;
+        return <Box>{name}</Box>;
+    } else if (value.className === "global") {
+        return seenGlobal ? (
+            <Box>globalThis</Box>
+        ) : (
+            <ObjectTree value={value} simple={simple} seenGlobal={true} />
+        );
     } else if (
         typeof value.subtype !== "undefined" &&
         value.subtype.length > 0
     ) {
         return <Box>{`[${value.className} ${value.type}]`}</Box>;
     } else {
-        return <ObjectTree value={value} />;
+        return (
+            <ObjectTree value={value} simple={simple} seenGlobal={seenGlobal} />
+        );
     }
 }
 
 interface FunctionObjectProps {
     value: RemoteObject;
+    simple: boolean;
 }
 function FunctionObject(props: FunctionObjectProps): JSX.Element {
-    const { value } = props;
+    const { value, simple } = props;
     if (value.type !== "function") {
         return <Box>unknown type ${value["type"]}</Box>;
     }
-    const text = value.description;
-    const highlighted = React.useMemo(() => highlightJs(text), [text]);
+    const [loaded, properties, error] = useObjectProperties(value.objectId);
+    const nameProp = properties
+        ? properties.find(p => p.name === "name")
+        : undefined;
+    const lines = React.useMemo(
+        () => highlightJs(value.description).split("\n"),
+        [value.description],
+    );
 
-    return <Box direction="column">{highlighted.split("\n")}</Box>;
+    if (simple) {
+        if (!loaded || error || !nameProp || nameProp.value.type !== "string") {
+            return <Box>{highlightJs("function")}</Box>;
+        } else {
+            return <Box>function {nameProp.value.value}()</Box>;
+        }
+    } else {
+        return <Box direction="column">{lines}</Box>;
+    }
 }
 
 interface ObjectViewProps {
-    simpleExceptions?: boolean;
+    simple?: boolean;
+    seenGlobal?: boolean;
     value: RemoteObject;
 }
 export function ObjectView(props: ObjectViewProps): JSX.Element {
-    const { simpleExceptions, value } = props;
+    const { simple = false, seenGlobal = false, value } = props;
 
     if (value.type === "string") return formatString(value.value);
     if (value.type === "number") return js(value.description);
@@ -181,12 +224,14 @@ export function ObjectView(props: ObjectViewProps): JSX.Element {
     if (value.type === "symbol") return js(value.description);
     if (value.type === "bigint") return js(value.description);
     if (value.type === "undefined") return js("undefined");
-    if (value.type === "function") return <FunctionObject value={value} />;
+    if (value.type === "function")
+        return <FunctionObject value={value} simple={simple} />;
     if (value.type === "object")
         return (
             <ComplexObject
-                simpleExceptions={simpleExceptions || false}
+                simple={simple}
                 value={value}
+                seenGlobal={seenGlobal}
             />
         );
 

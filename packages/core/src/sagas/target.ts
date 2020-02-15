@@ -42,19 +42,15 @@ function* setupConnection(connection: TargetConnection) {
     return eventChannel<Action>(emit => {
         logger.verbose("setting up target connection");
         connection.on("paused", event => {
-            logger.verbose("sagas: target paused");
             emit({ type: "paused", callFrames: event.callFrames });
         });
         connection.on("resumed", () => {
-            logger.verbose("sagas: target resumed");
             emit({ type: "resumed" });
         });
         connection.on("scriptParsed", event => {
-            logger.verbose(`sagas: script parsed: ${event.script.url}`);
             emit({ type: "add-script", script: event.script });
         });
         connection.on("breakpointResolved", event => {
-            logger.verbose("sagas: breakpoint resolved");
             emit({
                 type: "verify-breakpoint",
                 breakpoint: {
@@ -148,35 +144,40 @@ export function* watchTarget(
 ) {
     let task: Task | null = null;
 
-    while (true) {
-        const action: TargetSagaAction = yield take(channel);
-        logger.verbose(`watchTarget: ${action.type}`);
-        if (action.type === "started") {
-            if (task && task.isRunning()) {
-                task.cancel();
+    try {
+        while (true) {
+            const action: TargetSagaAction = yield take(channel);
+            logger.verbose(`watchTarget: ${action.type}`);
+            if (action.type === "started") {
+                if (task && task.isRunning()) {
+                    task.cancel();
+                }
+                task = yield fork(
+                    spawnConnection,
+                    action.host,
+                    action.port,
+                    connectionChannel,
+                );
+            } else if (action.type === "stopped") {
+                if (task) {
+                    task.cancel();
+                    task = null;
+                }
+                yield put(connectionChannel, -1);
+                yield put<Action>({ type: "disconnected" });
+            } else {
+                throw new Error(`unknown action type ${action["type"]}`);
             }
-            task = yield fork(
-                spawnConnection,
-                action.host,
-                action.port,
-                connectionChannel,
-            );
-        } else if (action.type === "stopped") {
-            if (task) {
-                task.cancel();
-                task = null;
-            }
-            yield put(connectionChannel, -1);
-            yield put<Action>({ type: "disconnected" });
-        } else {
-            throw new Error(`unknown action type ${action["type"]}`);
         }
+    } finally {
+        logger.verbose("stopping target watch");
     }
 }
 
 export function* targetFlow(
     target: Target,
     connectionChannel: Channel<TargetConnection | -1>,
+    _killChannel: Channel<Error>,
 ) {
     logger.verbose("sagas: targetFlow");
     logger.verbose("created target");

@@ -69,11 +69,12 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
 
                         // hacky delay so that node has enough time
                         // to actually bind to the port
-                        setTimeout(() => {
+                        const timeout = setTimeout(() => {
                             this.fire("started", {
                                 interface: { host, port },
                             });
                         }, 100); // TODO: option
+                        timeout.unref();
                     }
                 }
                 this.fire("stderr", str);

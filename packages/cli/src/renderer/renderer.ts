@@ -13,6 +13,7 @@ import {
     createContainer,
     applyAttributes,
     getNodesContainingPosition,
+    updateTextNodeLayout,
 } from "./dom";
 import { drawContainer } from "./draw";
 import { BufferTargetContext, BufferTargetMode } from "./buffertarget";
@@ -134,6 +135,7 @@ const HostConfig: Reconciler.HostConfig<
     },
     commitTextUpdate(instance: TextNode, _oldText: string, newText: string) {
         instance.value = newText;
+        updateTextNodeLayout(instance);
     },
     appendChild: appendChildNode,
     insertBefore: insertBeforeNode,

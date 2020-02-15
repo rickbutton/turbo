@@ -21,6 +21,10 @@
                 "panes": [
                     {
                         "type": "component",
+                        "component": "scopes"
+                    },
+                    {
+                        "type": "component",
                         "component": "breakpoints"
                     },
                     {

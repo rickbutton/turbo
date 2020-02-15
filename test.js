@@ -7,7 +7,7 @@ const LOGO =
     "\\__/\\__,_/_/  /_.___/\\____/\n\n ";
 
 function foo() {
-    console.log("bar");
+    console.log(LOGO);
 }
 const bar = foo;
 foo();

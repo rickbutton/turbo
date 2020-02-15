@@ -17,14 +17,14 @@ export function evaluate(turbo: Turbo, expr: string): void {
         const target = state.target;
         if (!target.paused) {
             logger.error("target is not paused");
-            process.exit(1);
+            turbo.env.exit();
         } else {
             const topCallFrame = target.callFrames[0];
             const result = await client.eval(expr, topCallFrame.id);
 
             render(<Eval result={result} />, "stdout");
             client.close();
-            process.exit(0);
+            turbo.env.exit();
         }
     });
 

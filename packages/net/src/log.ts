@@ -34,6 +34,7 @@ export class SocketLogServer extends EmitterBase<LogServerEvents>
 
         this.socketPath = turbo.env.getTmpFile("logs", uuid());
         this.server = net.createServer();
+        this.server.unref();
 
         this.server.on("connection", socket => {
             this.connections.add(socket);

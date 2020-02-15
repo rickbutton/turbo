@@ -1,4 +1,4 @@
-import net from "net";
+import { WebSocket } from "./websocket";
 import {
     logger,
     SessionId,
@@ -19,13 +19,12 @@ import {
     isRequestType,
     ClientEvents,
 } from "@turbo/core";
-import { JsonSocket } from "./jsonsocket";
 
 const RESPONSE_TIMEOUT = 5000;
 
 export interface ClientSocketEvents {
     close: void;
-    data: any;
+    message: any;
     error: Error;
     ready: void;
 }
@@ -81,7 +80,7 @@ export abstract class BaseClient<
             this.client = options.socket;
             this.connected = options.connected;
         } else {
-            this.client = new JsonSocket(new net.Socket());
+            this.client = new WebSocket();
             this.connected = false;
         }
         if (options.maxRetries) {
@@ -134,7 +133,7 @@ export abstract class BaseClient<
             this.connected = true;
             this.fire("ready", undefined);
         });
-        this.client.on("data", (msg: AnyMessage) => {
+        this.client.on("message", (msg: AnyMessage) => {
             this.handleInboundMessage(msg);
         });
         this.client.on("error", (error: Error) => {

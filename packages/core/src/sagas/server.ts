@@ -36,6 +36,7 @@ type ServerRequestType =
 function setupServer(
     turbo: Turbo,
     server: Server,
+    killChannel: Channel<Error>,
 ): [
     EventChannel<Action>,
     Channel<ServerConnection>,
@@ -70,19 +71,14 @@ function setupServer(
         }
         function onQuit(): void {
             server.broadcastQuit();
-            emit(END);
-            setTimeout(() => {
-                turbo.env.exit();
-            }, 1000);
+            serverChannel.close();
+            turbo.env.exit();
         }
-
-        server.on("action", onAction);
-        server.on("connected", onConnection);
-        server.on("request", onRequest);
-        server.on("quit", onQuit);
-
-        server.start();
-        return () => {
+        function onError(e: Error): void {
+            killChannel.put(e);
+        }
+        function cleanup() {
+            logger.verbose("server is being destroyed");
             server.off("action", onAction);
             server.off("connected", onConnection);
             server.off("request", onRequest);
@@ -90,29 +86,44 @@ function setupServer(
 
             connectionChannel.put(END);
             requestChannel.put(END);
-            logger.verbose("server is being destroyed");
+
             server.stop();
-        };
+        }
+
+        server.on("action", onAction);
+        server.on("connected", onConnection);
+        server.on("request", onRequest);
+        server.on("quit", onQuit);
+        server.on("error", onError);
+
+        return cleanup;
     });
 
     return [serverChannel, connectionChannel, requestChannel];
 }
 
 function* watchForNewConnections(channel: Channel<ServerConnection>) {
-    while (true) {
-        const conn: ServerConnection = yield take(channel);
-        logger.verbose(`handling new connection: ${conn.id}`);
-        const state: State = yield select();
+    try {
+        while (true) {
+            const conn: ServerConnection = yield take(channel);
+            const state: State = yield select();
 
-        conn.sendState(state);
+            conn.sendState(state);
+        }
+    } finally {
+        logger.verbose("stopped watching for new connections");
     }
 }
 
 function* watchForServerActions(channel: EventChannel<Action>) {
-    while (true) {
-        const action: Action = yield take(channel);
-        logger.verbose(`handling server action: ${action.type}`);
-        yield put(action);
+    try {
+        while (true) {
+            const action: Action = yield take(channel);
+            logger.verbose(`handling server action: ${action.type}`);
+            yield put(action);
+        }
+    } finally {
+        logger.verbose("stopped watching for server actions");
     }
 }
 
@@ -176,10 +187,12 @@ export function* serverFlow(
     turbo: Turbo,
     server: Server,
     targetConnectionChannel: Channel<TargetConnection | -1>,
+    killChannel: Channel<Error>,
 ) {
     const [serverChannel, connectionChannel, requestChannel] = setupServer(
         turbo,
         server,
+        killChannel,
     );
 
     yield fork(watchForNewConnections, connectionChannel);
@@ -191,4 +204,6 @@ export function* serverFlow(
         watchForServerRequests,
         requestChannel,
     );
+
+    server.start();
 }

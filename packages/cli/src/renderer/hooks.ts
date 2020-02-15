@@ -45,11 +45,12 @@ export function useOnHeightChanged(
             setHeight(newHeight);
         }
     }
+    const debouncedOnNodeDrawn = useDebouncedCallback(onNodeDrawn, 10);
 
     React.useEffect(() => {
         if (ref.current) {
             // eslint-disable-next-line @typescript-eslint/camelcase
-            ref.current.unstable_onNodeDrawn = onNodeDrawn;
+            ref.current.unstable_onNodeDrawn = debouncedOnNodeDrawn;
         }
         return (): void => {
             if (ref.current) {
@@ -104,4 +105,32 @@ export function useInterval(callback: () => void, delay: number): void {
         const id = setInterval(handler, delay);
         return (): void => clearInterval(id);
     }, [delay]);
+}
+
+export function useDebouncedCallback(
+    callback: () => void,
+    wait: number,
+): () => void {
+    // track timeout handle between calls
+    const timeout = React.useRef<ReturnType<typeof setTimeout>>();
+
+    function cleanup(): void {
+        if (timeout.current) {
+            clearTimeout(timeout.current);
+        }
+    }
+
+    // make sure our timeout gets cleared if
+    // our consuming component gets unmounted
+    React.useEffect(() => cleanup, []);
+
+    return function debouncedCallback(): void {
+        // clear debounce timer
+        cleanup();
+
+        // start waiting again
+        timeout.current = setTimeout(() => {
+            callback();
+        }, wait);
+    };
 }

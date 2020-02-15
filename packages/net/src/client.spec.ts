@@ -40,7 +40,7 @@ describe("Client", () => {
         client.on("sync", listener);
 
         const callbacks = socket.on.mock.calls.filter(
-            ([name]) => name === "data",
+            ([name]) => name === "message",
         );
         expect(callbacks.length).toBe(1);
 

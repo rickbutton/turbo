@@ -172,6 +172,7 @@ export interface ServerConnection extends Emitter<ServerConnectionEvents> {
 
 export interface ServerEvents {
     ready: void;
+    error: Error;
     log: MessagePayload<"log">;
     action: Action;
     connected: ServerConnection;

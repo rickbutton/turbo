@@ -13,12 +13,7 @@ export function Eval(props: EvalProps): JSX.Element {
         if (typeof result.value === "string") {
             return <Box>{result.value}</Box>;
         } else if (result.value.exception) {
-            return (
-                <ObjectView
-                    simpleExceptions={true}
-                    value={result.value.exception}
-                />
-            );
+            return <ObjectView simple={true} value={result.value.exception} />;
         } else {
             return <Box>{result.value.text}</Box>;
         }

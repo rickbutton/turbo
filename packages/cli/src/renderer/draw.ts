@@ -1,11 +1,4 @@
-import {
-    Node,
-    Container,
-    findClosestParent,
-    forAllTextChildren,
-    updateTextNodeLayout,
-    resolveProperty,
-} from "./dom";
+import { Node, Container, findClosestParent, resolveProperty } from "./dom";
 import * as yoga from "yoga-layout-prebuilt";
 import { Span } from "./ansi";
 import { DrawAttribute } from "./buffertarget";
@@ -178,8 +171,6 @@ export function drawContainer(container: Container): void {
         container.forceRedraw = false;
         delta = false;
     }
-
-    forAllTextChildren(node, updateTextNodeLayout);
 
     node.yoga.setWidth(width);
     if (typeof height !== "undefined") {

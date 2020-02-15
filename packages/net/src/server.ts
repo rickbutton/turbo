@@ -1,5 +1,3 @@
-import net from "net";
-import fs from "fs";
 import {
     SessionId,
     EmitterBase,
@@ -11,15 +9,32 @@ import {
     Server,
     ServerEvents,
 } from "@turbo/core";
-import { JsonSocket } from "./jsonsocket";
 import { SocketServerConnection } from "./serverconnection";
+import { WebSocket, WebSocketServer } from "./websocket";
 
-export class SocketServer extends EmitterBase<ServerEvents> implements Server {
+export interface SocketServerEvents {
+    connection: WebSocket;
+    error: Error;
+    ready: void;
+    close: void;
+}
+
+export interface SocketServer {
+    listen(sessionFile: string): void;
+    close(): void;
+
+    on<T extends keyof SocketServerEvents>(
+        name: T,
+        callback: (event: SocketServerEvents[T]) => void,
+    ): void;
+}
+
+export class TurboServer extends EmitterBase<ServerEvents> implements Server {
     private turbo: Turbo;
     private lastClientId: ClientId = 0 as ClientId;
-    private socketPath: string;
+    private sessionFile: string;
     private sessionId: SessionId;
-    private server: net.Server = this.createServer();
+    private server: SocketServer = this.createServer();
     private connections: Set<SocketServerConnection> = new Set();
 
     get numConnections(): number {
@@ -29,21 +44,12 @@ export class SocketServer extends EmitterBase<ServerEvents> implements Server {
     constructor(turbo: Turbo, sessionId: SessionId) {
         super();
         this.turbo = turbo;
-        this.socketPath = turbo.env.getTmpFile("sessions", sessionId);
+        this.sessionFile = turbo.env.getTmpFile("sessions", sessionId);
         this.sessionId = sessionId;
-
-        process.on("exit", () => {
-            this.server.close();
-            fs.unlinkSync(this.socketPath);
-        });
-        process.on("SIGHUP", () => {
-            this.server.close();
-            fs.unlinkSync(this.socketPath);
-        });
     }
 
     public start(): void {
-        this.server.listen(this.socketPath);
+        this.server.listen(this.sessionFile);
     }
 
     public stop(): void {
@@ -62,25 +68,28 @@ export class SocketServer extends EmitterBase<ServerEvents> implements Server {
         }
     }
 
-    private createServer(): net.Server {
-        const server = net.createServer();
+    private createServer(): SocketServer {
+        const server = new WebSocketServer();
 
-        server.on("connection", (socket: net.Socket) =>
-            this.handleSocket(socket),
-        );
-        server.on("error", (error: Error) => {
-            logger.error(`daemon error, ${error.toString()}`);
-            this.startAfterDelay();
-        });
-        server.on("listening", () => {
-            logger.verbose("daemon listening");
-        });
-        server.on("ready", () => {
+        const onConnection = (socket: WebSocket): void => {
+            this.handleSocket(socket);
+        };
+        const onError = (error: Error): void => {
+            this.fire("error", error);
+        };
+        const onReady = (): void => {
             this.fire("ready", undefined);
-        });
-        server.on("close", () => {
-            fs.unlinkSync(this.socketPath);
-        });
+        };
+        const onClose = (): void => {
+            server.off("connection", onConnection);
+            server.off("error", onError);
+            server.off("ready", onReady);
+            server.off("close", onClose);
+        };
+        server.on("connection", onConnection);
+        server.on("error", onError);
+        server.on("ready", onReady);
+        server.on("close", onClose);
 
         return server;
     }
@@ -91,9 +100,7 @@ export class SocketServer extends EmitterBase<ServerEvents> implements Server {
         }, 2000);
     }
 
-    private handleSocket(rawSocket: net.Socket): void {
-        const socket = new JsonSocket(rawSocket);
-
+    private handleSocket(socket: WebSocket): void {
         this.lastClientId = (this.lastClientId + 1) as ClientId;
 
         const client = new SocketServerConnection(

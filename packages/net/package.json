@@ -21,7 +21,10 @@
     "@types/node": "^12.12.5"
   },
   "dependencies": {
-    "@turbo/core": "^0.2.3"
+    "@turbo/core": "^0.2.3",
+    "@types/ws": "^7.2.1",
+    "get-port": "^5.1.1",
+    "ws": "^7.2.1"
   },
   "publishConfig": {
     "access": "public"

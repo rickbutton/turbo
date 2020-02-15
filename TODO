@@ -8,11 +8,11 @@ use yargs for entire repl?
 enable/disable individual breakpoints
 components:
     layout components? - tabs/draggable splitters?
-    watchers?
-vim plugin
-better error handling in sagas
 
 NICE TO HAVE
+watchers?
+vim plugin
+better error handling in sagas
 tooltip widget - React portal?
 add wrap options
  - word

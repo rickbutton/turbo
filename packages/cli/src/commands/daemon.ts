@@ -7,7 +7,7 @@ import {
     getCurrentSessionId,
     createTarget,
 } from "@turbo/core";
-import { SocketLogServer, SocketServer } from "@turbo/net";
+import { SocketLogServer, TurboServer } from "@turbo/net";
 
 function debounce<T extends (...args: any[]) => void>(
     func: T,
@@ -49,7 +49,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
     process.on("exit", () => target.stop());
 
     // set up the daemon server, started by the server saga
-    const server = new SocketServer(turbo, sessionId);
+    const server = new TurboServer(turbo, sessionId);
     server.on("log", (log: LogEvent) => {
         const msg = format(log);
         process.stdout.write(msg);
@@ -85,8 +85,4 @@ export async function daemon(turbo: Turbo): Promise<void> {
             }
         }, 10),
     );
-
-    // listen for signals to force exit on
-    process.on("SIGHUP", () => process.exit(0));
-    process.on("SIGINT", () => process.exit(0));
 }

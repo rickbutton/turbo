@@ -12,7 +12,7 @@ export function kill(turbo: Turbo): void {
 
     client.on("ready", () => {
         client.quit();
-        process.exit(0);
+        turbo.env.exit();
     });
 
     client.connect();

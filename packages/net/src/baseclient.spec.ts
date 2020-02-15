@@ -61,7 +61,7 @@ describe("BaseClient", () => {
                 payload: "foobar",
             },
         };
-        socket.fire("data", response);
+        socket.fire("message", response);
 
         const pingReturn = await promise;
         expect(pingReturn).toBe("foobar");

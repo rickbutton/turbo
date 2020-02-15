@@ -319,9 +319,9 @@ export class TerminalBufferTarget extends EmitterBase<BufferTargetEvents> {
             },
         });
     }
-    flush(delta: boolean): void {
+    flush(_delta: boolean): void {
         if (this.mode === "fullscreen") {
-            this.buffer.draw({ delta });
+            this.buffer.draw({ delta: false });
 
             if (this.cursor) {
                 terminal.hideCursor(false as any);

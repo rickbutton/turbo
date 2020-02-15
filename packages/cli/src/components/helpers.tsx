@@ -59,7 +59,7 @@ export function useScriptSource(id: ScriptId | undefined): string {
         } else {
             setScript("");
         }
-    }, [state]);
+    }, [Boolean(state), state ? state.target.paused : false, id]);
 
     return script;
 }

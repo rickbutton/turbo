@@ -8,6 +8,7 @@ import { Code } from "../components/code";
 import { ClientContext, TurboContext } from "../components/helpers";
 import { BreakpointsComponent } from "../components/breakpoints";
 import { StackComponent } from "../components/stack";
+import { ScopesComponent } from "../components/scope";
 
 interface StandardComponent {
     type: "standard";
@@ -29,6 +30,7 @@ const components: { [key: string]: Component } = {
     code: { type: "react", value: Code },
     breakpoints: { type: "react", value: BreakpointsComponent },
     stack: { type: "react", value: StackComponent },
+    scopes: { type: "react", value: ScopesComponent },
 };
 
 interface AppProps {
@@ -71,7 +73,7 @@ export function component(turbo: Turbo, name: string): void {
         }
     });
     client.on("quit", () => {
-        process.exit(0);
+        turbo.env.exit();
     });
 
     client.connectAfterDelay();

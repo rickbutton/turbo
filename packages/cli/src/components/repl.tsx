@@ -7,6 +7,7 @@ import { useClient, useTurbo } from "./helpers";
 import { Breakpoints } from "./breakpoints";
 import { Stack } from "./stack";
 import { setBreakpoint, removeBreakpoint } from "./actions";
+import { Scopes } from "./scope";
 
 const PROMPT = "> ";
 
@@ -29,6 +30,7 @@ const COMMANDS = [
     { type: "break", alts: ["b"] },
     { type: "unbreak", alts: ["ub"] },
     { type: "breaks", alts: ["bs"] },
+    { type: "scopes", alts: [] },
     { type: "eval", alts: ["e"] },
     { type: "up", alts: [] },
     { type: "down", alts: [] },
@@ -180,6 +182,14 @@ async function handle(
         }
     } else if (cmd.type === "breaks") {
         return <Breakpoints breakpoints={state.target.breakpoints} />;
+    } else if (cmd.type === "scopes") {
+        if (state.target.paused) {
+            const callFrame =
+                state.target.callFrames[state.target.focusedCallFrame];
+            return <Scopes callFrame={callFrame} />;
+        } else {
+            return <Box>cannot get scopes, not paused</Box>;
+        }
     } else if (!target.paused) {
         return <span>not paused</span>; // TODO - better error? eval global?
     } else {
