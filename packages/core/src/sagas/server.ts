@@ -14,19 +14,6 @@ import {
 import { eventChannel, channel, END, Channel, EventChannel } from "redux-saga";
 import { select, put, take, fork, takeLatest } from "redux-saga/effects";
 
-// TODO FOR ME TOMORROW!
-//
-// switch this channel to use custom server events
-// and switch the req->res things to emits of actions
-// in while(true) of server, switch between some: (think of more!)
-// - turbo actions - emit back up directly
-// - eval - have connection and call the "respond" method
-// - getProperties - ^^
-// - getPossibleBreakpointLocations - ^^
-//
-// the above requires communicating the "latest" TargetConnection
-// to that while(true) loop
-
 type ServerRequestType =
     | "eval"
     | "getProperties"
