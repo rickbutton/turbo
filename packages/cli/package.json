@@ -41,7 +41,7 @@
     "react-reconciler": "^0.24.0",
     "string-width": "^4.2.0",
     "terminal-kit": "^1.32.2",
-    "yargs": "^14.2.0",
+    "yargs": "^15.1.0",
     "yoga-layout-prebuilt": "^1.9.3"
   },
   "publishConfig": {
