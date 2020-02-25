@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@types/json5": "^0.0.30",
-    "@types/node": "^12.12.5"
+    "@types/node": "^13.7.5"
   },
   "dependencies": {
     "@turbo/connector-node": "^0.2.3",
