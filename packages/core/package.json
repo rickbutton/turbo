@@ -20,7 +20,7 @@
   "dependencies": {
     "@types/redux": "^3.6.0",
     "@types/redux-saga": "^0.10.5",
-    "@types/uuid": "^3.4.6",
+    "@types/uuid": "^7.0.0",
     "chalk": "^3.0.0",
     "chrome-remote-interface": "^0.28.1",
     "devtools-protocol": "^0.0.724935",
