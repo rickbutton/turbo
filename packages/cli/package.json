@@ -38,7 +38,7 @@
     "cli-highlight": "^2.1.4",
     "json5": "^2.1.1",
     "react": "^16.12.0",
-    "react-reconciler": "^0.24.0",
+    "react-reconciler": "^0.25.0",
     "string-width": "^4.2.0",
     "terminal-kit": "^1.32.2",
     "yargs": "^15.1.0",
