@@ -3,6 +3,9 @@ import { useClientState, useTurbo, useClient } from "./helpers";
 import { Box } from "../renderer";
 import { logger, CallFrame, Script } from "@turbo/core";
 
+interface ShrinkTextProps {
+    text: string;
+}
 interface Props {
     scripts: Script[];
     callFrames: CallFrame[];
@@ -25,20 +28,28 @@ export function Stack(props: Props): JSX.Element {
                 const script = props.scripts.find(
                     s => s.id === f.location.scriptId,
                 );
-                let gutter = "";
+                let gutter = "  ";
                 if (typeof props.focusedCallFrame === "number") {
                     gutter = i === props.focusedCallFrame ? "> " : "  ";
                 }
                 if (script) {
                     const url = turbo.env.cleanPath(script.url);
+                    const fileName = turbo.env.fileNameFromPath(url);
                     return (
                         <Box key={i} onClick={(): void => onClick(i)}>
-                            <Box color="red">{gutter}</Box>
-                            {f.functionName || "<anonymous>"} ({url}:
-                            {f.location.line + 1}
-                            {f.location.column !== undefined
-                                ? `:${f.location.column + 1}`
-                                : ""}
+                            <Box color="red" width={2}>
+                                {gutter}
+                            </Box>
+                            <Box shrink={1}>
+                                {f.functionName || "<anonymous>"}
+                            </Box>{" "}
+                            (<Box shrink={1}>{fileName}</Box>:
+                            <Box>
+                                {f.location.line + 1}
+                                {f.location.column !== undefined
+                                    ? `:${f.location.column + 1}`
+                                    : ""}
+                            </Box>
                             )
                         </Box>
                     );
@@ -54,7 +65,7 @@ export function StackComponent(): JSX.Element {
     const state = useClientState();
 
     return (
-        <Box direction="column">
+        <Box direction="column" grow={1}>
             <Box marginBottom={1} bg={"brightWhite"} color={"black"}>
                 call frames
             </Box>

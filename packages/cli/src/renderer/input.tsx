@@ -48,7 +48,7 @@ export function Input(props: InputProps): JSX.Element {
 
     return (
         <Box minHeight={1} direction="row">
-            {props.prompt}
+            <Box color="blue">{props.prompt}</Box>
             {before}
             <Cursor />
             {after}

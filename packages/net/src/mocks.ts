@@ -21,6 +21,7 @@ const TEST_ENV: Environment = {
     },
     nodePath: "/tmp/node",
     scriptPath: "/tmp/turbo.js",
+    fileNameFromPath: jest.fn(),
     cleanPath: jest.fn(),
     require: jest.fn(),
     readFile: jest.fn(),

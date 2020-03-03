@@ -1,5 +1,11 @@
 export { render } from "./renderer";
-export { useInterval, useInput, useBufferTarget } from "./hooks";
+export {
+    useInterval,
+    useInput,
+    useBufferTarget,
+    useOnHeightChanged,
+    useSize,
+} from "./hooks";
 export { Box, BoxProps } from "./box";
 export { ScrollableBox } from "./scrollablebox";
 export { Cursor } from "./cursor";

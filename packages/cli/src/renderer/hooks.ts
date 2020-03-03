@@ -9,6 +9,7 @@ import {
 import { unstable_batchedUpdates } from "./renderer";
 // eslint-disable-next-line @typescript-eslint/camelcase
 import { unstable_calculateTextHeight } from ".";
+import { logger } from "@turbo/core";
 
 export function useBufferTarget(): BufferTarget {
     return React.useContext(BufferTargetContext);
@@ -132,5 +133,30 @@ export function useDebouncedCallback(
         timeout.current = setTimeout(() => {
             callback();
         }, wait);
+    };
+}
+
+interface Size {
+    width: number;
+    height: number;
+}
+export function useSize(ref: React.RefObject<any>): Size {
+    const [width, setWidth] = React.useState(0);
+    const [height, setHeight] = React.useState(0);
+
+    React.useEffect(() => {
+        if (ref.current) {
+            const newWidth = ref.current.yoga.getComputedWidth();
+            const newHeight = ref.current.yoga.getComputedHeight();
+            setWidth(newWidth);
+            setHeight(newHeight);
+        } else {
+            setWidth(0);
+            setHeight(0);
+        }
+    });
+    return {
+        width,
+        height,
     };
 }

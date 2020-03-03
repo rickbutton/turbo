@@ -148,7 +148,13 @@ function drawNode(
         }
 
         if (node.bg !== undefined) {
-            target.fillBg(xmin, xmax, ymin, ymax, node.bg);
+            target.fillBg(
+                x + drawOffsetLeft,
+                x + drawOffsetLeft + node.yoga.getComputedWidth() - 1,
+                y + drawOffsetTop,
+                y + drawOffsetTop + node.yoga.getComputedHeight() - 1,
+                node.bg,
+            );
         }
 
         for (const child of node.children) {
@@ -203,4 +209,17 @@ export function drawContainer(container: Container): void {
 
     container.drawing = false;
     context.complete();
+}
+
+const scheduleMap = new Map<Container, NodeJS.Immediate>();
+export function scheduleDraw(container: Container): void {
+    if (!scheduleMap.has(container)) {
+        scheduleMap.set(
+            container,
+            setImmediate(() => {
+                scheduleMap.delete(container);
+                drawContainer(container);
+            }),
+        );
+    }
 }

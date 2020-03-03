@@ -20,6 +20,7 @@ export interface Environment {
     readonly getTmpFolder: (context: string) => string;
     readonly getTmpFile: (context: string, name: string) => string;
     readonly getAllSessionIds: () => SessionId[];
+    readonly fileNameFromPath: (path: string) => string;
     readonly cleanPath: (path: string) => string;
     readonly require: (path: string) => any;
     readonly readFile: (path: string) => string;

@@ -25,7 +25,7 @@ export function BreakpointsComponent(): JSX.Element {
     const breakpoints = state ? state.target.breakpoints : [];
 
     return (
-        <Box direction="column">
+        <Box direction="column" grow={1}>
             <Box marginBottom={1} bg={"brightWhite"} color={"black"}>
                 breakpoints
             </Box>

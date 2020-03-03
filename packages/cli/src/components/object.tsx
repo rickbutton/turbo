@@ -15,9 +15,9 @@ function js(str: string): JSX.Element {
 function formatString(str: string): JSX.Element {
     const lines = str.split("\n");
     return (
-        <Box direction="column">
+        <Box direction="column" height={lines.length}>
             {lines.map((l, i) => (
-                <Box key={i}>
+                <Box key={i} height={1}>
                     {i === 0 ? '"' : ""}
                     {l}
                     {i === lines.length - 1 ? '"' : ""}
@@ -64,7 +64,7 @@ function ErrorStringOrException(
     }
 }
 
-const MAX_PROPS_TO_SHOW_WHEN_CLOSED = 5;
+const MAX_PROPS_TO_SHOW_WHEN_CLOSED = 2;
 interface ObjectTreeProps {
     value: RemoteObject;
     simple: boolean;
@@ -104,25 +104,26 @@ function ObjectTree(props: ObjectTreeProps): JSX.Element {
                         <Box onClick={toggleOpen}>
                             {firstProps.map((p, i) => (
                                 <Box key={i}>
-                                    {i === 0 ? (open ? "▼ { " : "► { ") : " "}
-                                    <ObjectProperty
-                                        prop={p}
-                                        simple={true}
-                                        seenGlobal={seenGlobal}
-                                    />
-                                    {i === firstProps.length - 1
-                                        ? toShow.length >
-                                          MAX_PROPS_TO_SHOW_WHEN_CLOSED
-                                            ? " …}"
-                                            : " }"
-                                        : ""}
+                                    {i === 0 ? (open ? "▼ { " : "▶ { ") : " "}
+                                    {!open ? (
+                                        <ObjectProperty
+                                            prop={p}
+                                            simple={true}
+                                            seenGlobal={seenGlobal}
+                                        />
+                                    ) : null}
                                 </Box>
                             ))}
+                            {!open &&
+                            toShow.length > MAX_PROPS_TO_SHOW_WHEN_CLOSED
+                                ? " …"
+                                : " "}
+                            {!open ? "}" : ""}
                         </Box>
                         {open ? (
-                            <Box direction="column" marginLeft={4}>
+                            <Box direction="column">
                                 {toShow.map((p, i) => (
-                                    <Box key={i}>
+                                    <Box key={i} marginLeft={4}>
                                         <ObjectProperty
                                             prop={p}
                                             simple={true}
@@ -130,6 +131,7 @@ function ObjectTree(props: ObjectTreeProps): JSX.Element {
                                         />
                                     </Box>
                                 ))}
+                                {open ? "}" : ""}
                             </Box>
                         ) : null}
                     </Box>
@@ -203,7 +205,11 @@ function FunctionObject(props: FunctionObjectProps): JSX.Element {
         if (!loaded || error || !nameProp || nameProp.value.type !== "string") {
             return <Box>{highlightJs("function")}</Box>;
         } else {
-            return <Box>function {nameProp.value.value}()</Box>;
+            return (
+                <Box maxHeight={1}>
+                    {highlightJs(`function ${nameProp.value.value}()`)}
+                </Box>
+            );
         }
     } else {
         return <Box direction="column">{lines}</Box>;

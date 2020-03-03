@@ -40,6 +40,10 @@ function getAllSessionIds(): SessionId[] {
     return files.map(f => path.basename(f) as SessionId);
 }
 
+function fileNameFromPath(p: string): string {
+    return path.basename(p);
+}
+
 function cleanPath(p: string): string {
     const cwd = process.cwd();
 
@@ -101,6 +105,7 @@ function getEnvironment(): Environment {
         getTmpFolder,
         getTmpFile,
         getAllSessionIds,
+        fileNameFromPath,
         cleanPath,
         require: turboRequire,
         readFile,

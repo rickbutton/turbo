@@ -38,7 +38,7 @@ export function ScopesComponent(): JSX.Element {
     }
 
     return (
-        <Box direction="column">
+        <Box direction="column" grow={1}>
             <Box marginBottom={1} bg={"brightWhite"} color={"black"}>
                 scopes
             </Box>

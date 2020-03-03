@@ -9,7 +9,7 @@ import { Stack } from "./stack";
 import { setBreakpoint, removeBreakpoint } from "./actions";
 import { Scopes } from "./scope";
 
-const PROMPT = "> ";
+const PROMPT = "▶ ";
 
 function js(str: string): string {
     return str;
@@ -214,25 +214,25 @@ export function Repl(): JSX.Element {
     async function onSubmit(value: string): Promise<void> {
         const newLines = [
             ...lines,
-            <span key={lines.length}>{PROMPT + js(value)}</span>,
+            <Box key={lines.length}>
+                <Box color="gray">{PROMPT}</Box>
+                {js(value)}
+            </Box>,
         ];
         setLines(newLines);
 
         const output = await handle(turbo, value, client);
         if (output) {
-            setLines([
-                ...newLines,
-                <span key={newLines.length}>{output}</span>,
-            ]);
+            setLines([...newLines, <Box key={newLines.length}>{output}</Box>]);
         }
     }
 
     return (
-        <Box direction="column">
-            <Box marginBottom={1} bg={"brightWhite"} color={"black"}>
+        <Box direction="column" grow={1}>
+            <Box bg={"brightWhite"} color={"black"}>
                 repl
             </Box>
-            <ScrollableBox direction="column" grow={1} snapToBottom={true}>
+            <ScrollableBox direction="column" snapToBottom={true} grow={1}>
                 {lines}
                 <Input prompt={PROMPT} onSubmit={onSubmit} />
             </ScrollableBox>

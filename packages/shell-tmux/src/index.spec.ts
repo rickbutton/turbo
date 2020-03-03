@@ -35,6 +35,7 @@ function createEnv(inTmux = false): Environment {
         execSync: jest.fn().mockReturnValueOnce("sessionid"),
         nodePath: "/tmp/node",
         scriptPath: "/tmp/turbo.js",
+        fileNameFromPath: jest.fn(),
         cleanPath: jest.fn(),
         require: jest.fn(),
         readFile: jest.fn(),

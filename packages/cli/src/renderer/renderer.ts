@@ -15,7 +15,7 @@ import {
     getNodesContainingPosition,
     updateTextNodeLayout,
 } from "./dom";
-import { drawContainer } from "./draw";
+import { scheduleDraw } from "./draw";
 import { BufferTargetContext, BufferTargetMode } from "./buffertarget";
 import { TerminalBufferTarget } from "./terminal";
 import { logger } from "@turbo/core";
@@ -101,7 +101,7 @@ const HostConfig: Reconciler.HostConfig<
         return undefined;
     },
     resetAfterCommit(container: Container) {
-        drawContainer(container);
+        scheduleDraw(container);
     },
     appendChildToContainer(container: Container, child: Node) {
         appendChildNode(container.node, child);

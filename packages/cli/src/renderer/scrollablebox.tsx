@@ -1,27 +1,6 @@
 import React from "react";
 import { Box, BoxProps, MouseEvent } from ".";
-import { useOnHeightChanged } from "./hooks";
-
-function useSize(ref: React.RefObject<any>): { width: number; height: number } {
-    const [width, setWidth] = React.useState(0);
-    const [height, setHeight] = React.useState(0);
-
-    React.useEffect(() => {
-        if (ref.current) {
-            const newWidth = ref.current.yoga.getComputedWidth();
-            const newHeight = ref.current.yoga.getComputedHeight();
-            setWidth(newWidth);
-            setHeight(newHeight);
-        } else {
-            setWidth(0);
-            setHeight(0);
-        }
-    });
-    return {
-        width,
-        height,
-    };
-}
+import { useOnHeightChanged, useSize } from "./hooks";
 
 interface ScrollableBoxProps extends BoxProps {
     snapToBottom?: boolean;

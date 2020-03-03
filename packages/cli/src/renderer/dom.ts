@@ -1,5 +1,5 @@
 import * as yoga from "yoga-layout-prebuilt";
-import { applyStyle, NodeStyle } from "./style";
+import { applyStyle } from "./style";
 import stringWidth from "string-width";
 import { BufferTarget, MouseEvent } from "./buffertarget";
 import { Span, parseAnsi } from "./ansi";
@@ -42,6 +42,7 @@ interface TextSize {
 
 export interface TextNodePart {
     span: Span;
+    width: number;
     yoga: yoga.YogaNode;
 }
 export interface TextNode {
@@ -131,23 +132,6 @@ export function forAllTextChildren(
     }
 }
 
-export function cloneNode(node: Node): Node {
-    if (node.type === "text") {
-        const newNode = createTextNode(node.value);
-        updateTextNodeLayout(newNode);
-        return newNode;
-    } else {
-        const newNode = createNode(node.name);
-        applyAttributes(newNode, node.attributes);
-
-        for (const child of node.children) {
-            const newChild = cloneNode(child);
-            appendChildNode(newNode, newChild);
-        }
-        return newNode;
-    }
-}
-
 export function createNode(name: string): ComplexNode {
     const node: ComplexNode = {
         type: "complex",
@@ -172,20 +156,32 @@ export function createContainer(target: BufferTarget): Container {
 }
 
 export function calculateTextHeight(node: Node, width: number): number {
-    const root = createNode("#root");
-    const style: NodeStyle = {
-        width,
-    };
-    applyAttributes(root, { style });
+    if (node.type === "text") {
+        let bottom = node.yoga.getComputedTop() + node.yoga.getComputedHeight();
+        for (const part of node.parts) {
+            const partBottom =
+                part.yoga.getComputedBottom() + part.yoga.getComputedHeight();
+            if (partBottom > bottom) {
+                bottom = partBottom;
+            }
+        }
+        return bottom;
+    } else {
+        let bottom = node.yoga.getComputedTop() + node.yoga.getComputedHeight();
+        for (const child of node.children) {
+            let childBottom =
+                child.yoga.getComputedTop() + child.yoga.getComputedHeight();
+            if (childBottom > bottom) {
+                bottom = childBottom;
+            }
 
-    const clone = cloneNode(node);
-    appendChildNode(root, clone);
-
-    root.yoga.calculateLayout(width, 1, yoga.DIRECTION_LTR);
-
-    const height = clone.yoga.getComputedHeight();
-    root.yoga.freeRecursive();
-    return height;
+            childBottom = calculateTextHeight(child, width);
+            if (childBottom > bottom) {
+                bottom = childBottom;
+            }
+        }
+        return bottom;
+    }
 }
 
 export function updateTextNodeLayout(node: TextNode): void {
@@ -213,13 +209,14 @@ export function updateTextNodeLayout(node: TextNode): void {
 }
 
 function createTextNodePart(span: Span): TextNodePart {
+    const width = stringWidth(span.value);
     const part = {
         span,
+        width,
         yoga: yoga.Node.create(),
     };
-
-    const width = stringWidth(span.value);
     part.yoga.setWidth(width);
+    part.yoga.setMinWidth(width);
     part.yoga.setHeight(1);
     part.yoga.setMinHeight(1);
 

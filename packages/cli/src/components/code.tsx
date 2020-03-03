@@ -11,84 +11,74 @@ import {
 } from "./helpers";
 import { setBreakpoint, removeBreakpoint } from "./actions";
 
-interface NumbersProps {
+interface CodeLineProps {
+    index: number;
+    line: string;
     height: number;
-    onClick?(line: number): void;
+    highlightCallFrame: boolean;
+    highlightBreakpoint: boolean;
+    onClick?(index: number): void;
 }
-
-function Numbers(props: NumbersProps): JSX.Element {
+function CodeLine(props: CodeLineProps): JSX.Element {
     const width = String(props.height).length;
-    const onClick = props.onClick || ((): void => undefined);
-    const elements: JSX.Element[] = [];
 
-    for (let i = 0; i < props.height; i++) {
-        elements.push(
-            <Box key={i} onClick={onClick.bind(null, i)}>
-                {String(i + 1).padStart(width, " ")}
-            </Box>,
-        );
+    function onClick(): void {
+        if (props.onClick) {
+            props.onClick(props.index);
+        }
     }
-    return <Box direction="column">{elements}</Box>;
+
+    let gutterBg: string | undefined;
+    if (props.highlightBreakpoint) {
+        gutterBg = "red";
+    }
+
+    return (
+        <Box onClick={onClick}>
+            <Box height={1} bg={gutterBg} width={width}>
+                {String(props.index + 1).padStart(width, " ")}
+            </Box>
+            <Box color="yellow" bg={gutterBg} width={2} height={1}>
+                {props.highlightCallFrame ? " ▶" : "  "}
+            </Box>
+            <Box>{props.line || " "}</Box>
+        </Box>
+    );
 }
 
-interface GutterProps {
-    height: number;
-    onClick?(line: number): void;
+interface CodeLinesProps {
+    lines: string[];
+    onClick?(index: number): void;
 }
-function Gutter(props: GutterProps): JSX.Element {
+function CodeLines(props: CodeLinesProps): JSX.Element {
     const state = useClientState();
     const callFrame = useFocusedCallFrame();
 
-    if (!state) return <Box />;
+    if (state === null) return <Box />;
 
-    const onClick = props.onClick || ((): void => undefined);
     const breakpoints = state.target.breakpoints;
-
     const breakpointsByLine = breakpoints.reduce((map, breakpoint) => {
         map[breakpoint.line] = breakpoint;
         return map;
     }, {} as { [key: number]: Breakpoint });
 
-    const elements: JSX.Element[] = [];
-    for (let i = 0; i < props.height; i++) {
-        if (callFrame && i === callFrame.location.line) {
-            elements.push(
-                <Box
+    return (
+        <Box direction="column">
+            {props.lines.map((l, i) => (
+                <CodeLine
+                    index={i}
+                    line={l}
+                    height={props.lines.length}
+                    highlightCallFrame={Boolean(
+                        callFrame && i === callFrame.location.line,
+                    )}
+                    highlightBreakpoint={Boolean(breakpointsByLine[i])}
+                    onClick={props.onClick}
                     key={i}
-                    height={1}
-                    width={2}
-                    color="red"
-                    onClick={onClick.bind(null, i)}
-                >
-                    {" >"}
-                </Box>,
-            );
-        } else if (breakpointsByLine[i]) {
-            elements.push(
-                <Box
-                    key={i}
-                    height={1}
-                    width={2}
-                    color="red"
-                    onClick={onClick.bind(null, i)}
-                >
-                    {" O"}
-                </Box>,
-            );
-        } else {
-            elements.push(
-                <Box
-                    key={i}
-                    height={1}
-                    width={2}
-                    onClick={onClick.bind(null, i)}
-                >
-                    {"  "}
-                </Box>,
-            );
-        }
-    }
-    return <Box direction="column">{elements}</Box>;
+                />
+            ))}
+        </Box>
+    );
 }
 
 function LogoText(props: React.PropsWithChildren<{}>): JSX.Element {
@@ -118,7 +108,7 @@ export function Code(): JSX.Element {
         source,
     ]);
 
-    function onGutterClick(line: number): void {
+    function onLineClick(line: number): void {
         if (!state || !script) return;
 
         const matches = state.target.breakpoints.filter(b => b.line === line);
@@ -142,15 +132,10 @@ export function Code(): JSX.Element {
             </LogoText>
         );
     } else if (state.target.paused && callFrame) {
-        const height = lines.length;
         const loc = callFrame.location;
         content = (
             <ScrollableBox grow={1} direction="row" desiredFocus={loc.line}>
-                <Numbers height={height} onClick={onGutterClick} />
-                <Gutter height={height} onClick={onGutterClick} />
-                <Box direction="column" grow={1}>
-                    {lines}
-                </Box>
+                <CodeLines lines={lines} onClick={onLineClick} />
             </ScrollableBox>
         );
     } else if (state.target.connected) {
@@ -181,7 +166,7 @@ export function Code(): JSX.Element {
     }
 
     return (
-        <Box direction="column">
+        <Box direction="column" grow={1}>
             <Box bg={"brightWhite"} color={"black"}>
                 {title}
             </Box>
