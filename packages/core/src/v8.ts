@@ -342,6 +342,7 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
                     columnNumber: breakpoint.column,
                     scriptId: script.id,
                 },
+                restrictToFunction: true,
             },
         );
 
