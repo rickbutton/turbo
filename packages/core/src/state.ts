@@ -197,7 +197,7 @@ export interface TargetConnection extends Emitter<TargetConnectionEvents> {
     stepInto(): Promise<void>;
     stepOut(): Promise<void>;
     stepOver(): Promise<void>;
-    setBreakpoint(breakpoint: Breakpoint): Promise<void>;
+    setBreakpoint(breakpoint: Breakpoint): Promise<ResolvedBreakpoint | null>;
     removeBreakpoint(id: BreakpointId): Promise<void>;
     enableBreakpoints(): Promise<void>;
     disableBreakpoints(): Promise<void>;
@@ -272,9 +272,13 @@ export interface AddScriptAction {
     type: "add-script";
     script: Script;
 }
+export interface SetBreakpointRequestAction {
+    type: "set-breakpoint-request";
+    breakpoint: LocalBreakpoint;
+}
 export interface SetBreakpointAction {
     type: "set-breakpoint";
-    breakpoint: LocalBreakpoint;
+    breakpoint: Breakpoint;
 }
 export interface VerifyBreakpointAction {
     type: "verify-breakpoint";
@@ -314,6 +318,7 @@ export type Action =
     | FocusDownCallFrameAction
     | FocusCallFrameAction
     | AddScriptAction
+    | SetBreakpointRequestAction
     | SetBreakpointAction
     | VerifyBreakpointAction
     | RemoveBreakpointRequestAction

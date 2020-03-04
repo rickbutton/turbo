@@ -6,7 +6,7 @@ export function setBreakpoint(
     column?: number,
 ): Action {
     return {
-        type: "set-breakpoint",
+        type: "set-breakpoint-request",
         breakpoint: {
             id: uuid() as BreakpointId,
             line,

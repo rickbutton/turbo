@@ -321,46 +321,100 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
             await this.client.Debugger.stepOver();
         }
     }
-    async setBreakpoint(breakpoint: Breakpoint): Promise<void> {
+    async setBreakpoint(
+        breakpoint: Breakpoint,
+    ): Promise<ResolvedBreakpoint | null> {
         logger.debug(
             `v8 setBreakpoint ${breakpoint.rawUrl} ${breakpoint.line}:${breakpoint.column}`,
         );
+
+        const script = this.findScriptByUrl(breakpoint.url);
+        if (!script) {
+            logger.error(`unable to find script with url ${breakpoint.url}`);
+            return null;
+        }
+        logger.verbose(`found script with id ${script.id}`);
+
+        const { locations } = await this.client.Debugger.getPossibleBreakpoints(
+            {
+                start: {
+                    lineNumber: breakpoint.line,
+                    columnNumber: breakpoint.column,
+                    scriptId: script.id,
+                },
+            },
+        );
+
+        if (locations.length === 0) {
+            logger.error(`unable to find possible breakpoint`);
+            return null;
+        }
+
+        const realLocation = locations[0];
+        logger.verbose(
+            `found real break location ${realLocation.scriptId}:${realLocation.lineNumber}:${realLocation.columnNumber}`,
+        );
+
+        const matchingBreakpoint = Array.from(this.breakpoints.values()).find(
+            b =>
+                b.url === breakpoint.url &&
+                b.line === realLocation.lineNumber &&
+                b.column === realLocation.columnNumber,
+        );
+
+        if (matchingBreakpoint) {
+            logger.error("already have matching breakpoint, ignoring");
+            return null;
+        }
+        logger.verbose("no matching breakpoint");
+        logger.verbose(
+            JSON.stringify(Array.from(this.breakpoints.values()), null, 4),
+        );
+
         let breakpointId: RawBreakpointId;
-        let locations: Protocol.Debugger.Location[];
+        let resolvedLocations: Protocol.Debugger.Location[];
         try {
             const result = await this.client.Debugger.setBreakpointByUrl({
                 url: breakpoint.rawUrl,
-                lineNumber: breakpoint.line,
-                columnNumber: breakpoint.column,
+                lineNumber: realLocation.lineNumber,
+                columnNumber: realLocation.columnNumber,
                 condition: breakpoint.condition,
             });
             breakpointId = result.breakpointId as RawBreakpointId;
-            locations = result.locations;
+            resolvedLocations = result.locations;
         } catch (e) {
             logger.error(e.error);
             logger.error(e.stack || "");
-            return;
+            return null;
         }
 
         logger.debug(`new breakpoint id: ${breakpointId}`);
-        logger.debug(JSON.stringify(locations, null, 4));
 
-        if (locations.length > 0) {
-            const location = toSourceLocation(locations[0]);
-            const newBreakpoint: ResolvedBreakpoint = {
-                ...breakpoint,
-                raw: {
-                    id: breakpointId as RawBreakpointId,
-                    location,
-                },
-                line: location.line,
-                column: location.column,
-            };
-
-            this.fire("breakpointResolved", { breakpoint: newBreakpoint });
-
-            this.breakpoints.set(newBreakpoint.id, newBreakpoint);
+        if (resolvedLocations.length === 0) {
+            logger.error("resolved breakpoint has no locations");
+            return null;
         }
+        const location = toSourceLocation(resolvedLocations[0]);
+        logger.verbose(
+            `resolved break location ${location.scriptId}:${location.line}:${location.column}`,
+        );
+
+        const newBreakpoint: ResolvedBreakpoint = {
+            id: breakpoint.id,
+            url: breakpoint.url,
+            rawUrl: breakpoint.rawUrl,
+            raw: {
+                id: breakpointId as RawBreakpointId,
+                location,
+            },
+            line: location.line,
+            column: location.column,
+        };
+
+        this.fire("breakpointResolved", { breakpoint: newBreakpoint });
+
+        this.breakpoints.set(newBreakpoint.id, newBreakpoint);
+        return newBreakpoint;
     }
     async removeBreakpoint(id: BreakpointId): Promise<void> {
         const breakpoint = this.breakpoints.get(id);
@@ -468,6 +522,10 @@ class V8TargetConnection extends EmitterBase<TargetConnectionEvents>
         } else {
             return null;
         }
+    }
+
+    private findScriptByUrl(url: string): Script | undefined {
+        return Array.from(this.scripts.values()).find(s => s.url === url);
     }
 }
 

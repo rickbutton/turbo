@@ -9,6 +9,7 @@ import {
     SetBreakpointAction,
     RemovedBreakpointAction,
     State,
+    ResolvedBreakpoint,
 } from "../state";
 
 function setupTarget(target: Target): EventChannel<TargetSagaAction | END> {
@@ -80,8 +81,16 @@ function* watchConnectionRequests(target: TargetConnection) {
         yield call(() => target.stepOver());
     });
 
-    yield takeEvery("set-breakpoint", function*(action: SetBreakpointAction) {
-        yield call([target, target.setBreakpoint], action.breakpoint);
+    yield takeEvery("set-breakpoint-request", function*(
+        action: SetBreakpointAction,
+    ) {
+        const breakpoint: ResolvedBreakpoint = yield call(
+            [target, target.setBreakpoint],
+            action.breakpoint,
+        );
+        if (breakpoint) {
+            yield put<Action>({ type: "set-breakpoint", breakpoint });
+        }
     });
     yield takeEvery("remove-b-request", function*(
         action: RemovedBreakpointAction,

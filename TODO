@@ -29,9 +29,3 @@ dturbo - run dev version of turbo
     - dturbo -- the rest
 use node-pty to implement a tmux replacement for windows users
 show prompt for picking session when more than one is running
-
-SOON:
-// split set-breakpoint into set-breakpoint-request and set-breakpoint
-// use getPossibleBreakpointLocations to select best location
-// and then submit with set-breakpoint
-// in set-breakpoint, set raw from actualLocation
