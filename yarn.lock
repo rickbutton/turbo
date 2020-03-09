@@ -8805,9 +8805,9 @@ term-size@^1.2.0:
     execa "^0.7.0"
 
 terminal-kit@^1.32.2:
-  version "1.34.0"
-  resolved "https://registry.yarnpkg.com/terminal-kit/-/terminal-kit-1.34.0.tgz#0596f05a09dae0c889ad3a499aeffd3cb61c11a9"
-  integrity sha512-sZTuk1nhz1+Biu0jM/O7VYPZv8wwHPvmJ0Y7bf8DCluH56MSbjTt5Rc3A8tPCQFhsiUp94u3xr6tcs4JwX9yZg==
+  version "1.34.5"
+  resolved "https://registry.yarnpkg.com/terminal-kit/-/terminal-kit-1.34.5.tgz#c75757b93ba33ba83b950b7f74992e17df8bdaa3"
+  integrity sha512-zqAvowmYxNd0qrm6su8nBLg7aDvBsuzyEUfbWXNQA+4p5QHWrQYP3aNxvegsem0yMFARdowdEi6zHPwi/udPzQ==
   dependencies:
     "@cronvel/get-pixels" "^3.3.1"
     chroma-js "^2.1.0"
