@@ -8138,10 +8138,10 @@ setimmediate@^1.0.5:
   resolved "https://registry.yarnpkg.com/setimmediate/-/setimmediate-1.0.5.tgz#290cbb232e306942d7d7ea9b83732ab7856f8285"
   integrity sha1-KQy7Iy4waULX1+qbg3Mqt4VvgoU=
 
-seventh@^0.7.34:
-  version "0.7.34"
-  resolved "https://registry.yarnpkg.com/seventh/-/seventh-0.7.34.tgz#737525cb9a54e56e5e259f7face7efe4d4aa4fac"
-  integrity sha512-9YR6YjZIckltwsfomtsUuyHEGSx7gNHdXDX+hPmvVeHJLiGpFnLRm3izKWCVjb70cYZYUfdlA9osUEqtH/J6uQ==
+seventh@^0.7.35:
+  version "0.7.35"
+  resolved "https://registry.yarnpkg.com/seventh/-/seventh-0.7.35.tgz#328603d3f31cc9475a2b0b7c66209ffb8a155ce3"
+  integrity sha512-8uGsybZk/XBSv7BvyjbSeK+R8vpWh2jkZJq0UIMVlJTr9CZsCLTfGWKtcBxmHzMUbzSPxa134prhvZA8GuIx/w==
   dependencies:
     setimmediate "^1.0.5"
 
@@ -8783,16 +8783,16 @@ term-size@^1.2.0:
     execa "^0.7.0"
 
 terminal-kit@^1.32.2:
-  version "1.34.5"
-  resolved "https://registry.yarnpkg.com/terminal-kit/-/terminal-kit-1.34.5.tgz#c75757b93ba33ba83b950b7f74992e17df8bdaa3"
-  integrity sha512-zqAvowmYxNd0qrm6su8nBLg7aDvBsuzyEUfbWXNQA+4p5QHWrQYP3aNxvegsem0yMFARdowdEi6zHPwi/udPzQ==
+  version "1.35.1"
+  resolved "https://registry.yarnpkg.com/terminal-kit/-/terminal-kit-1.35.1.tgz#c2203690f0b232638c5f45221776b70431d5078b"
+  integrity sha512-36q0frqenTb1kWuq+vJU+xbGB8KPX1+05kxnbVZxeu9cXDL68qR5w2NzsliogHweplRI7XP0Zc/FITMMA8/BHA==
   dependencies:
     "@cronvel/get-pixels" "^3.3.1"
     chroma-js "^2.1.0"
     lazyness "^1.1.1"
     ndarray "^1.0.19"
     nextgen-events "^1.3.0"
-    seventh "^0.7.34"
+    seventh "^0.7.35"
     string-kit "^0.11.6"
     tree-kit "^0.6.2"
 
