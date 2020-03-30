@@ -3136,10 +3136,10 @@ detect-node@^2.0.4:
   resolved "https://registry.yarnpkg.com/detect-node/-/detect-node-2.0.4.tgz#014ee8f8f669c5c58023da64b8179c083a28c46c"
   integrity sha512-ZIzRpLJrOj7jjP2miAtgqIfmzbxa4ZOr5jJc601zklsfEx9oTzmmj2nVpIPRpNlRTIh8lc1kyViIY7BWSGNmKw==
 
-devtools-protocol@^0.0.724935:
-  version "0.0.724935"
-  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.724935.tgz#9974fc42cebb83111e77152a17af391158e8e91e"
-  integrity sha512-oDFro6yLSK7dFSr3ZhK5DSPt35V7CNYx5tkPjkDvM+X557vzorVxFHxyPEZyLgYURM7hSad0H4/ctv0yTtUdiA==
+devtools-protocol@^0.0.753577:
+  version "0.0.753577"
+  resolved "https://registry.yarnpkg.com/devtools-protocol/-/devtools-protocol-0.0.753577.tgz#9fbd592d12344057292f60a5b73de82408110603"
+  integrity sha512-J/z7FYWEJdiOzDUlboCCHehfSXJO0RD7pWdEy35d9vMutlXqVUPAIj1/MRj4ZENQ4HnsoKjOtvdW1hIMqN2TAg==
 
 dezalgo@^1.0.0:
   version "1.0.3"
