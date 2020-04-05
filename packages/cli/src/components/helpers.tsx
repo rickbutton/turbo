@@ -35,6 +35,7 @@ export function useClientState(): State | null {
             setState(state);
         };
         client.on("sync", cb);
+        setState(client.state);
 
         return (): void => client.off("sync", cb);
     }, [client]);
