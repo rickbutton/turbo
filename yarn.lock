@@ -1535,9 +1535,9 @@
   integrity sha512-l42BggppR6zLmpfU6fq9HEa2oGPEI8yrSPL3GITjfRInppYFahObbIQOQK3UGxEnyQpltZLaPe75046NOZQikw==
 
 "@types/terminal-kit@^1.28.0":
-  version "1.28.0"
-  resolved "https://registry.yarnpkg.com/@types/terminal-kit/-/terminal-kit-1.28.0.tgz#696d94ffec4c92da9518bd0df7ab161768151463"
-  integrity sha512-xByt2gVf6BvmCU8QOg3zc+cywAefyXNIZSr1qnaz/U2jedfIAkvCq4hfTao0iAU7w6o7QcxVEJAc/BIbQ9SU7A==
+  version "1.28.1"
+  resolved "https://registry.yarnpkg.com/@types/terminal-kit/-/terminal-kit-1.28.1.tgz#f90b44ed43c7bfcf9bbb8b999feb07d5376d5a29"
+  integrity sha512-WtBTVRxwTIWkEBAU33U0MEVaiOX+X0yvNy4jOfFkT3khSTPz1f79ayyTRSqKE2StZKJqU78Tz7sPQwwhAf12MQ==
   dependencies:
     "@types/nextgen-events" "*"
 
