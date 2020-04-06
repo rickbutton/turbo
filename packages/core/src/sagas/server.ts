@@ -40,17 +40,14 @@ function setupServer(
             connectionChannel.put(conn);
 
             conn.on("close", () => {
-                setTimeout(() => {
-                    // TODO: wait for log servers as well
-                    if (server.numConnections === 0) {
-                        // TODO: log this message somewhere
-                        // TODO: only exit if in config
-                        logger.error(
-                            "closing daemon because all clients disconnected",
-                        );
-                        onQuit();
-                    }
-                }, 5000); // TODO: don't hardcode
+                // TODO: wait for log servers as well
+                if (server.numConnections === 0 && !turbo.options.keepAlive) {
+                    // TODO: log this message somewhere
+                    logger.error(
+                        "closing daemon because all clients disconnected",
+                    );
+                    onQuit();
+                }
             });
         }
         function onRequest(req: RequestEvent<ServerRequestType>): void {

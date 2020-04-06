@@ -8,6 +8,7 @@ function exampleSyncMessage(): Message<"sync"> {
         type: "sync",
         payload: {
             state: {
+                keepAlive: false,
                 target: {
                     connected: false,
                     paused: false,

@@ -17,6 +17,7 @@ import { getTurbo } from "./turbo";
 function getOptions(argv: any): TurboOptions {
     return {
         sessionId: argv.session || undefined,
+        keepAlive: argv["keep-alive"],
     };
 }
 
@@ -32,11 +33,22 @@ export function run(): void {
             describe: "the desired session id",
             alias: ["s"],
         })
-        .command(["start", "$0"], "start a turbo session", {}, argv => {
-            const turbo = makeTurbo(argv);
+        .command(
+            ["start", "$0"],
+            "start a turbo session",
+            yargs => {
+                yargs.boolean("keep-alive");
+                yargs.describe(
+                    "keep-alive",
+                    "don't close the daemon after all clients disconnect",
+                );
+            },
+            argv => {
+                const turbo = makeTurbo(argv);
 
-            start(turbo);
-        })
+                start(turbo);
+            },
+        )
         .command(
             ["component <name>", "comp"],
             "start a turbo component",
@@ -62,9 +74,20 @@ export function run(): void {
             const turbo = makeTurbo(argv);
             return kill(turbo);
         })
-        .command("daemon", "start a turbo daemon", {}, argv => {
-            const turbo = makeTurbo(argv);
+        .command(
+            "daemon",
+            "start a turbo daemon",
+            yargs => {
+                yargs.boolean("keep-alive");
+                yargs.describe(
+                    "keep-alive",
+                    "don't close the daemon after all clients disconnect",
+                );
+            },
+            argv => {
+                const turbo = makeTurbo(argv);
 
-            return daemon(turbo);
-        }).argv;
+                return daemon(turbo);
+            },
+        ).argv;
 }

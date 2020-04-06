@@ -9,7 +9,6 @@ import { ClientContext, TurboContext } from "../components/helpers";
 import { BreakpointsComponent } from "../components/breakpoints";
 import { StackComponent } from "../components/stack";
 import { ScopesComponent } from "../components/scope";
-import { Layout } from "../components/layout";
 
 interface StandardComponent {
     type: "standard";
@@ -32,7 +31,6 @@ const components: { [key: string]: Component } = {
     breakpoints: { type: "react", value: BreakpointsComponent },
     stack: { type: "react", value: StackComponent },
     scopes: { type: "react", value: ScopesComponent },
-    layout: { type: "react", value: Layout },
 };
 
 interface AppProps {
@@ -49,14 +47,8 @@ function App(props: React.PropsWithChildren<AppProps>): JSX.Element {
     );
 }
 
-export function component(turbo: Turbo, name: string): void {
+export function renderComponent(turbo: Turbo, Component: Component): void {
     const sessionId = getCurrentSessionId(turbo);
-    const Component = components[name];
-
-    if (!Component) {
-        console.error(`unknown component: ${name}`);
-        return;
-    }
     if (!sessionId) {
         console.error("unable to identify current session");
         return;
@@ -79,4 +71,14 @@ export function component(turbo: Turbo, name: string): void {
     });
 
     client.connectAfterDelay();
+}
+
+export function component(turbo: Turbo, name: string): void {
+    const Component = components[name];
+    if (!Component) {
+        console.error(`unknown component: ${name}`);
+        return;
+    }
+
+    renderComponent(turbo, Component);
 }

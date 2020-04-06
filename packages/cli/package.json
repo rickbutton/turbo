@@ -29,7 +29,6 @@
     "@turbo/connector-node": "^0.2.3",
     "@turbo/core": "^0.2.3",
     "@turbo/net": "^0.2.3",
-    "@turbo/shell-tmux": "^0.2.3",
     "@types/react": "^16.9.16",
     "@types/react-reconciler": "^0.18.0",
     "@types/terminal-kit": "^1.28.0",

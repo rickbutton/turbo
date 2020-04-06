@@ -1,31 +1,23 @@
 import {
     Turbo,
-    Layout,
     SessionId,
     generateSessionId,
-    createShell,
+    getCurrentSessionId,
 } from "@turbo/core";
 import { Client } from "@turbo/net";
 import child from "child_process";
-
-const defaultLayout: Layout = {
-    windows: [
-        {
-            name: "debug",
-            panes: [
-                { type: "component", component: "test1" },
-                { type: "component", component: "test2" },
-                { type: "shell" },
-            ],
-        },
-        { name: "sh", panes: [{ type: "shell" }] },
-    ],
-};
+import { Layout } from "../components/layout";
+import { renderComponent } from "../commands/component";
 
 function spawnDaemon(turbo: Turbo, id: SessionId): void {
     try {
         const exec = turbo.env.nodePath;
         const args = [turbo.env.scriptPath, "--session", id, "daemon"];
+
+        if (turbo.options.keepAlive) {
+            args.push("--keep-alive");
+        }
+
         const spawned = child.spawn(exec, args, {
             detached: true,
             stdio: "ignore",
@@ -54,21 +46,29 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
 // write a wrapper around error handling for client users
 
 export function start(turbo: Turbo): void {
-    const id = generateSessionId(turbo);
+    const id = getCurrentSessionId(turbo);
 
-    const layout = turbo.config.layout || defaultLayout;
-    // spawn daemon in background
-    spawnDaemon(turbo, id);
+    function render(): void {
+        renderComponent(turbo, { type: "react", value: Layout });
+    }
 
-    const client = new Client(turbo, {
-        type: "managed",
-        sessionId: id,
-        maxRetries: 20,
-    });
-    client.connect();
+    if (id) {
+        render();
+    } else {
+        const id = generateSessionId(turbo);
 
-    client.on("ready", () => {
-        const shell = createShell(turbo);
-        shell.start(id, layout, turbo);
-    });
+        // spawn daemon in background
+        spawnDaemon(turbo, id);
+
+        const client = new Client(turbo, {
+            type: "managed",
+            sessionId: id,
+            maxRetries: 20,
+        });
+        client.connect();
+
+        client.on("ready", () => {
+            render();
+        });
+    }
 }

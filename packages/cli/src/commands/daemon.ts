@@ -58,6 +58,7 @@ export async function daemon(turbo: Turbo): Promise<void> {
 
     // make the redux store
     const store = makeStore(turbo, server, target, {
+        keepAlive: turbo.options.keepAlive || false,
         target: {
             connected: false,
             paused: false,

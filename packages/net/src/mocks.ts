@@ -3,7 +3,6 @@ import { Config, Environment, Turbo, SessionId } from "@turbo/core";
 const TEST_ENV: Environment = {
     getVar: (name: string) => {
         if (name === "SHELL") return "conch";
-        if (name === "TMUX") return "foobarbaz";
         else return undefined;
     },
     getTmpFolder(context: string) {
@@ -29,7 +28,6 @@ const TEST_ENV: Environment = {
 };
 const TEST_CONFIG: Config = {
     target: "node",
-    shell: "tmux",
 };
 export const TEST_TURBO: Turbo = {
     env: TEST_ENV,

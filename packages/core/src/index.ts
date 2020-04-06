@@ -27,43 +27,17 @@ export interface Environment {
     readonly exit: () => void;
 }
 
-export interface Layout {
-    readonly windows: Window[];
-}
-
-export interface Window {
-    readonly name: string;
-    readonly panes: Pane[];
-}
-
-interface ComponentPane {
-    readonly type: "component";
-    readonly component: string;
-}
-interface ExecPane {
-    readonly type: "exec";
-    readonly command: string;
-}
-interface ShellPane {
-    readonly type: "shell";
-}
-
-export type Pane = ComponentPane | ExecPane | ShellPane;
-
 interface Options {
     [key: string]: any;
 }
 type TargetConfig = string | [string, Options];
-type ShellConfig = string | [string, Options];
 export interface Config {
     target: TargetConfig;
-    shell: ShellConfig;
-    layout?: Layout;
 }
 
 export type ShellFactory = (options: Options, turbo: Turbo) => Shell;
 export interface Shell {
-    start(id: SessionId, layout: Layout, turbo: Turbo): void;
+    start(id: SessionId, turbo: Turbo): void;
     getSessionId(): SessionId | undefined;
 }
 
@@ -88,6 +62,7 @@ export type Connector = (options: Options, turbo: Turbo) => Target;
 
 export interface TurboOptions {
     sessionId?: SessionId;
+    keepAlive?: boolean;
 }
 export interface Turbo {
     env: Environment;
@@ -102,12 +77,6 @@ export function uuid(): string {
 export function getCurrentSessionId(turbo: Turbo): SessionId | undefined {
     if (turbo.options.sessionId) {
         return turbo.options.sessionId;
-    }
-
-    const shell = createShell(turbo);
-    const shellId = shell.getSessionId();
-    if (shellId) {
-        return shellId;
     }
 
     const ids = turbo.env.getAllSessionIds();
@@ -150,16 +119,6 @@ export function createTarget(turbo: Turbo): Target {
     const connector = resolvePlugin<Connector>(turbo, "connector", name);
 
     return connector(options, turbo);
-}
-
-export function createShell(turbo: Turbo): Shell {
-    const config = turbo.config.shell;
-    const name = Array.isArray(config) ? config[0] : config;
-    const options = Array.isArray(config) ? config[1] : {};
-
-    const shell = resolvePlugin<ShellFactory>(turbo, "shell", name);
-
-    return shell(options, turbo);
 }
 
 export { Emitter, EmitterBase } from "./emitter";

@@ -120,7 +120,6 @@ function loadJson(path: string): any {
 
 const DEFAULT_CONFIG: Config = {
     target: "node",
-    shell: "tmux",
 };
 
 function getConfig(): Config {

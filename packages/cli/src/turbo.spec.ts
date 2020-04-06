@@ -61,7 +61,6 @@ jest.mock(
     "/tmp/exists/turbo.config.js",
     () => ({
         target: "node",
-        shell: "tmux",
     }),
     { virtual: true },
 );
@@ -120,7 +119,6 @@ describe("Turbo", () => {
 
             expect(Object.keys(output)).toEqual([
                 "target",
-                "shell",
                 "one",
                 "two",
                 "three",
@@ -128,7 +126,6 @@ describe("Turbo", () => {
             ]);
             expect(output).toEqual({
                 target: "node",
-                shell: "tmux",
                 one: "three",
                 two: null,
                 three: "four",

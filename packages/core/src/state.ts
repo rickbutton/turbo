@@ -229,6 +229,7 @@ interface LogStreamState {
 }
 
 export interface State {
+    keepAlive: boolean;
     target: TargetDescriptor & BaseTargetDescriptor;
     logStream: LogStreamState;
 }
