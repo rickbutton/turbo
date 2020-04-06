@@ -1,5 +1,6 @@
 import { Target, TargetEvents, EmitterBase, logger, Turbo } from "@turbo/core";
 import child from "child_process";
+import fs from "fs";
 
 const NODE_EXIT_REGEX = /Waiting for the debugger to disconnect\.\.\.\n$/;
 const NODE_PORT_REGEX = /Debugger listening on ws:\/\/([^:]+):(\d+)/;
@@ -37,7 +38,15 @@ class ManagedScript extends EmitterBase<TargetEvents> implements Target {
 
     private spawn(): void {
         const nodePath = this.config.nodePath || this.turbo.env.nodePath;
-        const args = ["--inspect-brk=0", this.config.script];
+
+        const script = this.turbo.options.filePath || this.config.script;
+
+        if (!fs.existsSync(script)) {
+            logger.error(`path ${script} does not exist, cannot start`);
+            return;
+        }
+
+        const args = ["--inspect-brk=0", script];
 
         logger.info(
             `starting node process ${nodePath} with args ${args.join(" ")}`,

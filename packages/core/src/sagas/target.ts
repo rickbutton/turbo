@@ -195,21 +195,41 @@ export function* targetFlow(
 
     yield takeEvery<ActionType>("start", () => {
         logger.verbose("sagas: watchTargetRequests: start");
-        target.start();
+        try {
+            target.start();
+        } catch (e) {
+            logger.error(e.message);
+            logger.error(e.stack);
+        }
     });
     yield takeEvery<ActionType>("stop", () => {
         logger.verbose("sagas: watchTargetRequests: stop");
-        target.stop();
+        try {
+            target.stop();
+        } catch (e) {
+            logger.error(e.message);
+            logger.error(e.stack);
+        }
     });
     yield takeEvery<ActionType>("restart", () => {
         logger.verbose("sagas: watchTargetRequests: restart");
-        if (target.isRunning) {
-            target.once("stopped", () => {
+        try {
+            if (target.isRunning) {
+                target.once("stopped", () => {
+                    try {
+                        target.start();
+                    } catch (e) {
+                        logger.error(e.message);
+                        logger.error(e.stack);
+                    }
+                });
+                target.stop();
+            } else {
                 target.start();
-            });
-            target.stop();
-        } else {
-            target.start();
+            }
+        } catch (e) {
+            logger.error(e.message);
+            logger.error(e.stack);
         }
     });
 

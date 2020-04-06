@@ -14,6 +14,9 @@ function spawnDaemon(turbo: Turbo, id: SessionId): void {
         const exec = turbo.env.nodePath;
         const args = [turbo.env.scriptPath, "--session", id, "daemon"];
 
+        if (turbo.options.filePath) {
+            args.push(turbo.options.filePath);
+        }
         if (turbo.options.keepAlive) {
             args.push("--keep-alive");
         }

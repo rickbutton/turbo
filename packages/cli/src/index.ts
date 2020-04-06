@@ -18,6 +18,7 @@ function getOptions(argv: any): TurboOptions {
     return {
         sessionId: argv.session || undefined,
         keepAlive: argv["keep-alive"],
+        filePath: argv.path || undefined,
     };
 }
 
@@ -34,7 +35,7 @@ export function run(): void {
             alias: ["s"],
         })
         .command(
-            ["start", "$0"],
+            ["start [path]", "$0"],
             "start a turbo session",
             yargs => {
                 yargs.boolean("keep-alive");
@@ -42,6 +43,10 @@ export function run(): void {
                     "keep-alive",
                     "don't close the daemon after all clients disconnect",
                 );
+                yargs.positional("path", {
+                    describe: "path to file to debug",
+                    type: "string",
+                });
             },
             argv => {
                 const turbo = makeTurbo(argv);
@@ -75,7 +80,7 @@ export function run(): void {
             return kill(turbo);
         })
         .command(
-            "daemon",
+            "daemon [path]",
             "start a turbo daemon",
             yargs => {
                 yargs.boolean("keep-alive");
@@ -83,6 +88,10 @@ export function run(): void {
                     "keep-alive",
                     "don't close the daemon after all clients disconnect",
                 );
+                yargs.positional("path", {
+                    describe: "path to file to debug",
+                    type: "string",
+                });
             },
             argv => {
                 const turbo = makeTurbo(argv);

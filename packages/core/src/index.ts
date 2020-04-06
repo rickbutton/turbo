@@ -63,6 +63,7 @@ export type Connector = (options: Options, turbo: Turbo) => Target;
 export interface TurboOptions {
     sessionId?: SessionId;
     keepAlive?: boolean;
+    filePath?: string;
 }
 export interface Turbo {
     env: Environment;

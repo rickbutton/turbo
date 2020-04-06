@@ -17,9 +17,6 @@ watchers?
 vim plugin
 better error handling in sagas
 tooltip widget - React portal?
-add wrap options
- - word
- - newline
 colors for eval command - buffer drawChars with ansi escapes
 dturbo - run dev version of turbo
     - another npm package
