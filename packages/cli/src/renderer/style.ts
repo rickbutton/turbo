@@ -1,4 +1,4 @@
-import * as yoga from "yoga-layout-prebuilt";
+import * as yoga from "yoga-wasm";
 
 export interface NodeStyle {
     flexGrow?: number;
@@ -30,7 +30,7 @@ export interface NodeStyle {
     paddingRight?: number;
 }
 
-export function applyStyle(node: yoga.YogaNode, style: NodeStyle): void {
+export function applyStyle(node: yoga.Node, style: NodeStyle): void {
     if (typeof style.flexGrow !== "undefined") {
         node.setFlexGrow(style.flexGrow);
     }

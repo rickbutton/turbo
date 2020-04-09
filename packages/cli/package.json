@@ -41,7 +41,7 @@
     "string-width": "^4.2.0",
     "terminal-kit": "^1.32.2",
     "yargs": "^15.1.0",
-    "yoga-layout-prebuilt": "^1.9.3"
+    "yoga-wasm": "^0.0.1"
   },
   "publishConfig": {
     "access": "public"

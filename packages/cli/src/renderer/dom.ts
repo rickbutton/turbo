@@ -1,4 +1,4 @@
-import * as yoga from "yoga-layout-prebuilt";
+import * as yoga from "yoga-wasm";
 import { applyStyle } from "./style";
 import stringWidth from "string-width";
 import { BufferTarget, MouseEvent } from "./buffertarget";
@@ -16,7 +16,7 @@ type Attributes = { [key: string]: any };
 export interface ComplexNode {
     type: "complex";
     name: string;
-    yoga: yoga.YogaNode;
+    yoga: yoga.Node;
     children: Node[];
     parent: ComplexNode | null;
     attributes: Attributes;
@@ -43,11 +43,11 @@ interface TextSize {
 export interface TextNodePart {
     span: Span;
     width: number;
-    yoga: yoga.YogaNode;
+    yoga: yoga.Node;
 }
 export interface TextNode {
     type: "text";
-    yoga: yoga.YogaNode;
+    yoga: yoga.Node;
     value: string;
     parts: TextNodePart[];
     parent: ComplexNode | null;
@@ -187,7 +187,7 @@ export function calculateTextHeight(node: Node, width: number): number {
 export function updateTextNodeLayout(node: TextNode): void {
     if (!node.parent) return;
 
-    const childrenToRemove: yoga.YogaNode[] = [];
+    const childrenToRemove: yoga.Node[] = [];
     for (let i = 0; i < node.yoga.getChildCount(); i++) {
         childrenToRemove.push(node.yoga.getChild(i));
     }

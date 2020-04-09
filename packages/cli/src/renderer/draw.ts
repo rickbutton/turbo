@@ -1,5 +1,5 @@
 import { Node, Container, findClosestParent, resolveProperty } from "./dom";
-import * as yoga from "yoga-layout-prebuilt";
+import * as yoga from "yoga-wasm";
 import { Span } from "./ansi";
 import { DrawAttribute } from "./buffertarget";
 
