@@ -1580,15 +1580,6 @@
     regexpp "^3.0.0"
     tsutils "^3.17.1"
 
-"@typescript-eslint/experimental-utils@2.23.0":
-  version "2.23.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/experimental-utils/-/experimental-utils-2.23.0.tgz#5d2261c8038ec1698ca4435a8da479c661dc9242"
-  integrity sha512-OswxY59RcXH3NNPmq+4Kis2CYZPurRU6mG5xPcn24CjFyfdVli5mySwZz/g/xDbJXgDsYqNGq7enV0IziWGXVQ==
-  dependencies:
-    "@types/json-schema" "^7.0.3"
-    "@typescript-eslint/typescript-estree" "2.23.0"
-    eslint-scope "^5.0.0"
-
 "@typescript-eslint/experimental-utils@2.27.0":
   version "2.27.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/experimental-utils/-/experimental-utils-2.27.0.tgz#801a952c10b58e486c9a0b36cf21e2aab1e9e01a"
@@ -1608,19 +1599,6 @@
     "@typescript-eslint/experimental-utils" "2.27.0"
     "@typescript-eslint/typescript-estree" "2.27.0"
     eslint-visitor-keys "^1.1.0"
-
-"@typescript-eslint/typescript-estree@2.23.0":
-  version "2.23.0"
-  resolved "https://registry.yarnpkg.com/@typescript-eslint/typescript-estree/-/typescript-estree-2.23.0.tgz#d355960fab96bd550855488dcc34b9a4acac8d36"
-  integrity sha512-pmf7IlmvXdlEXvE/JWNNJpEvwBV59wtJqA8MLAxMKLXNKVRC3HZBXR/SlZLPWTCcwOSg9IM7GeRSV3SIerGVqw==
-  dependencies:
-    debug "^4.1.1"
-    eslint-visitor-keys "^1.1.0"
-    glob "^7.1.6"
-    is-glob "^4.0.1"
-    lodash "^4.17.15"
-    semver "^6.3.0"
-    tsutils "^3.17.1"
 
 "@typescript-eslint/typescript-estree@2.27.0":
   version "2.27.0"
@@ -5843,9 +5821,9 @@ lodash.uniq@^4.5.0:
   integrity sha1-0CJTc662Uq3BvILklFM5qEJ1R3M=
 
 lodash@^4.17.10, lodash@^4.17.11, lodash@^4.17.12, lodash@^4.17.13, lodash@^4.17.14, lodash@^4.17.15, lodash@^4.2.1, lodash@^4.3.0:
-  version "4.17.15"
-  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.15.tgz#b447f6670a0455bbfeedd11392eff330ea097548"
-  integrity sha512-8xOcRHvCjnocdS5cpwXQXVzmmh5e5+saE2QGoeQmbKmRS6J3VQppPOIt0MnmE+4xlZoumy0GPG0D0MVIQbNA1A==
+  version "4.17.19"
+  resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.19.tgz#e48ddedbe30b3321783c5b4301fbd353bc1e4a4b"
+  integrity sha512-JNvd8XER9GQX0v2qJgsaN/mzFCNA5BRe/j8JN9d+tWyGLSodKQHKFicdwNYzWwI3wjRnaKPsGj1XkBjx/F96DQ==
 
 log-symbols@^2.1.0, log-symbols@^2.2.0:
   version "2.2.0"
