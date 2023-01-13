@@ -39,7 +39,7 @@
     "react": "^16.12.0",
     "react-reconciler": "^0.25.0",
     "string-width": "^4.2.0",
-    "terminal-kit": "^1.32.2",
+    "terminal-kit": "^2.1.8",
     "yargs": "^15.1.0",
     "yoga-wasm": "^0.0.1"
   },
